@@ -1,9 +1,9 @@
-import * as S from './store.js?v=202609220909';
-import { SITE, ADMINS } from './config.js?v=202609220909';
-import { TEAMS, TEAM_BY_ID, LEAGUES } from './teams.js?v=202609220909';
-import { METROS } from './metros.js?v=202609220909';
-import { encode, center, bounds, areaLabel, km } from './geo.js?v=202609220909';
-import { nextGames } from './schedule.js?v=202609220909';
+import * as S from './store.js?v=202609220946';
+import { SITE, ADMINS } from './config.js?v=202609220946';
+import { TEAMS, TEAM_BY_ID, LEAGUES } from './teams.js?v=202609220946';
+import { METROS } from './metros.js?v=202609220946';
+import { encode, center, bounds, areaLabel, km } from './geo.js?v=202609220946';
+import { nextGames } from './schedule.js?v=202609220946';
 
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -304,7 +304,7 @@ function viewMap() {
     maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
   }).addTo(map);
   mapLayers = L.layerGroup().addTo(map);
-  map.on('click', e => { if (adding) { setAdding(false); openSpotDialog(e.latlng); } });
+  map.on('click', e => { if (adding) { const club = adding === 'club'; setAdding(false); openSpotDialog(e.latlng, club); } });
   loadMap();
 }
 
@@ -364,6 +364,7 @@ async function loadMap(fresh = false) {
           <span class="main"><span class="t" style="display:block">${esc(s.name)}</span><span class="s">${fmtKm(s.dist)}${s.eventAt ? ` · ${esc(s.eventTitle || 'Watch party')}, ${fmtWhen(s.eventAt)}` : s.note ? ` · ${esc(s.note)}` : ''}</span></span>
           ${s.going ? `<span class="badge">${s.going} going</span>` : s.source === 'scout' ? '<span class="badge plain">found online</span>' : ''}</button>`).join('')
         : `<p class="empty">No spots within ${Math.round(NEAR_KM * .621)} miles yet. Know a bar that shows ${esc(t?.short)} games? Add it and other fans will find it.</p>`}</div>
+      <button class="link-btn" style="font-size:14px;margin-top:10px" id="clubLink">Run a fan club or alumni chapter?</button>
     </div>
     <div class="panel">
       <h3>Fans near you</h3>
@@ -380,6 +381,8 @@ async function loadMap(fresh = false) {
     </div>`;
 
   $('#addSpot').onclick = () => setAdding(true);
+  $('#clubLink').onclick = openClubDialog;
+  if (location.hash === '#club') { history.replaceState(null, '', '#map'); openClubDialog(); }
   $('#toChat').onclick = () => { view = 'chat'; room = 'local'; history.replaceState(null, '', '#chat'); renderShell(); };
   $('#unGo')?.addEventListener('click', async () => { await S.checkOut(id); toast('Check-in cancelled'); loadMap(true); });
   $$('[data-spot]', side).forEach(b => b.onclick = () => {
@@ -414,8 +417,10 @@ function spotPopup(s, myCheckin) {
       <button class="btn sm ${here ? '' : 'primary'}" data-go>${here ? 'Going ✓' : "I'm going"}</button>
       <a class="btn sm" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=${s.lat},${s.lng}">Directions</a>
       ${mine ? '<button class="btn sm ghost" data-rm>Remove</button>' : ''}
-    </div>`;
+    </div>
+    <button class="link-btn" style="font-size:12px;margin-top:10px" data-report>${s.source === 'scout' ? 'Still accurate? Tell us if not' : 'Something wrong with this spot?'}</button>`;
   el.querySelector('[data-go]').onclick = () => here ? S.checkOut(teamId).then(() => { toast('Check-in cancelled'); loadMap(true); }) : goTo(s);
+  el.querySelector('[data-report]').onclick = () => openReportDialog(s);
   el.querySelector('[data-rm]')?.addEventListener('click', async () => {
     if (!confirm(`Remove ${s.name} from the map?`)) return;
     await S.removeSpot(s.id); toast('Spot removed'); loadMap(true);
@@ -435,24 +440,25 @@ async function goTo(spot, game, tid = teamId) {
 }
 
 function setAdding(on) {
-  adding = on;
+  adding = on; // true, false, or 'club'
   $('.view-map')?.classList.toggle('adding', on);
   $('.map-hint')?.remove();
   if (on) {
     const h = document.createElement('div');
-    h.className = 'map-hint'; h.innerHTML = 'Tap the map where the spot is · <button class="link-btn" style="color:inherit;text-decoration:underline">Cancel</button>';
+    h.className = 'map-hint'; h.innerHTML = `Tap the map where ${on === 'club' ? 'your club meets' : 'the spot is'} · <button class="link-btn" style="color:inherit;text-decoration:underline">Cancel</button>`;
     h.querySelector('button').onclick = () => setAdding(false);
     $('#map').parentElement.append(h);
     if (matchMedia('(max-width: 860px)').matches) $('#map').scrollIntoView({ behavior: 'smooth' });
   }
 }
 
-function openSpotDialog(latlng) {
+function openSpotDialog(latlng, forClub = false) {
   const dlg = document.createElement('dialog');
   dlg.innerHTML = `<h3>Add a watch spot</h3>
     <form method="dialog" id="spotForm">
       <label class="field">Name<input class="input" name="name" required maxlength="80" placeholder="The Brass Tap"></label>
       <label class="field">Address <span class="hint">optional</span><input class="input" name="address" maxlength="120" placeholder="123 Main St"></label>
+      <label class="field">Fan club or chapter <span class="hint">${forClub ? 'the club that meets here' : 'optional'}</span><input class="input" name="club" maxlength="80" placeholder="Bills Backers of Phoenix" ${forClub ? 'required' : ''}></label>
       <label class="field">Why go here? <span class="hint">optional</span><input class="input" name="note" maxlength="200" placeholder="Official backers bar, sound on, gets packed"></label>
       <div class="field">Shows games for
         <div class="picked">${profile.teams.map(id => `<label class="chip"><input type="checkbox" name="teams" value="${id}" ${id === teamId ? 'checked' : ''}>${logo(TEAM_BY_ID[id], 'sm')}${esc(TEAM_BY_ID[id]?.short)}</label>`).join('')}</div>
@@ -469,11 +475,49 @@ function openSpotDialog(latlng) {
     const f = new FormData(e.target), teams = f.getAll('teams');
     if (!teams.length) { $('#spotErr', dlg).textContent = 'Pick at least one team.'; return; }
     try {
-      await S.addSpot({ name: f.get('name'), address: f.get('address'), note: f.get('note'), lat: latlng.lat, lng: latlng.lng, teams, byName: profile.name });
+      await S.addSpot({ name: f.get('name'), address: f.get('address'), club: f.get('club'), note: f.get('note'), lat: latlng.lat, lng: latlng.lng, teams, byName: profile.name });
       dlg.close(); toast('Spot added. Thanks!');
       teams.forEach(t => delete cache[t]); loadMap(true);
     } catch (x) { $('#spotErr', dlg).textContent = errMsg(x); }
   };
+}
+
+function openReportDialog(s) {
+  const reasons = s.eventAt
+    ? ['Event cancelled or moved', 'Wrong place or time', 'Something else']
+    : ['Closed, or no longer shows the games', 'Wrong location or address', 'Wrong team', 'Something else'];
+  const dlg = document.createElement('dialog');
+  dlg.innerHTML = `<h3>What's wrong?</h3>
+    <form method="dialog">
+      <p class="muted" style="margin-top:-6px">${esc(s.name)}</p>
+      <div style="display:grid;gap:8px">${reasons.map((r, i) => `<label class="row" style="gap:10px;font-weight:500"><input type="radio" name="reason" value="${esc(r)}" ${i ? '' : 'checked'}>${esc(r)}</label>`).join('')}</div>
+      <label class="field">Details <span class="hint">optional</span><textarea class="input" name="note" maxlength="300" rows="3" placeholder="e.g. They moved to the bar down the street"></textarea></label>
+      <p class="err" id="repErr"></p>
+      <div class="row" style="justify-content:flex-end"><button class="btn ghost" value="cancel" formnovalidate>Cancel</button><button class="btn primary" value="send">Send</button></div>
+    </form>`;
+  document.body.append(dlg); dlg.showModal();
+  dlg.addEventListener('close', () => dlg.remove());
+  dlg.querySelector('form').onsubmit = async e => {
+    if (e.submitter?.value !== 'send') return;
+    e.preventDefault();
+    const f = new FormData(e.target);
+    try { await S.reportSpot({ spotId: s.id, spotName: s.name, name: profile.name, reason: f.get('reason'), note: f.get('note') }); dlg.close(); toast("Thanks, we'll check it"); }
+    catch (x) { $('#repErr', dlg).textContent = errMsg(x); }
+  };
+}
+
+function openClubDialog() {
+  const dlg = document.createElement('dialog');
+  dlg.innerHTML = `<h3>Run a fan club?</h3>
+    <div style="display:grid;gap:14px">
+      <p>Backers clubs and alumni chapters are the heart of game day for fans far from home. Put your bar on the map so the fans around ${esc(profile.area.replace(/ area$/, ''))} can find you.</p>
+      <p class="muted" style="font-size:14px">Already listed but something's out of date? Open the listing on the map and tap <b>Still accurate?</b> to tell us what changed.</p>
+      <div class="row" style="justify-content:flex-end"><button class="btn ghost" data-x>Not now</button><button class="btn primary" data-add>Add my club's bar</button></div>
+    </div>`;
+  document.body.append(dlg); dlg.showModal();
+  dlg.addEventListener('close', () => dlg.remove());
+  dlg.querySelector('[data-x]').onclick = () => dlg.close();
+  dlg.querySelector('[data-add]').onclick = () => { dlg.close(); setAdding('club'); };
 }
 
 /* ------------------------------------------------------------------ games */
@@ -584,10 +628,11 @@ function timeAgo(ms) {
 /* ----------------------------------------------------------------- review */
 async function viewReview() {
   const v = $('#view');
-  v.innerHTML = `<div class="page"><h2>Scout review</h2><p class="muted">Finds the weekly scout wasn't sure enough about to publish on its own. Approve puts them on the map; reject stops the scout suggesting them again.</p><div id="queue" style="display:grid;gap:14px"><div class="loading" style="min-height:160px">Loading…</div></div></div>`;
-  let items;
-  try { items = await S.listQueue(); } catch (e) { $('#queue').innerHTML = `<div class="panel"><p class="err">${esc(errMsg(e))}</p></div>`; return; }
+  v.innerHTML = `<div class="page"><h2>Review</h2><div id="reports" style="display:grid;gap:14px"></div><h3 style="font-size:26px;margin-top:10px">Scout finds</h3><p class="muted">Finds the weekly scout wasn't sure enough about to publish on its own. Approve puts them on the map; reject stops the scout suggesting them again.</p><div id="queue" style="display:grid;gap:14px"><div class="loading" style="min-height:160px">Loading…</div></div></div>`;
+  let items, reports;
+  try { [items, reports] = await Promise.all([S.listQueue(), S.listReports()]); } catch (e) { $('#queue').innerHTML = `<div class="panel"><p class="err">${esc(errMsg(e))}</p></div>`; return; }
   if (view !== 'review') return;
+  drawReports(reports);
   items.sort((a, b) => (a.queuedAt || 0) - (b.queuedAt || 0));
   const q = $('#queue');
   if (!items.length) { q.innerHTML = '<div class="panel"><p class="empty">Nothing waiting. The scout runs Tuesday mornings.</p></div>'; return; }
@@ -609,6 +654,30 @@ async function viewReview() {
     };
     $('[data-ok]', card).onclick = () => act(S.approveQueued, `${it.name} is on the map`);
     $('[data-no]', card).onclick = () => act(S.rejectQueued, 'Rejected');
+  });
+}
+
+function drawReports(reports) {
+  const box = $('#reports');
+  if (!box) return;
+  if (!reports.length) { box.innerHTML = ''; return; }
+  reports.sort((a, b) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0));
+  box.innerHTML = `<h3 style="font-size:26px">Reports from fans (${reports.length})</h3>` + reports.map(r => `
+    <div class="panel" data-r="${esc(r.id)}" style="display:grid;gap:6px">
+      <div class="row"><b class="grow">${esc(r.spotName || r.spotId)}</b><span class="badge">${esc(r.reason)}</span></div>
+      ${r.note ? `<div style="font-size:14px">“${esc(r.note)}”</div>` : ''}
+      <div class="muted" style="font-size:13px">From ${esc(r.name)}${r.createdAt?.toMillis ? ` · ${timeAgo(r.createdAt.toMillis())}` : ''}</div>
+      <div class="row"><button class="btn sm primary" data-rm>Remove listing</button><button class="btn sm ghost" data-ok>Dismiss</button></div>
+    </div>`).join('');
+  $$('[data-r]', box).forEach(card => {
+    const r = reports.find(x => x.id === card.dataset.r);
+    const act = async (fn, msg) => {
+      $$('button', card).forEach(b => b.disabled = true);
+      try { await fn(r); cache = {}; toast(msg); viewReview(); }
+      catch (e) { toast(errMsg(e)); $$('button', card).forEach(b => b.disabled = false); }
+    };
+    $('[data-rm]', card).onclick = () => confirm(`Remove ${r.spotName} from the map?`) && act(S.removeReportedSpot, 'Listing removed');
+    $('[data-ok]', card).onclick = () => act(x => S.dismissReport(x.id), 'Dismissed');
   });
 }
 

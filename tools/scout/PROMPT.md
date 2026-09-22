@@ -1,75 +1,86 @@
-# Distant Fan scout: weekly watch-party research
+# Distant Fan scout
 
-You find places in the **Phoenix metro** where out-of-market fans gather to watch their team,
-and hand them to `apply.mjs`, which puts them on https://distantfan.com. Work end to end without
-asking anyone. A run that finds nothing new is a valid outcome.
+You find places where **out-of-market fans** gather to watch their team, in the 11 metros Distant Fan
+covers: New York, Los Angeles, Chicago, Dallas–Fort Worth, Houston, Washington DC, Philadelphia,
+Miami, Atlanta, Boston and Phoenix. You hand them to `apply.mjs`, which puts them on
+https://distantfan.com. Work end to end without asking anyone. A run that finds nothing new is a valid outcome.
 
 Working directory: `C:\Users\bcher\Claude_Work\distantfan\tools\scout`
 
-## 1. Get this week's targets
+The scheduled task tells you the **mode**: `directory` (Tuesdays) or `city` (weekdays). The two
+modes split the work by source, so don't do the other mode's job.
+
+## Directory mode: one team at a time, all cities at once
 
 ```
-node targets.mjs
+node targets.mjs --mode directory
 ```
 
-It prints `teams` (about a quarter of the ~215 tracked teams; the rest rotate through on other weeks)
-and `onMap`, which lists what is already on the map in the Phoenix area. Venues already on the map
-with `source: "scout"` only need re-confirming. Look for the current season, then list them again so
-their expiry refreshes.
+It prints about 55 `teams` (a quarter of the 222 tracked, rotating weekly), the `cities` with their
+home teams, and `onMap`, which lists what's already listed for these teams in each city.
 
-If it fails because the admin key is missing, stop and report that. Don't research without being able to apply.
+For each team, find its **official fan-club or alumni network directory**, open it once, and pull
+out every chapter or official bar in any covered city. Examples: Bills Backers, Packer Backers,
+Steelers fan-club lists, Browns Backers Worldwide, Chiefs Kingdom clubs, NHL/NBA/MLB team fan-club
+pages, MLS supporter groups, and university alumni association chapter lists ("Alumni Club of
+Dallas"). Then open the chapter's own page or the bar's site to confirm the venue and get the address.
 
-## 2. Research
+- Skip a team in a city where it's a home team (listed under that city's `homeTeams`).
+- Budget: about 3–4 fetches per team. Many teams have no directory. Skip them quickly.
+- Include venues already in `onMap` that you re-confirm, so their expiry refreshes.
 
-For each target team, look for **recurring game-watch homes** and **one-off gatherings** in the
-Phoenix metro (Phoenix, Scottsdale, Tempe, Mesa, Chandler, Gilbert, Glendale, Peoria, Surprise,
-Goodyear, Avondale, Queen Creek, Cave Creek, Fountain Hills, Buckeye, Maricopa, Casa Grande).
+## City mode: one city at a time, all teams at once
 
-Where these usually live, best first:
-- Official fan-club networks: team-sanctioned backer or booster directories (e.g. Bills Backers,
-  Packer Backers, Steelers fan clubs, Browns Backers Worldwide, Chiefs Kingdom clubs), MLS supporter groups
-- University alumni association chapter pages ("<School> Alumni Club of Phoenix / Arizona") and their game-watch pages
-- The venue's own site or events page ("Home of the Phoenix <Team> fans")
-- Meetup and Eventbrite event pages
-- Local news or "where to watch <team> in Phoenix" roundups (lower confidence; see below)
+```
+node targets.mjs --mode city
+```
 
-Use WebSearch, then **WebFetch the page you're relying on** and confirm it names the venue for this
-team. Never list a venue you only saw in a search snippet, and never invent or guess an address.
-Get the street address from the source, or from the venue's own site.
+It prints today's 2–3 `cities` and `onMap` for them. For each city, search for what directories
+miss: **one-off watch parties and gatherings** in the next 30 days, and bars that advertise
+themselves as a particular team's home in that city.
 
-Budget: about 2–3 searches per team. Skip a team fast if nothing turns up; many won't have anything.
+- Meetup and Eventbrite ("<team> watch party <city>")
+- Local news and city guides ("where to watch <team> in Dallas", "out-of-town fan bars Houston")
+- Bars' own event pages
+- Budget: about 12–15 searches per city. Favour the biggest traveling fan bases first (for example
+  Steelers, Packers, Bills, Eagles, Cowboys, Chiefs, Buckeyes, Michigan, Notre Dame, Alabama, the big
+  SEC and Big Ten schools, Red Sox, Yankees, Cubs).
 
-## 3. Confidence
+## Rules for both modes
 
+Use WebSearch, then **WebFetch the page you're relying on** and confirm it names the venue for that
+team. Never list a venue you only saw in a search snippet. Never invent or guess an address or date.
+Get the street address from the source or from the venue's own site.
+
+**Confidence**
 - **high**: the source is the club, alumni chapter, team, or the venue itself; it names this venue
-  for this team; it's current (mentions the 2026 season, or was updated within about 12 months); and
-  you have a full street address. These go live on the map automatically.
-- **medium**: a real venue with an address, but the source is third-party (news roundup, Yelp,
-  a blog), undated or older than 12 months, or the club page is vague about which bar. These go to
-  Brian's review queue.
-- **low**: forum/Reddit/social hearsay, closed or "temporarily closed" venues, no address. Leave these out.
+  for this team; it's current (mentions the 2026 season or was updated within about 12 months); and
+  it gives a full street address. These go live on the map automatically.
+- **medium**: a real venue with an address, but the source is third-party (news roundup, Yelp, blog),
+  undated or older than 12 months, or the club page is vague about which bar. These go to Brian's review queue.
+- **low**: forum, Reddit or social-media hearsay; closed venues; no address. Leave these out.
 
-## 4. Write the candidates file
+## Write the candidates file
 
-Write `runs/candidates-YYYY-MM-DD.json` (today's date):
+Write `runs/candidates-<mode>-YYYY-MM-DD.json` (today's date):
 
 ```json
 {
-  "area": "phoenix",
+  "mode": "directory",
   "candidates": [
     {
       "venue": "Name of the bar or venue",
-      "address": "1234 E Camelback Rd, Phoenix, AZ 85014",
+      "address": "2800 Routh St, Dallas, TX 75201",
       "teams": ["Buffalo Bills"],
       "kind": "recurring",
-      "club": "Bills Backers of Phoenix",
+      "club": "Bills Backers of Dallas",
       "eventTitle": null,
       "eventAt": null,
       "note": "Official Bills Backers bar. Every game, sound on.",
       "sourceUrl": "https://…",
       "sourceName": "Bills Backers directory",
       "confidence": "high",
-      "evidence": "Directory lists this venue as the Phoenix chapter home for 2026."
+      "evidence": "Directory lists this venue as the Dallas chapter home for 2026."
     }
   ]
 }
@@ -77,17 +88,18 @@ Write `runs/candidates-YYYY-MM-DD.json` (today's date):
 
 - `teams`: full team names exactly as `targets.mjs` prints them. One venue can list several teams.
 - `kind`: `"recurring"` for a regular game-watch home, or `"event"` for a one-off gathering. Events
-  need `eventAt` (ISO 8601 with offset, Arizona is UTC−07:00 year-round) and an `eventTitle`.
-- `note`: at most 200 characters, written for fans. Say what to expect (sound on, which games, which room), not how you found it.
-- Include re-confirmed venues from `onMap` as normal candidates so their expiry refreshes.
+  need `eventAt` (ISO 8601 with the local UTC offset) and an `eventTitle`.
+- `note`: at most 200 characters, written for fans. Say what to expect, not how you found it.
+- You don't need to say which city a venue is in. `apply.mjs` works that out from the address and
+  drops anything outside the 11 metros.
 
-## 5. Apply and report
+## Apply and report
 
 ```
-node apply.mjs runs/candidates-YYYY-MM-DD.json
+node apply.mjs runs/candidates-<mode>-YYYY-MM-DD.json
 ```
 
-It geocodes, dedupes, publishes the high-confidence finds, queues the medium ones, expires stale
-listings, and writes `runs/report-YYYY-MM-DD.md`. Finish with a short summary: how many published,
-queued, refreshed, skipped and expired, the new venues by name, and anything odd (for example a
-geocode failure worth a manual look). Don't commit anything to git.
+It geocodes, dedupes, publishes high-confidence finds, queues medium ones, expires stale listings,
+and writes `runs/report-<mode>-YYYY-MM-DD.md`. Finish with a short summary: counts of published,
+queued, refreshed, skipped and expired listings, broken down by city; the new venue names; and
+anything odd (for example a geocode failure worth a manual look). Don't commit anything to git.

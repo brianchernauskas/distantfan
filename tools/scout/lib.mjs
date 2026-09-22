@@ -5,15 +5,45 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { TEAMS } from '../../assets/js/teams.js';
 
+// Covered metros: the 10 largest US metros plus Phoenix. homeTeams are skipped in that city only,
+// since their fans aren't out-of-market there (a Cowboys bar in Phoenix still counts).
 export const AREAS = {
-  phoenix: {
-    label: 'Phoenix',
-    center: { lat: 33.45, lng: -112.07 },
-    radiusKm: 100,
-    // Home-market teams: their fans aren't out-of-market here, so the scout skips them.
-    homeTeams: ['nfl-ari', 'nba-phx', 'mlb-ari', 'cfb-9', 'cfb-12'],
-  },
+  nyc: { label: 'New York', center: { lat: 40.73, lng: -73.99 }, radiusKm: 70,
+    homeTeams: ['nfl-nyg', 'nfl-nyj', 'nba-ny', 'nba-bkn', 'mlb-nyy', 'mlb-nym', 'nhl-nyr', 'nhl-nyi', 'nhl-nj', 'mls-nyc', 'mls-rbny', 'cfb-164'] },
+  la: { label: 'Los Angeles', center: { lat: 34.05, lng: -118.24 }, radiusKm: 90,
+    homeTeams: ['nfl-lar', 'nfl-lac', 'nba-lal', 'nba-lac', 'mlb-lad', 'mlb-laa', 'nhl-la', 'nhl-ana', 'mls-lafc', 'mls-la', 'cfb-30', 'cfb-26'] },
+  chi: { label: 'Chicago', center: { lat: 41.88, lng: -87.63 }, radiusKm: 70,
+    homeTeams: ['nfl-chi', 'nba-chi', 'mlb-chc', 'mlb-chw', 'nhl-chi', 'mls-chi', 'cfb-77'] },
+  dfw: { label: 'Dallas–Fort Worth', center: { lat: 32.84, lng: -97.05 }, radiusKm: 90,
+    homeTeams: ['nfl-dal', 'nba-dal', 'mlb-tex', 'nhl-dal', 'mls-dal', 'cfb-2628', 'cfb-2567'] },
+  hou: { label: 'Houston', center: { lat: 29.76, lng: -95.37 }, radiusKm: 80,
+    homeTeams: ['nfl-hou', 'nba-hou', 'mlb-hou', 'mls-hou', 'cfb-248'] },
+  dc: { label: 'Washington DC', center: { lat: 38.91, lng: -77.04 }, radiusKm: 70,
+    homeTeams: ['nfl-wsh', 'nba-wsh', 'mlb-wsh', 'nhl-wsh', 'mls-dc', 'cfb-120'] },
+  phl: { label: 'Philadelphia', center: { lat: 39.95, lng: -75.17 }, radiusKm: 60,
+    homeTeams: ['nfl-phi', 'nba-phi', 'mlb-phi', 'nhl-phi', 'mls-phi'] },
+  mia: { label: 'Miami', center: { lat: 26.0, lng: -80.2 }, radiusKm: 90,
+    homeTeams: ['nfl-mia', 'nba-mia', 'mlb-mia', 'nhl-fla', 'mls-mia', 'cfb-2390'] },
+  atl: { label: 'Atlanta', center: { lat: 33.75, lng: -84.39 }, radiusKm: 70,
+    homeTeams: ['nfl-atl', 'nba-atl', 'mlb-atl', 'mls-atl', 'cfb-59'] },
+  bos: { label: 'Boston', center: { lat: 42.36, lng: -71.06 }, radiusKm: 60,
+    homeTeams: ['nfl-ne', 'nba-bos', 'mlb-bos', 'nhl-bos', 'mls-ne', 'cfb-103'] },
+  phx: { label: 'Phoenix', center: { lat: 33.45, lng: -112.07 }, radiusKm: 100,
+    homeTeams: ['nfl-ari', 'nba-phx', 'mlb-ari', 'cfb-9', 'cfb-12'] },
 };
+
+// City sweep: which metros each weekday covers (Mon..Fri), so every city is searched weekly.
+export const CITY_DAYS = [['nyc', 'la', 'chi'], ['dfw', 'hou'], ['dc', 'phl'], ['mia', 'atl'], ['bos', 'phx']];
+
+// The covered metro a point falls in, or null.
+export function areaFor(pt) {
+  let best = null, bestD = Infinity;
+  for (const [key, a] of Object.entries(AREAS)) {
+    const d = km(a.center, pt);
+    if (d <= a.radiusKm && d < bestD) { best = key; bestD = d; }
+  }
+  return best;
+}
 
 export const SPOT_TTL_DAYS = 60;   // a recurring spot drops off unless re-confirmed within this window
 export const ROTATION = 4;         // teams are split into 4 buckets; one bucket per week
@@ -22,9 +52,9 @@ const P4 = JSON.parse(fs.readFileSync(new URL('./p4-ids.json', import.meta.url))
 const P4_IDS = new Set(Object.values(P4).flat().map(id => `cfb-${id}`));
 const CONF = Object.fromEntries(Object.entries(P4).flatMap(([c, ids]) => ids.map(id => [`cfb-${id}`, c])));
 
-export function scoutTeams(area) {
-  const skip = new Set(AREAS[area].homeTeams);
-  return TEAMS.filter(t => (t.lg !== 'cfb' || P4_IDS.has(t.id)) && !skip.has(t.id))
+// Every tracked team: all pro teams plus Power 4 football and Notre Dame. Home teams are excluded per city in apply.mjs.
+export function scoutTeams() {
+  return TEAMS.filter(t => t.lg !== 'cfb' || P4_IDS.has(t.id))
     .map(t => ({ id: t.id, name: t.name, league: t.lg, conference: CONF[t.id] }));
 }
 
@@ -47,7 +77,7 @@ export function resolveTeam(s) {
   return short.length === 1 ? short[0] : null;
 }
 
-export const norm = s => String(s || '').toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g, '')
+export const norm = s => String(s || '').toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g, '')
   .replace(/&/g, ' and ').replace(/['’]/g, '').replace(/[^a-z0-9]+/g, ' ').replace(/\b(the|bar|and|grill|pub|tavern|restaurant)\b/g, ' ').replace(/\s+/g, ' ').trim();
 
 export function venueKey(venue, address) {

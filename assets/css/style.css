@@ -218,6 +218,8 @@ main.view { min-height: 0; }
 .leaflet-popup-content p { margin: 0 0 8px; color: var(--muted); }
 .leaflet-container a.leaflet-popup-close-button { color: var(--muted); }
 .adding #map { cursor: crosshair; }
+/* While placing a spot, taps go through markers and circles to the map itself. */
+.adding .leaflet-interactive, .adding .leaflet-marker-icon { pointer-events: none !important; }
 .map-hint { position: absolute; z-index: 500; left: 50%; top: 14px; transform: translateX(-50%); background: var(--text); color: var(--bg); padding: 8px 14px; border-radius: 999px; font-size: 14px; font-weight: 600; box-shadow: var(--shadow); }
 
 /* games + chat + profile views */

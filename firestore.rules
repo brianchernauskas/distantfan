@@ -27,9 +27,10 @@ service cloud.firestore {
     match /spots/{id} {
       allow read: if signedIn();
       allow create: if signedIn()
-        && data().keys().hasOnly(['name', 'address', 'note', 'lat', 'lng', 'teams', 'by', 'byName', 'createdAt'])
+        && data().keys().hasOnly(['name', 'address', 'club', 'note', 'lat', 'lng', 'teams', 'by', 'byName', 'createdAt'])
         && data().by == me()
         && str(data().name, 1, 80) && str(data().address, 0, 120) && str(data().note, 0, 200) && str(data().byName, 0, 40)
+        && str(data().get('club', ''), 0, 80)
         && data().lat is number && data().lat >= -90 && data().lat <= 90
         && data().lng is number && data().lng >= -180 && data().lng <= 180
         && data().teams is list && data().teams.size() >= 1 && data().teams.size() <= 6
@@ -42,6 +43,17 @@ service cloud.firestore {
     // Watch-party scout (tools/scout). Its admin key bypasses these rules; the admin reviews in the app.
     match /scoutQueue/{id} { allow read, write: if isAdmin(); }
     match /scoutRejects/{id} { allow read, write: if isAdmin(); }
+
+    // "Still accurate?" reports from fans. One per fan per spot; only the admin reads them.
+    match /spotReports/{id} {
+      allow create, update: if signedIn()
+        && data().uid == me() && id == data().spotId + '_' + me()
+        && data().keys().hasOnly(['spotId', 'spotName', 'uid', 'name', 'reason', 'note', 'createdAt'])
+        && str(data().spotId, 1, 80) && str(data().spotName, 0, 80) && str(data().name, 1, 40)
+        && str(data().reason, 1, 40) && str(data().note, 0, 300)
+        && data().createdAt == request.time;
+      allow read, delete: if isAdmin();
+    }
 
     // One active check-in per fan per team; the doc id is `${uid}_${teamId}`.
     match /checkins/{id} {

@@ -1,9 +1,9 @@
 // Data layer. Uses Firebase (Auth + Firestore) when FIREBASE_CONFIG is set,
 // otherwise a demo store in localStorage seeded with clearly fake fans and spots.
-import { FIREBASE_CONFIG, SITE } from './config.js?v=202609220909';
-import { TEAMS, TEAM_BY_ID } from './teams.js?v=202609220909';
-import { METROS } from './metros.js?v=202609220909';
-import { encode, center } from './geo.js?v=202609220909';
+import { FIREBASE_CONFIG, SITE } from './config.js?v=202609220946';
+import { TEAMS, TEAM_BY_ID } from './teams.js?v=202609220946';
+import { METROS } from './metros.js?v=202609220946';
+import { encode, center } from './geo.js?v=202609220946';
 
 export const mode = FIREBASE_CONFIG ? 'firebase' : 'demo';
 let impl;
@@ -36,6 +36,10 @@ export const deleteMessage = call('deleteMessage');
 export const listQueue = call('listQueue');
 export const approveQueued = call('approveQueued');
 export const rejectQueued = call('rejectQueued');
+export const reportSpot = call('reportSpot');
+export const listReports = call('listReports');
+export const removeReportedSpot = call('removeReportedSpot');
+export const dismissReport = call('dismissReport');
 
 const clean = (s, max) => String(s || '').replace(/\s+/g, ' ').trim().slice(0, max);
 const active = c => (c.expiresAt || 0) > Date.now();
@@ -88,7 +92,7 @@ async function firebaseStore() {
       .then(r => r.map(({ id, ...p }) => ({ uid: id, ...p }))),
     spotsFor: teamId => list(F.query(F.collection(db, 'spots'), F.where('teams', 'array-contains', teamId), F.limit(500))),
     addSpot: s => F.addDoc(F.collection(db, 'spots'), {
-      name: clean(s.name, 80), address: clean(s.address, 120), note: clean(s.note, 200),
+      name: clean(s.name, 80), address: clean(s.address, 120), club: clean(s.club, 80), note: clean(s.note, 200),
       lat: +s.lat, lng: +s.lng, teams: s.teams.slice(0, 6),
       by: me.uid, byName: clean(s.byName, 40), createdAt: F.serverTimestamp(),
     }),
@@ -130,6 +134,23 @@ async function firebaseStore() {
       b.delete(F.doc(db, 'scoutQueue', q.id));
       await b.commit();
     },
+
+    // Fan reports on a listing. One per fan per spot; only the admin can read them.
+    reportSpot: r => F.setDoc(F.doc(db, 'spotReports', `${r.spotId}_${me.uid}`), {
+      spotId: r.spotId, spotName: clean(r.spotName, 80), uid: me.uid, name: clean(r.name, 40),
+      reason: clean(r.reason, 40), note: clean(r.note, 300), createdAt: F.serverTimestamp(),
+    }),
+    listReports: () => list(F.query(F.collection(db, 'spotReports'), F.limit(200))),
+    async removeReportedSpot(r) {
+      const all = await list(F.query(F.collection(db, 'spotReports'), F.where('spotId', '==', r.spotId)));
+      const b = F.writeBatch(db);
+      all.forEach(x => b.delete(F.doc(db, 'spotReports', x.id)));
+      b.delete(F.doc(db, 'spots', r.spotId));
+      // Stop the scout re-adding a listing a fan says is wrong.
+      if (r.spotId.startsWith('scout_')) b.set(F.doc(db, 'scoutRejects', r.spotId.slice(6)), { name: r.spotName || '', reason: r.reason, rejectedAt: F.serverTimestamp() });
+      await b.commit();
+    },
+    dismissReport: id => F.deleteDoc(F.doc(db, 'spotReports', id)),
   };
 }
 
@@ -223,6 +244,10 @@ function demoStore() {
       state.rooms[id] = state.rooms[id].slice(-100); save(); emitRoom(id);
     },
     async listQueue() { return []; },
+    async reportSpot() {},
+    async listReports() { return []; },
+    async removeReportedSpot() {},
+    async dismissReport() {},
     async approveQueued() {},
     async rejectQueued() {},
     async deleteMessage(id, mid) { state.rooms[id] = (state.rooms[id] || []).filter(m => m.id !== mid); save(); emitRoom(id); },
