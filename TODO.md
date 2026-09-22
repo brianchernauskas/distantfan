@@ -14,10 +14,14 @@ When picking up this file cold, work top to bottom unless told otherwise.
       anonymity (3mi cells can point at a specific neighborhood), accepted deliberately after
       discussion — see the README note if it ever needs revisiting. Also required updating
       `firestore.rules` (the enforced storage-precision ceiling) alongside `config.js`.
-- [ ] **Reopen the app to local (non-away) teams**, e.g. "find a spot to watch my team when they're
-      on the road, or when I'm not going to the game." This changes the core query from
-      "out-of-market fans only" to something broader — worth deciding the UX distinction between
-      "away fan" and "local fan looking for a bar" before building.
+- [x] **Reopen the app to local (non-away) teams.** Turned out to be a positioning problem, not a
+      code one: nothing in `store.js`/`app.js`/`firestore.rules` ever restricted team selection to
+      out-of-market fans — anyone could already follow their local team. The landing page copy
+      (`index.html`) was the only thing saying otherwise ("For out-of-market fans," "You moved
+      away"). Broadened the eyebrow tag, meta description, and added an explicit line for locals
+      ("find a bar for the away games, or for when you just don't feel like fighting stadium
+      traffic"). Also fixed two stale "25 miles" / "40 miles" copy references left over from item 1's
+      3-mile/10-mile change.
 
 ## Phase 2 — Content & coverage
 
