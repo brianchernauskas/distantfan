@@ -9,12 +9,19 @@
 <meta property="og:description" content="Find fellow fans of your team near you, the bar that shows your game, and a room full of people who get it.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://distantfan.com/">
+<meta property="og:image" content="https://distantfan.com/assets/img/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Distant Fan: your team, wherever you are">
+<meta name="twitter:description" content="Find fellow fans of your team near you, the bar that shows your game, and a room full of people who get it.">
+<meta name="twitter:image" content="https://distantfan.com/assets/img/og.png">
 <meta name="theme-color" content="#0b1016">
 <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/css/style.css?v=202609221452">
+<link rel="stylesheet" href="assets/css/style.css?v=202609221504">
 </head>
 <body>
 
@@ -151,21 +158,28 @@
 
 <section class="block" id="own-a-bar" style="padding-bottom:0">
   <div class="wrap">
-    <div class="panel" style="padding:28px">
-      <div style="max-width:520px">
-        <span class="eyebrow">Bar &amp; restaurant owners</span>
-        <h2 style="font-size:40px;margin-top:10px">Want your bar on the map?</h2>
-        <p class="muted" style="margin-top:10px">Show the away-game crowd where to go. Leave a few details below and I'll reach out — no account needed.</p>
+    <div class="panel lead-panel">
+      <div class="lead-grid">
+        <div class="lead-pitch">
+          <span class="eyebrow">Bar &amp; restaurant owners</span>
+          <h2 style="font-size:40px;margin-top:10px">Want your bar on the map?</h2>
+          <p class="muted" style="margin-top:10px">Show the away-game crowd where to go. Leave a few details and I'll reach out — no account needed.</p>
+          <ul class="lead-perks">
+            <li>Free listing, no strings attached</li>
+            <li>More foot traffic on game day</li>
+            <li>Update or remove it anytime</li>
+          </ul>
+        </div>
+        <form id="leadForm">
+          <label class="field">Bar or restaurant name<input class="input" name="venue" maxlength="80" placeholder="The Brass Tap" required></label>
+          <label class="field">Address <span class="hint">optional</span><input class="input" name="address" maxlength="120" placeholder="123 Main St, Phoenix, AZ"></label>
+          <label class="field">Your email or phone<input class="input" name="contact" maxlength="120" placeholder="you@example.com" required></label>
+          <label class="field">Anything else? <span class="hint">optional</span><textarea class="input" name="note" maxlength="400" rows="3" placeholder="Which teams do you show? Any backers clubs that meet there?"></textarea></label>
+          <input type="text" name="company" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0" aria-hidden="true">
+          <div><button class="btn primary" type="submit">Send</button></div>
+          <p id="leadMsg" class="fine" style="margin-top:0"></p>
+        </form>
       </div>
-      <form id="leadForm" style="display:grid;gap:14px;margin-top:22px;max-width:480px">
-        <label class="field">Bar or restaurant name<input class="input" name="venue" maxlength="80" placeholder="The Brass Tap" required></label>
-        <label class="field">Address <span class="hint">optional</span><input class="input" name="address" maxlength="120" placeholder="123 Main St, Phoenix, AZ"></label>
-        <label class="field">Your email or phone<input class="input" name="contact" maxlength="120" placeholder="you@example.com" required></label>
-        <label class="field">Anything else? <span class="hint">optional</span><textarea class="input" name="note" maxlength="400" rows="3" placeholder="Which teams do you show? Any backers clubs that meet there?"></textarea></label>
-        <input type="text" name="company" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0" aria-hidden="true">
-        <div><button class="btn primary" type="submit">Send</button></div>
-        <p id="leadMsg" class="fine" style="margin-top:0"></p>
-      </form>
     </div>
   </div>
 </section>
@@ -186,8 +200,8 @@
 </footer>
 
 <script type="module">
-  import { TEAMS } from './assets/js/teams.js?v=202609221452';
-  import { FIREBASE_CONFIG } from './assets/js/config.js?v=202609221452';
+  import { TEAMS } from './assets/js/teams.js?v=202609221504';
+  import { FIREBASE_CONFIG } from './assets/js/config.js?v=202609221504';
   document.getElementById('yr').textContent = new Date().getFullYear();
 
   // Logo marquee: a shuffled mix of pro teams, doubled so the loop is seamless.

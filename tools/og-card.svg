@@ -1,0 +1,58 @@
+<!-- Source for ../assets/img/og.png (social share preview). Regenerate after an edit with:
+     npx --yes sharp-cli -i tools/og-card.svg -o assets/img/og.png resize 1200 630
+     Uses web-safe fonts, not Barlow Condensed/Inter -- sharp's SVG renderer (librsvg) can't load
+     Google Fonts. Close enough for a small share-preview thumbnail. -->
+<svg width="1200" height="630" viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="glow1" cx="92%" cy="6%" r="55%">
+      <stop offset="0%" stop-color="#df5a0b" stop-opacity=".26"/>
+      <stop offset="70%" stop-color="#df5a0b" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glow2" cx="4%" cy="100%" r="55%">
+      <stop offset="0%" stop-color="#df5a0b" stop-opacity=".14"/>
+      <stop offset="70%" stop-color="#df5a0b" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="630" fill="#f5f3ee"/>
+  <rect width="1200" height="630" fill="url(#glow1)"/>
+  <rect width="1200" height="630" fill="url(#glow2)"/>
+
+  <!-- scattered dots, right side -->
+  <g fill="#df5a0b">
+    <circle cx="820" cy="70" r="5" opacity=".18"/><circle cx="880" cy="120" r="7" opacity=".32"/>
+    <circle cx="960" cy="60" r="4" opacity=".22"/><circle cx="1020" cy="140" r="6" opacity=".28"/>
+    <circle cx="1090" cy="90" r="5" opacity=".2"/><circle cx="1140" cy="180" r="8" opacity=".35"/>
+    <circle cx="860" cy="220" r="6" opacity=".26"/><circle cx="940" cy="260" r="4" opacity=".18"/>
+    <circle cx="1010" cy="300" r="7" opacity=".3"/><circle cx="1080" cy="250" r="5" opacity=".22"/>
+    <circle cx="1150" cy="330" r="6" opacity=".26"/><circle cx="900" cy="360" r="5" opacity=".2"/>
+    <circle cx="970" cy="410" r="8" opacity=".32"/><circle cx="1040" cy="380" r="4" opacity=".18"/>
+    <circle cx="1110" cy="450" r="6" opacity=".26"/><circle cx="830" cy="450" r="5" opacity=".2"/>
+    <circle cx="1160" cy="500" r="7" opacity=".28"/><circle cx="960" cy="530" r="5" opacity=".22"/>
+    <circle cx="1030" cy="560" r="6" opacity=".24"/><circle cx="1100" cy="580" r="4" opacity=".18"/>
+    <circle cx="870" cy="560" r="6" opacity=".24"/><circle cx="790" cy="180" r="4" opacity=".16"/>
+    <circle cx="750" cy="340" r="5" opacity=".18"/><circle cx="780" cy="500" r="4" opacity=".15"/>
+  </g>
+
+  <!-- brand mark -->
+  <g transform="translate(78,52)">
+    <circle cx="8" cy="32" r="4.5" fill="#121820" opacity=".35"/>
+    <path d="M12 29C15 20 19 17 23.5 17.5" fill="none" stroke="#121820" stroke-width="2.6" stroke-linecap="round" stroke-dasharray=".5 5" opacity=".55"/>
+    <path d="M29 3.5a8.5 8.5 0 0 0-8.5 8.5c0 6.4 8.5 15 8.5 15s8.5-8.6 8.5-15A8.5 8.5 0 0 0 29 3.5z" fill="#df5a0b"/>
+    <circle cx="29" cy="12" r="3.2" fill="#f5f3ee"/>
+    <text x="48" y="27" font-family="Arial Narrow, Arial, sans-serif" font-weight="800" font-size="30" letter-spacing="0.5" fill="#121820">DISTANT<tspan fill="#df5a0b">FAN</tspan></text>
+  </g>
+
+  <!-- eyebrow -->
+  <g transform="translate(78,150)">
+    <line x1="0" y1="0" x2="26" y2="0" stroke="#df5a0b" stroke-width="2"/>
+    <text x="36" y="5" font-family="Arial, sans-serif" font-weight="700" font-size="17" letter-spacing="2.4" fill="#df5a0b">FOR FANS NEAR OR FAR</text>
+  </g>
+
+  <!-- headline -->
+  <text x="76" y="278" font-family="Arial Narrow, Arial, sans-serif" font-weight="800" font-size="108" letter-spacing="0" fill="#121820">YOUR TEAM.</text>
+  <text x="76" y="378" font-family="Arial Narrow, Arial, sans-serif" font-weight="800" font-size="108" fill="#121820"><tspan fill="#df5a0b">WHEREVER</tspan> YOU ARE.</text>
+
+  <!-- subtext -->
+  <text x="78" y="432" font-family="Arial, sans-serif" font-weight="500" font-size="27" fill="#5a6572">Find fellow fans nearby, the bar that shows your game, and</text>
+  <text x="78" y="468" font-family="Arial, sans-serif" font-weight="500" font-size="27" fill="#5a6572">a room full of people who get it.</text>
+</svg>
