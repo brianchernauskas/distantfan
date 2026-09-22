@@ -25,12 +25,23 @@ No build step. Serve the folder as static files.
 
 ## Privacy model
 
-- A fan's home is a geohash of **4 characters** (a cell about 39 × 20 km). Browser geolocation
-  is rounded on the device and the coordinates are thrown away. Metro picks use the metro centre.
-- `firestore.rules` rejects any `cell` longer than 4 characters, so a street-level location can't
+Distant Fan's whole pitch is "there are 23 Chiefs fans near you" without ever telling anyone,
+including us, exactly where "you" live. Fans meeting up around games and bars is exactly the
+kind of context where a precise home location is easy to misuse (stalking, unwanted contact), so
+the location a fan sets is deliberately much coarser than what their device actually knows.
+
+- A fan's home is a geohash of **5 characters** (a cell about 4.9 × 4.9 km, roughly 3 miles
+  across). Browser geolocation is rounded on the device and the coordinates are thrown away.
+  Metro picks use the metro centre.
+- `firestore.rules` rejects any `cell` longer than 5 characters, so a street-level location can't
   be stored even by a modified client.
 - The map draws fan circles at cell centres. It never draws a pin for a person.
 - Watch spots are public places and do keep exact coordinates.
+- The 3-mile grain was chosen over a coarser one (previously ~25 miles) to make the "near you"
+  surfacing more locally useful, especially in sprawling metros. That's a real tradeoff against
+  anonymity — a 3-mile cell can point at a specific neighborhood rather than just "the Phoenix
+  area" — accepted deliberately rather than by default. If that tradeoff ever needs revisiting,
+  it's `homePrecision` in `assets/js/config.js` (plus the matching limit in `firestore.rules`).
 
 ## Going live with Firebase
 

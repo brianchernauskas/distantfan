@@ -9,7 +9,7 @@ const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const root = $('#root');
-const NEAR_KM = 80;
+const NEAR_KM = 16; // ~10 miles
 const isAdmin = () => !!user && ADMINS.includes(user.uid);
 
 let user = null, profile = null, teamId = null, view = 'map';
@@ -155,7 +155,7 @@ function renderOnboarding(editing = false) {
   };
 
   const stepArea = () => `
-    <div><h2>Where do you live now?</h2><p class="muted" style="margin-top:6px">We only keep a rough area, a grid square about 25 miles across. Your exact location never leaves this device.</p></div>
+    <div><h2>Where do you live now?</h2><p class="muted" style="margin-top:6px">We only keep a rough area, a grid square about 3 miles across. Your exact location never leaves this device.</p></div>
     <div class="panel" style="display:grid;gap:14px">
       <button class="btn primary" id="locate">📍 Use my location</button>
       <div class="divider">or pick the nearest metro</div>

@@ -15,9 +15,9 @@ export const SITE = {
   name: 'Distant Fan',
   tagline: 'Your team. Wherever you are.',
   maxTeams: 8,
-  // Geohash precision stored for a fan's home area. 4 ≈ 39 × 20 km. Firestore
+  // Geohash precision stored for a fan's home area. 5 ≈ 4.9 × 4.9 km (~3 mi). Firestore
   // rules reject anything more precise, so a street-level location can never be saved.
-  homePrecision: 4,
+  homePrecision: 5,
   // Local chat rooms group fans by a precision-3 cell (≈ 156 × 156 km).
   roomPrecision: 3,
 };

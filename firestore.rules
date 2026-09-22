@@ -9,7 +9,7 @@ service cloud.firestore {
     // Must match ADMINS in assets/js/config.js.
     function isAdmin() { return signedIn() && request.auth.uid in ['euJIvUd4sig4pGT4fE7SPSpE6lA3']; }
 
-    // Public fan profile. Home is a geohash of at most 4 characters (~39 × 20 km);
+    // Public fan profile. Home is a geohash of at most 5 characters (~4.9 × 4.9 km, ~3 mi);
     // anything more precise is rejected, so a street-level location can never be stored.
     match /profiles/{uid} {
       allow read: if signedIn();
@@ -17,7 +17,7 @@ service cloud.firestore {
         && data().keys().hasOnly(['name', 'teams', 'cell', 'area', 'updatedAt'])
         && str(data().name, 1, 40)
         && data().teams is list && data().teams.size() >= 1 && data().teams.size() <= 8
-        && str(data().cell, 1, 4) && data().cell.matches('^[0-9b-hjkmnp-z]+$')
+        && str(data().cell, 1, 5) && data().cell.matches('^[0-9b-hjkmnp-z]+$')
         && str(data().area, 0, 60)
         && data().updatedAt == request.time;
       allow delete: if signedIn() && me() == uid;
