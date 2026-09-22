@@ -40,7 +40,13 @@ When picking up this file cold, work top to bottom unless told otherwise.
       added to the site.
 - [ ] Broader push to get more venues/sites added generally (likely follows from the contact form
       above, plus manual outreach).
-- [ ] Add college basketball to the sports mix (worth timing before March Madness).
+- [x] Add college basketball to the sports mix. Scoped to the same ~68 Power 4 schools already
+      tracked for college football rather than all 362 D-I teams (`tools/cbb-ids.json`, reusing
+      `tools/scout/p4-ids.json`) -- app architecture was already generic enough (LEAGUES/TEAMS-driven
+      tabs, PATH-driven ESPN schedule fetch) that no app.js/store.js changes were needed, just data
+      generation + a schedule endpoint entry. The venue scout now covers cbb too. Known gap: Big
+      East (UConn, Villanova, etc.) is basketball-only and not covered -- worth a follow-up if it
+      matters before March Madness.
 
 ## Phase 3 — Design & monetization
 
