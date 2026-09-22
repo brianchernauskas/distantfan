@@ -14,7 +14,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/css/style.css?v=202609221424">
+<link rel="stylesheet" href="assets/css/style.css?v=202609221432">
 </head>
 <body>
 
@@ -149,6 +149,27 @@
   </div>
 </section>
 
+<section class="block" id="own-a-bar" style="padding-bottom:0">
+  <div class="wrap">
+    <div class="panel" style="padding:28px">
+      <div style="max-width:520px">
+        <span class="eyebrow">Bar &amp; restaurant owners</span>
+        <h2 style="font-size:40px;margin-top:10px">Want your bar on the map?</h2>
+        <p class="muted" style="margin-top:10px">Show the away-game crowd where to go. Leave a few details below and I'll reach out — no account needed.</p>
+      </div>
+      <form id="leadForm" style="display:grid;gap:14px;margin-top:22px;max-width:480px">
+        <label class="field">Bar or restaurant name<input class="input" name="venue" maxlength="80" placeholder="The Brass Tap" required></label>
+        <label class="field">Address <span class="hint">optional</span><input class="input" name="address" maxlength="120" placeholder="123 Main St, Phoenix, AZ"></label>
+        <label class="field">Your email or phone<input class="input" name="contact" maxlength="120" placeholder="you@example.com" required></label>
+        <label class="field">Anything else? <span class="hint">optional</span><textarea class="input" name="note" maxlength="400" rows="3" placeholder="Which teams do you show? Any backers clubs that meet there?"></textarea></label>
+        <input type="text" name="company" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0" aria-hidden="true">
+        <div><button class="btn primary" type="submit">Send</button></div>
+        <p id="leadMsg" class="fine" style="margin-top:0"></p>
+      </form>
+    </div>
+  </div>
+</section>
+
 <section class="cta-band">
   <div class="wrap">
     <h2>Stop watching alone</h2>
@@ -165,7 +186,8 @@
 </footer>
 
 <script type="module">
-  import { TEAMS } from './assets/js/teams.js?v=202609221424';
+  import { TEAMS } from './assets/js/teams.js?v=202609221432';
+  import { FIREBASE_CONFIG } from './assets/js/config.js?v=202609221432';
   document.getElementById('yr').textContent = new Date().getFullYear();
 
   // Logo marquee: a shuffled mix of pro teams, doubled so the loop is seamless.
@@ -186,6 +208,41 @@
     ${[26, 52, 80].map(rr => `<circle cx="${W / 2}" cy="${H / 2}" r="${rr}" fill="none" stroke="currentColor" stroke-opacity=".12" stroke-dasharray="3 4"/>`).join('')}
     ${pts.join('')}
     <circle cx="${W / 2}" cy="${H / 2}" r="12" fill="var(--accent)" opacity=".25"/><circle cx="${W / 2}" cy="${H / 2}" r="6" fill="var(--accent)" stroke="#fff" stroke-width="2"/></svg>`;
+
+  // Bar-owner lead form: writes straight to Firestore via the REST API (no auth, no SDK
+  // needed for one small write) so this stays a plain landing-page form.
+  const leadForm = document.getElementById('leadForm');
+  if (leadForm && FIREBASE_CONFIG) leadForm.addEventListener('submit', async e => {
+    e.preventDefault();
+    const msg = document.getElementById('leadMsg');
+    const fd = new FormData(leadForm);
+    if (fd.get('company')) return; // honeypot: real visitors never fill this hidden field
+    const venue = fd.get('venue').trim(), contact = fd.get('contact').trim();
+    if (!venue || !contact) { msg.textContent = 'A bar name and a way to reach you are both required.'; return; }
+    const btn = leadForm.querySelector('button');
+    btn.disabled = true;
+    msg.textContent = '';
+    const str = v => ({ stringValue: v });
+    try {
+      const res = await fetch(`https://firestore.googleapis.com/v1/projects/${FIREBASE_CONFIG.projectId}/databases/(default)/documents/venueLeads`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fields: {
+          venue: str(venue.slice(0, 80)),
+          address: str((fd.get('address') || '').trim().slice(0, 120)),
+          contact: str(contact.slice(0, 120)),
+          note: str((fd.get('note') || '').trim().slice(0, 400)),
+          createdAt: str(new Date().toISOString()),
+        } }),
+      });
+      if (!res.ok) throw new Error();
+      leadForm.hidden = true;
+      leadForm.insertAdjacentHTML('afterend', '<p class="muted">Thanks — I\'ll be in touch.</p>');
+    } catch {
+      msg.textContent = "That didn't go through. Mind trying again in a minute?";
+      btn.disabled = false;
+    }
+  });
 </script>
 </body>
 </html>

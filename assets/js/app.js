@@ -1,9 +1,9 @@
-import * as S from './store.js?v=202609221424';
-import { SITE, ADMINS } from './config.js?v=202609221424';
-import { TEAMS, TEAM_BY_ID, LEAGUES } from './teams.js?v=202609221424';
-import { METROS } from './metros.js?v=202609221424';
-import { encode, center, bounds, areaLabel, km } from './geo.js?v=202609221424';
-import { nextGames } from './schedule.js?v=202609221424';
+import * as S from './store.js?v=202609221432';
+import { SITE, ADMINS } from './config.js?v=202609221432';
+import { TEAMS, TEAM_BY_ID, LEAGUES } from './teams.js?v=202609221432';
+import { METROS } from './metros.js?v=202609221432';
+import { encode, center, bounds, areaLabel, km } from './geo.js?v=202609221432';
+import { nextGames } from './schedule.js?v=202609221432';
 
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -659,10 +659,11 @@ function timeAgo(ms) {
 /* ----------------------------------------------------------------- review */
 async function viewReview() {
   const v = $('#view');
-  v.innerHTML = `<div class="page"><h2>Review</h2><div id="reports" style="display:grid;gap:14px"></div><h3 style="font-size:26px;margin-top:10px">Scout finds</h3><p class="muted">Finds the weekly scout wasn't sure enough about to publish on its own. Approve puts them on the map; reject stops the scout suggesting them again.</p><div id="queue" style="display:grid;gap:14px"><div class="loading" style="min-height:160px">Loading…</div></div></div>`;
-  let items, reports;
-  try { [items, reports] = await Promise.all([S.listQueue(), S.listReports()]); } catch (e) { $('#queue').innerHTML = `<div class="panel"><p class="err">${esc(errMsg(e))}</p></div>`; return; }
+  v.innerHTML = `<div class="page"><h2>Review</h2><div id="leads" style="display:grid;gap:14px"></div><div id="reports" style="display:grid;gap:14px"></div><h3 style="font-size:26px;margin-top:10px">Scout finds</h3><p class="muted">Finds the weekly scout wasn't sure enough about to publish on its own. Approve puts them on the map; reject stops the scout suggesting them again.</p><div id="queue" style="display:grid;gap:14px"><div class="loading" style="min-height:160px">Loading…</div></div></div>`;
+  let items, reports, leads;
+  try { [items, reports, leads] = await Promise.all([S.listQueue(), S.listReports(), S.listVenueLeads()]); } catch (e) { $('#queue').innerHTML = `<div class="panel"><p class="err">${esc(errMsg(e))}</p></div>`; return; }
   if (view !== 'review') return;
+  drawLeads(leads);
   drawReports(reports);
   items.sort((a, b) => (a.queuedAt || 0) - (b.queuedAt || 0));
   const q = $('#queue');
@@ -685,6 +686,30 @@ async function viewReview() {
     };
     $('[data-ok]', card).onclick = () => act(S.approveQueued, `${it.name} is on the map`);
     $('[data-no]', card).onclick = () => act(S.rejectQueued, 'Rejected');
+  });
+}
+
+function drawLeads(leads) {
+  const box = $('#leads');
+  if (!box) return;
+  if (!leads.length) { box.innerHTML = ''; return; }
+  leads.sort((a, b) => (Date.parse(b.createdAt) || 0) - (Date.parse(a.createdAt) || 0));
+  box.innerHTML = `<h3 style="font-size:26px">Bar leads (${leads.length})</h3><p class="muted">Owners who asked to be added from the landing page.</p>` + leads.map(l => `
+    <div class="panel" data-l="${esc(l.id)}" style="display:grid;gap:6px">
+      <div class="row"><b class="grow">${esc(l.venue)}</b></div>
+      ${l.address ? `<div style="font-size:14px">${esc(l.address)}</div>` : ''}
+      <div style="font-size:14px">Contact: ${esc(l.contact)}</div>
+      ${l.note ? `<div style="font-size:14px">“${esc(l.note)}”</div>` : ''}
+      <div class="muted" style="font-size:13px">${Date.parse(l.createdAt) ? timeAgo(Date.parse(l.createdAt)) : ''}</div>
+      <div class="row"><button class="btn sm ghost" data-ok>Dismiss</button></div>
+    </div>`).join('');
+  $$('[data-l]', box).forEach(card => {
+    const l = leads.find(x => x.id === card.dataset.l);
+    $('[data-ok]', card).onclick = async () => {
+      $$('button', card).forEach(b => b.disabled = true);
+      try { await S.dismissVenueLead(l.id); toast('Dismissed'); viewReview(); }
+      catch (e) { toast(errMsg(e)); $$('button', card).forEach(b => b.disabled = false); }
+    };
   });
 }
 

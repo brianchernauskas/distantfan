@@ -55,6 +55,15 @@ service cloud.firestore {
       allow read, delete: if isAdmin();
     }
 
+    // Bar/venue owners asking to be added, from the public landing page (no account, so no
+    // signedIn() check). May contain a contact email/phone, so only the admin reads them.
+    match /venueLeads/{id} {
+      allow create: if data().keys().hasOnly(['venue', 'address', 'contact', 'note', 'createdAt'])
+        && str(data().venue, 1, 80) && str(data().address, 0, 120) && str(data().contact, 1, 120)
+        && str(data().note, 0, 400) && data().createdAt is string && data().createdAt.size() < 40;
+      allow read, delete: if isAdmin();
+    }
+
     // One active check-in per fan per team; the doc id is `${uid}_${teamId}`.
     match /checkins/{id} {
       allow read: if signedIn();

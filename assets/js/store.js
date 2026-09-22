@@ -1,9 +1,9 @@
 // Data layer. Uses Firebase (Auth + Firestore) when FIREBASE_CONFIG is set,
 // otherwise a demo store in localStorage seeded with clearly fake fans and spots.
-import { FIREBASE_CONFIG, SITE } from './config.js?v=202609221424';
-import { TEAMS, TEAM_BY_ID } from './teams.js?v=202609221424';
-import { METROS } from './metros.js?v=202609221424';
-import { encode, center } from './geo.js?v=202609221424';
+import { FIREBASE_CONFIG, SITE } from './config.js?v=202609221432';
+import { TEAMS, TEAM_BY_ID } from './teams.js?v=202609221432';
+import { METROS } from './metros.js?v=202609221432';
+import { encode, center } from './geo.js?v=202609221432';
 
 export const mode = FIREBASE_CONFIG ? 'firebase' : 'demo';
 let impl;
@@ -41,6 +41,8 @@ export const reportSpot = call('reportSpot');
 export const listReports = call('listReports');
 export const removeReportedSpot = call('removeReportedSpot');
 export const dismissReport = call('dismissReport');
+export const listVenueLeads = call('listVenueLeads');
+export const dismissVenueLead = call('dismissVenueLead');
 
 const clean = (s, max) => String(s || '').replace(/\s+/g, ' ').trim().slice(0, max);
 const active = c => (c.expiresAt || 0) > Date.now();
@@ -156,6 +158,11 @@ async function firebaseStore() {
       await b.commit();
     },
     dismissReport: id => F.deleteDoc(F.doc(db, 'spotReports', id)),
+
+    // Bar-owner leads from the public landing page (no account; written via the Firestore
+    // REST API directly from index.html). Admin only, enforced by firestore.rules.
+    listVenueLeads: () => list(F.query(F.collection(db, 'venueLeads'), F.limit(200))),
+    dismissVenueLead: id => F.deleteDoc(F.doc(db, 'venueLeads', id)),
   };
 }
 
@@ -254,6 +261,8 @@ function demoStore() {
     async listReports() { return []; },
     async removeReportedSpot() {},
     async dismissReport() {},
+    async listVenueLeads() { return []; },
+    async dismissVenueLead() {},
     async approveQueued() {},
     async rejectQueued() {},
     async deleteMessage(id, mid) { state.rooms[id] = (state.rooms[id] || []).filter(m => m.id !== mid); save(); emitRoom(id); },
