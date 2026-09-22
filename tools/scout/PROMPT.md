@@ -1,8 +1,8 @@
 # Distant Fan scout
 
-You find places where **out-of-market fans** gather to watch their team, in the 11 metros Distant Fan
-covers: New York, Los Angeles, Chicago, Dallas–Fort Worth, Houston, Washington DC, Philadelphia,
-Miami, Atlanta, Boston and Phoenix. You hand them to `apply.mjs`, which puts them on
+You find places where **out-of-market fans** gather to watch their team, in the 29 metros Distant
+Fan covers (run `node targets.mjs --mode directory --no-db` for the current list -- roughly the
+top 30 US metros by population plus Phoenix). You hand them to `apply.mjs`, which puts them on
 https://distantfan.com. Work end to end without asking anyone. A run that finds nothing new is a valid outcome.
 
 Working directory: `C:\Users\bcher\Claude_Work\distantfan\tools\scout`
@@ -107,7 +107,7 @@ Write `runs/candidates-<mode>-YYYY-MM-DD.json` (today's date):
   need `eventAt` (ISO 8601 with the local UTC offset) and an `eventTitle`.
 - `note`: at most 200 characters, written for fans. Say what to expect, not how you found it.
 - You don't need to say which city a venue is in. `apply.mjs` works that out from the address and
-  drops anything outside the 11 metros.
+  drops anything outside a covered metro.
 
 ## Apply and report
 

@@ -5,37 +5,83 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { TEAMS } from '../../assets/js/teams.js';
 
-// Covered metros: the 10 largest US metros plus Phoenix. homeTeams are skipped in that city only,
-// since their fans aren't out-of-market there (a Cowboys bar in Phoenix still counts).
+// Covered metros: the top 30 US metros by population (minus Riverside-San Bernardino, which is
+// LA sprawl and would just duplicate the la entry) plus Phoenix, which was added ahead of its
+// population rank for Brian's own local relevance. homeTeams are skipped in that city only,
+// since their fans aren't out-of-market there (a Cowboys bar in Phoenix still counts). A school's
+// football and basketball ids are both listed when it fields both, since ESPN ids are per-school.
 export const AREAS = {
   nyc: { label: 'New York', center: { lat: 40.73, lng: -73.99 }, radiusKm: 70,
-    homeTeams: ['nfl-nyg', 'nfl-nyj', 'nba-ny', 'nba-bkn', 'mlb-nyy', 'mlb-nym', 'nhl-nyr', 'nhl-nyi', 'nhl-nj', 'mls-nyc', 'mls-rbny', 'cfb-164'] },
+    homeTeams: ['nfl-nyg', 'nfl-nyj', 'nba-ny', 'nba-bkn', 'mlb-nyy', 'mlb-nym', 'nhl-nyr', 'nhl-nyi', 'nhl-nj', 'mls-nyc', 'mls-rbny', 'cfb-164', 'cbb-164'] },
   la: { label: 'Los Angeles', center: { lat: 34.05, lng: -118.24 }, radiusKm: 90,
-    homeTeams: ['nfl-lar', 'nfl-lac', 'nba-lal', 'nba-lac', 'mlb-lad', 'mlb-laa', 'nhl-la', 'nhl-ana', 'mls-lafc', 'mls-la', 'cfb-30', 'cfb-26'] },
+    homeTeams: ['nfl-lar', 'nfl-lac', 'nba-lal', 'nba-lac', 'mlb-lad', 'mlb-laa', 'nhl-la', 'nhl-ana', 'mls-lafc', 'mls-la', 'cfb-30', 'cbb-30', 'cfb-26', 'cbb-26'] },
   chi: { label: 'Chicago', center: { lat: 41.88, lng: -87.63 }, radiusKm: 70,
-    homeTeams: ['nfl-chi', 'nba-chi', 'mlb-chc', 'mlb-chw', 'nhl-chi', 'mls-chi', 'cfb-77'] },
+    homeTeams: ['nfl-chi', 'nba-chi', 'mlb-chc', 'mlb-chw', 'nhl-chi', 'mls-chi', 'cfb-77', 'cbb-77'] },
   dfw: { label: 'Dallas–Fort Worth', center: { lat: 32.84, lng: -97.05 }, radiusKm: 90,
-    homeTeams: ['nfl-dal', 'nba-dal', 'mlb-tex', 'nhl-dal', 'mls-dal', 'cfb-2628', 'cfb-2567'] },
+    homeTeams: ['nfl-dal', 'nba-dal', 'mlb-tex', 'nhl-dal', 'mls-dal', 'cfb-2628', 'cbb-2628', 'cfb-2567', 'cbb-2567'] },
   hou: { label: 'Houston', center: { lat: 29.76, lng: -95.37 }, radiusKm: 80,
-    homeTeams: ['nfl-hou', 'nba-hou', 'mlb-hou', 'mls-hou', 'cfb-248'] },
+    homeTeams: ['nfl-hou', 'nba-hou', 'mlb-hou', 'mls-hou', 'cfb-248', 'cbb-248'] },
+  atl: { label: 'Atlanta', center: { lat: 33.75, lng: -84.39 }, radiusKm: 70,
+    homeTeams: ['nfl-atl', 'nba-atl', 'mlb-atl', 'mls-atl', 'cfb-59', 'cbb-59'] },
   dc: { label: 'Washington DC', center: { lat: 38.91, lng: -77.04 }, radiusKm: 70,
-    homeTeams: ['nfl-wsh', 'nba-wsh', 'mlb-wsh', 'nhl-wsh', 'mls-dc', 'cfb-120'] },
+    homeTeams: ['nfl-wsh', 'nba-wsh', 'mlb-wsh', 'nhl-wsh', 'mls-dc', 'cfb-120', 'cbb-120'] },
+  mia: { label: 'Miami', center: { lat: 26.0, lng: -80.2 }, radiusKm: 90,
+    homeTeams: ['nfl-mia', 'nba-mia', 'mlb-mia', 'nhl-fla', 'mls-mia', 'cfb-2390', 'cbb-2390'] },
   phl: { label: 'Philadelphia', center: { lat: 39.95, lng: -75.17 }, radiusKm: 60,
     homeTeams: ['nfl-phi', 'nba-phi', 'mlb-phi', 'nhl-phi', 'mls-phi'] },
-  mia: { label: 'Miami', center: { lat: 26.0, lng: -80.2 }, radiusKm: 90,
-    homeTeams: ['nfl-mia', 'nba-mia', 'mlb-mia', 'nhl-fla', 'mls-mia', 'cfb-2390'] },
-  atl: { label: 'Atlanta', center: { lat: 33.75, lng: -84.39 }, radiusKm: 70,
-    homeTeams: ['nfl-atl', 'nba-atl', 'mlb-atl', 'mls-atl', 'cfb-59'] },
-  bos: { label: 'Boston', center: { lat: 42.36, lng: -71.06 }, radiusKm: 60,
-    homeTeams: ['nfl-ne', 'nba-bos', 'mlb-bos', 'nhl-bos', 'mls-ne', 'cfb-103'] },
-  // Arizona Wildcats (cfb-12) play in Tucson, ~110mi away, so they're treated as an away
+  // Arizona Wildcats (cfb-12/cbb-12) play in Tucson, ~110mi away, so they're treated as an away
   // team for Phoenix scouting purposes even though they're the state's flagship program.
   phx: { label: 'Phoenix', center: { lat: 33.45, lng: -112.07 }, radiusKm: 100,
-    homeTeams: ['nfl-ari', 'nba-phx', 'mlb-ari', 'cfb-9'] },
+    homeTeams: ['nfl-ari', 'nba-phx', 'mlb-ari', 'cfb-9', 'cbb-9'] },
+  bos: { label: 'Boston', center: { lat: 42.36, lng: -71.06 }, radiusKm: 60,
+    homeTeams: ['nfl-ne', 'nba-bos', 'mlb-bos', 'nhl-bos', 'mls-ne', 'cfb-103', 'cbb-103'] },
+  sf: { label: 'San Francisco Bay Area', center: { lat: 37.77, lng: -122.42 }, radiusKm: 90,
+    homeTeams: ['nfl-sf', 'nba-gs', 'mlb-sf', 'nhl-sj', 'mls-sj', 'cfb-25', 'cbb-25', 'cfb-24', 'cbb-24'] },
+  det: { label: 'Detroit', center: { lat: 42.33, lng: -83.05 }, radiusKm: 65,
+    homeTeams: ['nfl-det', 'nba-det', 'mlb-det', 'nhl-det', 'cfb-130', 'cbb-130'] },
+  sea: { label: 'Seattle', center: { lat: 47.61, lng: -122.33 }, radiusKm: 70,
+    homeTeams: ['nfl-sea', 'mlb-sea', 'nhl-sea', 'mls-sea', 'cfb-264', 'cbb-264'] },
+  msp: { label: 'Minneapolis–St. Paul', center: { lat: 44.98, lng: -93.27 }, radiusKm: 65,
+    homeTeams: ['nfl-min', 'nba-min', 'mlb-min', 'nhl-min', 'mls-min', 'cfb-135', 'cbb-135'] },
+  sd: { label: 'San Diego', center: { lat: 32.72, lng: -117.16 }, radiusKm: 60,
+    homeTeams: ['mlb-sd', 'mls-sd'] },
+  tb: { label: 'Tampa Bay', center: { lat: 27.95, lng: -82.46 }, radiusKm: 65,
+    homeTeams: ['nfl-tb', 'mlb-tb', 'nhl-tb'] },
+  den: { label: 'Denver', center: { lat: 39.74, lng: -104.99 }, radiusKm: 70,
+    homeTeams: ['nfl-den', 'nba-den', 'mlb-col', 'nhl-col', 'mls-col', 'cfb-38', 'cbb-38'] },
+  sa: { label: 'San Antonio', center: { lat: 29.42, lng: -98.49 }, radiusKm: 55,
+    homeTeams: ['nba-sa'] },
+  stl: { label: 'St. Louis', center: { lat: 38.63, lng: -90.2 }, radiusKm: 60,
+    homeTeams: ['mlb-stl', 'nhl-stl', 'mls-stl'] },
+  bal: { label: 'Baltimore', center: { lat: 39.29, lng: -76.61 }, radiusKm: 50,
+    homeTeams: ['nfl-bal', 'mlb-bal'] },
+  orl: { label: 'Orlando', center: { lat: 28.54, lng: -81.38 }, radiusKm: 60,
+    homeTeams: ['nba-orl', 'mls-orl', 'cfb-2116', 'cbb-2116'] },
+  clt: { label: 'Charlotte', center: { lat: 35.23, lng: -80.84 }, radiusKm: 60,
+    homeTeams: ['nfl-car', 'nba-cha', 'mls-clt'] },
+  lv: { label: 'Las Vegas', center: { lat: 36.17, lng: -115.14 }, radiusKm: 50,
+    homeTeams: ['nfl-lv', 'nhl-vgk'] },
+  pdx: { label: 'Portland', center: { lat: 45.52, lng: -122.68 }, radiusKm: 60,
+    homeTeams: ['nba-por', 'mls-por'] },
+  aus: { label: 'Austin', center: { lat: 30.27, lng: -97.74 }, radiusKm: 50,
+    homeTeams: ['mls-atx', 'cfb-251', 'cbb-251'] },
+  sac: { label: 'Sacramento', center: { lat: 38.58, lng: -121.49 }, radiusKm: 60,
+    homeTeams: ['nba-sac'] },
+  cmh: { label: 'Columbus', center: { lat: 39.96, lng: -82.99 }, radiusKm: 55,
+    homeTeams: ['nhl-cbj', 'mls-clb', 'cfb-194', 'cbb-194'] },
+  pit: { label: 'Pittsburgh', center: { lat: 40.44, lng: -79.99 }, radiusKm: 55,
+    homeTeams: ['nfl-pit', 'mlb-pit', 'nhl-pit', 'cfb-221', 'cbb-221'] },
 };
 
-// City sweep: which metros each weekday covers (Mon..Fri), so every city is searched weekly.
-export const CITY_DAYS = [['nyc', 'la', 'chi'], ['dfw', 'hou'], ['dc', 'phl'], ['mia', 'atl'], ['bos', 'phx']];
+// City sweep: which metros each weekday covers (Mon..Fri), so every city is searched roughly
+// every 6 business days now that there are 29 of them (was every week at 11).
+export const CITY_DAYS = [
+  ['nyc', 'la', 'chi', 'sf', 'sea', 'det'],
+  ['dfw', 'hou', 'sa', 'aus', 'sd', 'stl'],
+  ['dc', 'phl', 'bal', 'pit', 'cmh', 'msp'],
+  ['mia', 'atl', 'orl', 'tb', 'clt', 'sac'],
+  ['bos', 'phx', 'den', 'lv', 'pdx'],
+];
 
 // The covered metro a point falls in, or null.
 export function areaFor(pt) {
