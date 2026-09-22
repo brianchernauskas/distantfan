@@ -36,8 +36,20 @@ When picking up this file cold, work top to bottom unless told otherwise.
       skipping them entirely -- now fixed so future scout runs cover them too. Candidates saved to
       `tools/scout/runs/candidates-manual-2026-09-22.json` (gitignored, not yet published to the
       live site -- see chat for the publish decision).
-- [ ] Add a "suggest a bar/venue" contact form so bar owners can reach you directly about being
-      added to the site.
+- [x] Add a "suggest a bar/venue" contact form so bar owners can reach you directly about being
+      added to the site. Public form on the landing page (`index.html`), no account needed --
+      writes to a new `venueLeads` Firestore collection via the REST API directly (kept
+      `index.html` free of the Firebase SDK for one small write). Admin-only read, since
+      submissions may include an email/phone. Shows up in the existing admin Review tab in the
+      app alongside fan reports and scout finds. No visible email address on the public site, per
+      your call -- form-only. Verified with live test writes against the deployed rules (cleaned
+      up after). Spam/abuse protection is still just a honeypot field, no CAPTCHA or rate
+      limiting -- still the gap noted below if it becomes a problem.
+      **Also found and fixed while here:** item 1's `firestore.rules` change (4->5 char cell
+      precision) had only ever been committed to git, never actually deployed to the live
+      Firestore project -- the README's manual "paste into console" step was never done, so
+      profile saves have likely been failing against the live rules since that push. Deployed the
+      current rules via `tools/scout/deploy-rules.mjs` (uses the same admin key the scout uses).
 - [ ] Broader push to get more venues/sites added generally (likely follows from the contact form
       above, plus manual outreach).
 - [x] Add college basketball to the sports mix. Scoped to the same ~68 Power 4 schools already
