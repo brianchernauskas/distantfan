@@ -101,9 +101,13 @@ const P4_IDS = new Set(Object.values(P4).flat().flatMap(id => [`cfb-${id}`, `cbb
 const CONF = Object.fromEntries(Object.entries(P4).flatMap(([c, ids]) => ids.flatMap(id => [[`cfb-${id}`, c], [`cbb-${id}`, c]])));
 
 // Every tracked team: all pro teams plus Power 4 football/basketball and Notre Dame. Home teams are excluded per city in apply.mjs.
+// Every P4 school is tracked under both cfb and cbb with the identical team name ("Ohio State
+// Buckeyes"), so a bare name is ambiguous -- printing "(Football)"/"(Basketball)" here means the
+// agent copies a disambiguated name straight into candidates, and resolveTeam() below can parse
+// it back to the right league instead of silently failing to resolve either one.
 export function scoutTeams() {
   return TEAMS.filter(t => (t.lg !== 'cfb' && t.lg !== 'cbb') || P4_IDS.has(t.id))
-    .map(t => ({ id: t.id, name: t.name, league: t.lg, conference: CONF[t.id] }));
+    .map(t => ({ id: t.id, name: t.lg === 'cfb' ? `${t.name} (Football)` : t.lg === 'cbb' ? `${t.name} (Basketball)` : t.name, league: t.lg, conference: CONF[t.id] }));
 }
 
 export function isoWeek(d = new Date()) {
@@ -113,12 +117,21 @@ export function isoWeek(d = new Date()) {
   return Math.ceil(((t - Date.UTC(t.getUTCFullYear(), 0, 1)) / 864e5 + 1) / 7);
 }
 
-// Team names from the agent → ids. Accepts an id, full name, "short" name, or abbreviation within a league.
+// Team names from the agent → ids. Accepts an id, full name, "short" name, or abbreviation within
+// a league. A trailing "(Football)"/"(Basketball)" (as scoutTeams() now prints for every P4
+// school, which is tracked under both) resolves straight to that league instead of hitting the
+// cfb/cbb name collision below.
 export function resolveTeam(s) {
   const q = String(s || '').trim().toLowerCase();
   if (!q) return null;
   const byId = TEAMS.find(t => t.id === q);
   if (byId) return byId;
+  const sport = q.match(/^(.*?)\s*\((football|basketball)\)$/);
+  if (sport) {
+    const lg = sport[2] === 'football' ? 'cfb' : 'cbb', base = sport[1];
+    const hit = TEAMS.find(t => t.lg === lg && (t.name.toLowerCase() === base || t.short.toLowerCase() === base || t.loc.toLowerCase() === base));
+    if (hit) return hit;
+  }
   const exact = TEAMS.filter(t => t.name.toLowerCase() === q);
   if (exact.length === 1) return exact[0];
   const short = TEAMS.filter(t => t.short.toLowerCase() === q || t.loc.toLowerCase() === q);
