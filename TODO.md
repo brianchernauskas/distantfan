@@ -44,8 +44,10 @@ When picking up this file cold, work top to bottom unless told otherwise.
 - [ ] Email/text alert when a new venue is listed for a team the user follows (text = SMS costs
       via a provider like Twilio; decide email-only vs. email+SMS before building).
 - [ ] "Traveling" mode: see watch parties/restaurants in a city other than home, for fans on the road.
-- [ ] Marketing plan to get the site in front of more people (do this once Phase 3 polish is in,
-      so there's something good to point people at).
+- [x] Marketing plan to get the site in front of more people. Drafted ahead of the rest of Phase 3
+      by request — see [MARKETING.md](MARKETING.md) for the full plan. Phase A of that plan
+      (seeding fan-club communities) can start any time; Phases C–E assume more polish/content is
+      in place first, so those still line up with finishing Phase 2/3 here.
 
 ## Phase 5 — Future platforms
 
