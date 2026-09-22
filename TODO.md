@@ -83,7 +83,13 @@ When picking up this file cold, work top to bottom unless told otherwise.
 
 ## Phase 3 — Design & monetization
 
-- [ ] Graphical/UI polish pass to make the site more visually appealing.
+- [x] Graphical/UI polish pass to make the site more visually appealing. The existing design
+      system was already solid (typography, color tokens, dark mode) so this was a refinement,
+      not a redesign: fixed a real layout bug (the bar-lead form panel was mostly empty
+      whitespace on desktop -- now a proper two-column layout), added hover-lift micro-interactions
+      to cards that were static, added depth behind the hero mock stack, and added a missing
+      og:image/twitter:image (there was no social-preview image at all -- built a branded
+      1200x630 card, source in `tools/og-card.svg`).
 - [ ] Fanatics affiliate ad: team-aware creative based on the fan's followed teams, using your
       Fanatics referral link.
 - [ ] Brainstorm additional monetization paths beyond the Fanatics affiliate (sponsorships from
