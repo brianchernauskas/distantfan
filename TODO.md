@@ -50,8 +50,15 @@ When picking up this file cold, work top to bottom unless told otherwise.
       Firestore project -- the README's manual "paste into console" step was never done, so
       profile saves have likely been failing against the live rules since that push. Deployed the
       current rules via `tools/scout/deploy-rules.mjs` (uses the same admin key the scout uses).
-- [ ] Broader push to get more venues/sites added generally (likely follows from the contact form
-      above, plus manual outreach).
+- [x] Broader push to get more venues/sites added generally. Turned out to already be underway:
+      another Claude session had set up two live scheduled tasks (`distantfan-phoenix-scout`,
+      weekly directory sweep; `distantfan-city-sweep`, weekday city sweep) that were already
+      running and had added 20 venues across DFW/Houston earlier today. Per your call, expanded
+      the actual scope rather than duplicating that work: grew `tools/scout/lib.mjs`'s covered
+      metros from 11 to 29 (the rest of the top-30 US metros by population), fixed a cbb home-team
+      exclusion gap along the way, redistributed the weekday rotation, and updated both scheduled
+      tasks' instructions to match. The existing automation will pick up the new metros on its
+      normal schedule -- no manual run triggered.
 - [x] Add college basketball to the sports mix. Scoped to the same ~68 Power 4 schools already
       tracked for college football rather than all 362 D-I teams (`tools/cbb-ids.json`, reusing
       `tools/scout/p4-ids.json`) -- app architecture was already generic enough (LEAGUES/TEAMS-driven
