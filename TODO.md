@@ -6,10 +6,14 @@ When picking up this file cold, work top to bottom unless told otherwise.
 
 ## Phase 1 — Foundation (touches core data model / privacy)
 
-- [ ] **Tighten viewer radius to 10 miles (from 25) and re-document why anonymity matters.**
-      Affects `assets/js/geo.js` geohash precision and the map query radius in `store.js`/`app.js`.
-      Revisit the README's "Privacy model" section to explain the reasoning (not just the mechanism)
-      so future-you remembers why fan locations are deliberately coarse.
+- [x] **Tighten viewer radius to 10 miles (from 25) and re-document why anonymity matters.**
+      Done: stored geohash precision went from 4→5 chars (~25mi cell → ~3mi cell, the closest
+      geohash step available), and the separate "near you" surfacing radius (`NEAR_KM` in
+      `app.js`) went from ~50mi to 10mi. README's "Privacy model" section now explains the
+      anonymity tradeoff, not just the mechanism. Note: this is a real reduction in location
+      anonymity (3mi cells can point at a specific neighborhood), accepted deliberately after
+      discussion — see the README note if it ever needs revisiting. Also required updating
+      `firestore.rules` (the enforced storage-precision ceiling) alongside `config.js`.
 - [ ] **Reopen the app to local (non-away) teams**, e.g. "find a spot to watch my team when they're
       on the road, or when I'm not going to the game." This changes the core query from
       "out-of-market fans only" to something broader — worth deciding the UX distinction between
