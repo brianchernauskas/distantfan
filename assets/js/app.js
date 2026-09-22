@@ -1,9 +1,9 @@
-import * as S from './store.js?v=202609221432';
-import { SITE, ADMINS } from './config.js?v=202609221432';
-import { TEAMS, TEAM_BY_ID, LEAGUES } from './teams.js?v=202609221432';
-import { METROS } from './metros.js?v=202609221432';
-import { encode, center, bounds, areaLabel, km } from './geo.js?v=202609221432';
-import { nextGames } from './schedule.js?v=202609221432';
+import * as S from './store.js?v=202609221452';
+import { SITE, ADMINS } from './config.js?v=202609221452';
+import { TEAMS, TEAM_BY_ID, LEAGUES } from './teams.js?v=202609221452';
+import { METROS } from './metros.js?v=202609221452';
+import { encode, center, bounds, areaLabel, km } from './geo.js?v=202609221452';
+import { nextGames } from './schedule.js?v=202609221452';
 
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -421,9 +421,17 @@ async function loadMap(fresh = false) {
     if (matchMedia('(max-width: 860px)').matches) $('#map').scrollIntoView({ behavior: 'smooth' });
   });
 
-  if (!nearFans.length && !nearSpots.length && d.fans.length) {
-    const b = L.latLngBounds(Object.keys(cells).map(c => { const p = center(c); return [p.lat, p.lng]; }));
-    b.extend([me.lat, me.lng]); map.fitBounds(b, { padding: [30, 30], maxZoom: 9 });
+  // Nothing near home for this team: zoom out to whatever does exist for it (fans or spots,
+  // wherever they are) instead of leaving an empty local view with no hint where to look.
+  if (!nearFans.length && !nearSpots.length) {
+    const pts = [
+      ...Object.keys(cells).map(c => { const p = center(c); return [p.lat, p.lng]; }),
+      ...spots.map(s => [s.lat, s.lng]),
+    ];
+    if (pts.length) {
+      const b = L.latLngBounds(pts);
+      b.extend([me.lat, me.lng]); map.fitBounds(b, { padding: [30, 30], maxZoom: 9 });
+    }
   }
 }
 

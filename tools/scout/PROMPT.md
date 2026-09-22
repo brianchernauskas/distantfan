@@ -1,9 +1,12 @@
 # Distant Fan scout
 
-You find places where **out-of-market fans** gather to watch their team, in the 29 metros Distant
-Fan covers (run `node targets.mjs --mode directory --no-db` for the current list -- roughly the
-top 30 US metros by population plus Phoenix). You hand them to `apply.mjs`, which puts them on
-https://distantfan.com. Work end to end without asking anyone. A run that finds nothing new is a valid outcome.
+You find places where fans gather to watch their team -- mainly **out-of-market fans**, but also
+locals who want to watch their own home team with other fans without going to the game. `apply.mjs`
+isn't limited to the 29 metros Distant Fan tracks closely (run `node targets.mjs --mode directory
+--no-db` for that list -- roughly the top 30 US metros by population plus Phoenix): a real,
+well-sourced venue anywhere in the US still goes on the map, just labelled by its own city instead
+of a tracked metro. `apply.mjs` puts finds on https://distantfan.com. Work end to end without
+asking anyone. A run that finds nothing new is a valid outcome.
 
 Working directory: `C:\Users\bcher\Claude_Work\distantfan\tools\scout`
 
@@ -16,16 +19,20 @@ modes split the work by source, so don't do the other mode's job.
 node targets.mjs --mode directory
 ```
 
-It prints about 55 `teams` (a quarter of the 222 tracked, rotating weekly), the `cities` with their
+It prints about 70 `teams` (a quarter of the ~290 tracked, rotating weekly), the `cities` with their
 home teams, and `onMap`, which lists what's already listed for these teams in each city.
 
 For each team, find its **official fan-club or alumni network directory**, open it once, and pull
-out every chapter or official bar in any covered city. Examples: Bills Backers, Packer Backers,
-Steelers fan-club lists, Browns Backers Worldwide, Chiefs Kingdom clubs, NHL/NBA/MLB team fan-club
-pages, MLS supporter groups, and university alumni association chapter lists ("Alumni Club of
-Dallas"). Then open the chapter's own page or the bar's site to confirm the venue and get the address.
+out **every chapter or official bar it lists, anywhere in the US** -- not just the tracked metros.
+A directory page you've already fetched costs nothing extra to read fully, and a chapter in a city
+Distant Fan doesn't track closely still deserves to be on the map. Examples: Bills Backers, Packer
+Backers, Steelers fan-club lists, Browns Backers Worldwide, Chiefs Kingdom clubs, NHL/NBA/MLB team
+fan-club pages, MLS supporter groups, and university alumni association chapter lists ("Alumni Club
+of Dallas"). Then open the chapter's own page or the bar's site to confirm the venue and get the address.
 
-- Skip a team in a city where it's a home team (listed under that city's `homeTeams`).
+- Skip a team in a city where it's that city's home team (listed under the city's `homeTeams` in
+  `targets.mjs`'s output) -- an away-fan-club directory has nothing to say about a team's own
+  market. (City mode, below, covers home teams differently.)
 - Budget: about 3–4 fetches per team. Many teams have no directory. Skip them quickly.
 - Include venues already in `onMap` that you re-confirm, so their expiry refreshes.
 
@@ -35,16 +42,20 @@ Dallas"). Then open the chapter's own page or the bar's site to confirm the venu
 node targets.mjs --mode city
 ```
 
-It prints today's 2–3 `cities` and `onMap` for them. For each city, search for what directories
-miss: **one-off watch parties and gatherings** in the next 30 days, and bars that advertise
-themselves as a particular team's home in that city.
+It prints today's cities and `onMap` for them. For each city, search for what directories miss:
+**one-off watch parties and gatherings** in the next 30 days, bars that advertise themselves as a
+particular away team's home in that city, and -- unlike directory mode -- **popular spots to watch
+that city's own home team(s)**, for locals who aren't going to the game. `apply.mjs` accepts
+home-team finds from city mode; it only strips them out of directory-mode results.
 
 - Meetup and Eventbrite ("<team> watch party <city>")
-- Local news and city guides ("where to watch <team> in Dallas", "out-of-town fan bars Houston")
+- Local news and city guides ("where to watch <team> in Dallas", "out-of-town fan bars Houston",
+  "best bars to watch the Cowboys in Dallas")
 - Bars' own event pages
 - Budget: about 12–15 searches per city. Favour the biggest traveling fan bases first (for example
   Steelers, Packers, Bills, Eagles, Cowboys, Chiefs, Buckeyes, Michigan, Notre Dame, Alabama, the big
-  SEC and Big Ten schools, Red Sox, Yankees, Cubs).
+  SEC and Big Ten schools, Red Sox, Yankees, Cubs), then spend a couple of searches on that city's
+  own home team(s) so locals have somewhere to look too.
 
 ## Rules for both modes
 
@@ -106,8 +117,9 @@ Write `runs/candidates-<mode>-YYYY-MM-DD.json` (today's date):
 - `kind`: `"recurring"` for a regular game-watch home, or `"event"` for a one-off gathering. Events
   need `eventAt` (ISO 8601 with the local UTC offset) and an `eventTitle`.
 - `note`: at most 200 characters, written for fans. Say what to expect, not how you found it.
-- You don't need to say which city a venue is in. `apply.mjs` works that out from the address and
-  drops anything outside a covered metro.
+- You don't need to say which city a venue is in. `apply.mjs` works that out from the address --
+  a tracked metro's label if it falls inside one, otherwise a "City, ST" label of its own. Either
+  way it still goes on the map.
 
 ## Apply and report
 
