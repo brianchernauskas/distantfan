@@ -1,9 +1,9 @@
-import * as S from './store.js?v=202609221504';
-import { SITE, ADMINS } from './config.js?v=202609221504';
-import { TEAMS, TEAM_BY_ID, LEAGUES } from './teams.js?v=202609221504';
-import { METROS } from './metros.js?v=202609221504';
-import { encode, center, bounds, areaLabel, km } from './geo.js?v=202609221504';
-import { nextGames } from './schedule.js?v=202609221504';
+import * as S from './store.js?v=202609221512';
+import { SITE, ADMINS } from './config.js?v=202609221512';
+import { TEAMS, TEAM_BY_ID, LEAGUES } from './teams.js?v=202609221512';
+import { METROS } from './metros.js?v=202609221512';
+import { encode, center, bounds, areaLabel, km } from './geo.js?v=202609221512';
+import { nextGames } from './schedule.js?v=202609221512';
 
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -27,7 +27,17 @@ const ICON = {
   me: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>',
 };
 const BRAND = `<a class="brand" href="./" aria-label="Distant Fan home"><svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="8" cy="32" r="4.5" fill="currentColor" opacity=".35"/><path d="M12 29C15 20 19 17 23.5 17.5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-dasharray=".5 5" opacity=".55"/><path d="M29 3.5a8.5 8.5 0 0 0-8.5 8.5c0 6.4 8.5 15 8.5 15s8.5-8.6 8.5-15A8.5 8.5 0 0 0 29 3.5z" fill="var(--accent)"/><circle cx="29" cy="12" r="3.2" fill="var(--bg)"/></svg><span>Distant<b>Fan</b></span></a>`;
-const logo = (t, cls = '') => t?.logo ? `<img class="logo ${cls}" src="${esc(t.logo)}" alt="" loading="lazy">` : `<span class="logo ${cls}"></span>`;
+// Football and basketball are tracked separately for the same school (Kansas Jayhawks football
+// vs. basketball) but share one logo image, so a small sport badge is the only way to tell two
+// otherwise-identical chips apart.
+const SPORT_ICON = { cfb: '🏈', cbb: '🏀' };
+const logo = (t, cls = '') => {
+  if (!t?.logo) return `<span class="logo ${cls}"></span>`;
+  const icon = SPORT_ICON[t.lg];
+  return icon
+    ? `<span class="logo ${cls}"><img class="logo-img" src="${esc(t.logo)}" alt="" loading="lazy"><i class="sport-badge" aria-hidden="true">${icon}</i></span>`
+    : `<img class="logo ${cls}" src="${esc(t.logo)}" alt="" loading="lazy">`;
+};
 
 function toast(msg) {
   const el = document.createElement('div');

@@ -113,9 +113,15 @@ label.field span.hint { font-weight: 400; color: var(--muted); }
 .mock .bubble.me { background: var(--accent); color: var(--accent-ink); border-radius: 12px 12px 4px 12px; margin-left: 40px; }
 .mock .radar { height: 110px; margin: 4px -18px -16px; border-radius: 0 0 var(--radius) var(--radius); overflow: hidden; }
 
-.logo { width: 36px; height: 36px; border-radius: 50%; background: #fff; padding: 4px; object-fit: contain; flex: none; box-shadow: 0 0 0 1px rgb(0 0 0 / .06); }
+.logo { width: 36px; height: 36px; border-radius: 50%; background: #fff; padding: 4px; object-fit: contain; flex: none; box-shadow: 0 0 0 1px rgb(0 0 0 / .06); position: relative; display: inline-block; }
 .logo.sm { width: 26px; height: 26px; padding: 3px; }
 .logo.lg { width: 56px; height: 56px; padding: 6px; }
+/* Football/basketball share one school's logo, so a badge disambiguates the two chips. */
+.logo-img { width: 100%; height: 100%; object-fit: contain; display: block; border-radius: 50%; }
+.sport-badge { position: absolute; right: -3px; bottom: -3px; width: 15px; height: 15px; border-radius: 50%; background: var(--surface);
+  box-shadow: 0 0 0 1px var(--line); font-size: 10px; line-height: 1; font-style: normal; display: grid; place-items: center; }
+.logo.sm .sport-badge { width: 13px; height: 13px; font-size: 8px; right: -2px; bottom: -2px; }
+.logo.lg .sport-badge { width: 20px; height: 20px; font-size: 13px; }
 
 .marquee { border-block: 1px solid var(--line); background: var(--surface); overflow: hidden; padding: 18px 0; }
 .marquee .track { display: flex; gap: 26px; width: max-content; animation: slide 90s linear infinite; }
