@@ -1,0 +1,5 @@
+# Raw ESPN dumps used by tools/build-teams.mjs (regenerate with the curl lines in the README)
+tools/*.json
+!tools/fbs-ids.json
+node_modules/
+.DS_Store

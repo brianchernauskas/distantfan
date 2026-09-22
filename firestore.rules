@@ -1,0 +1,58 @@
+rules_version = '2';
+// Distant Fan: paste into Firebase console → Firestore → Rules, then Publish.
+service cloud.firestore {
+  match /databases/{db}/documents {
+    function signedIn() { return request.auth != null; }
+    function me() { return request.auth.uid; }
+    function str(v, min, max) { return v is string && v.size() >= min && v.size() <= max; }
+    function data() { return request.resource.data; }
+
+    // Public fan profile. Home is a geohash of at most 4 characters (~39 × 20 km);
+    // anything more precise is rejected, so a street-level location can never be stored.
+    match /profiles/{uid} {
+      allow read: if signedIn();
+      allow create, update: if signedIn() && me() == uid
+        && data().keys().hasOnly(['name', 'teams', 'cell', 'area', 'updatedAt'])
+        && str(data().name, 1, 40)
+        && data().teams is list && data().teams.size() >= 1 && data().teams.size() <= 8
+        && str(data().cell, 1, 4) && data().cell.matches('^[0-9b-hjkmnp-z]+$')
+        && str(data().area, 0, 60)
+        && data().updatedAt == request.time;
+      allow delete: if signedIn() && me() == uid;
+    }
+
+    // Watch spots are public places, so exact coordinates are fine here.
+    match /spots/{id} {
+      allow read: if signedIn();
+      allow create: if signedIn()
+        && data().keys().hasOnly(['name', 'address', 'note', 'lat', 'lng', 'teams', 'by', 'byName', 'createdAt'])
+        && data().by == me()
+        && str(data().name, 1, 80) && str(data().address, 0, 120) && str(data().note, 0, 200) && str(data().byName, 0, 40)
+        && data().lat is number && data().lat >= -90 && data().lat <= 90
+        && data().lng is number && data().lng >= -180 && data().lng <= 180
+        && data().teams is list && data().teams.size() >= 1 && data().teams.size() <= 6
+        && data().createdAt == request.time;
+      allow delete: if signedIn() && resource.data.by == me();
+    }
+
+    // One active check-in per fan per team; the doc id is `${uid}_${teamId}`.
+    match /checkins/{id} {
+      allow read: if signedIn();
+      allow create, update: if signedIn()
+        && data().uid == me() && id == me() + '_' + data().teamId
+        && data().keys().hasOnly(['uid', 'name', 'teamId', 'spotId', 'gameId', 'gameName', 'gameDate', 'expiresAt', 'createdAt'])
+        && str(data().name, 1, 40) && str(data().spotId, 1, 64)
+        && data().expiresAt is number && data().expiresAt < request.time.toMillis() + 30 * 86400000;
+      allow delete: if signedIn() && resource.data.uid == me();
+    }
+
+    match /rooms/{room}/messages/{id} {
+      allow read: if signedIn();
+      allow create: if signedIn()
+        && data().keys().hasOnly(['uid', 'name', 'text', 'createdAt'])
+        && data().uid == me() && str(data().name, 1, 40) && str(data().text, 1, 500)
+        && data().createdAt == request.time;
+      allow delete: if signedIn() && resource.data.uid == me();
+    }
+  }
+}

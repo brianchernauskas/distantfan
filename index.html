@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Distant Fan: your team, wherever you are</title>
+<meta name="description" content="Distant Fan connects out-of-market sports fans: find fellow fans of your team nearby, the bars that put your game on, and a game-day chat full of people who get it.">
+<meta property="og:title" content="Distant Fan: your team, wherever you are">
+<meta property="og:description" content="Find fellow fans of your team near you, the bar that shows your game, and a room full of people who get it.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://distantfan.com/">
+<meta name="theme-color" content="#0b1016">
+<link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css?v=202609211704">
+</head>
+<body>
+
+<header class="site-head">
+  <div class="wrap">
+    <a class="brand" href="./" aria-label="Distant Fan home">
+      <svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="8" cy="32" r="4.5" fill="currentColor" opacity=".35"/><path d="M12 29C15 20 19 17 23.5 17.5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-dasharray=".5 5" opacity=".55"/><path d="M29 3.5a8.5 8.5 0 0 0-8.5 8.5c0 6.4 8.5 15 8.5 15s8.5-8.6 8.5-15A8.5 8.5 0 0 0 29 3.5z" fill="var(--accent)"/><circle cx="29" cy="12" r="3.2" fill="var(--bg)"/></svg>
+      <span>Distant<b>Fan</b></span>
+    </a>
+    <nav>
+      <a href="#how">How it works</a>
+      <a href="#features">Features</a>
+      <a href="#privacy">Privacy</a>
+      <a class="btn sm primary" href="app.html">Open the app</a>
+    </nav>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="wrap">
+    <div>
+      <span class="eyebrow">For out-of-market fans</span>
+      <h1>Your team.<br><em>Wherever</em> you are.</h1>
+      <p class="lede">You moved away. Your team didn't. Distant Fan finds the other fans of your team where you live now, the bar that puts your game on with the sound up, and a game-day room full of people who get it.</p>
+      <div class="ctas">
+        <a class="btn lg primary" href="app.html">Find my people</a>
+        <a class="btn lg ghost" href="#how">How it works</a>
+      </div>
+      <p class="fine">Free. NFL, college football, NBA, MLB, NHL and MLS.</p>
+    </div>
+
+    <div class="mock" aria-label="Preview of the app" role="img">
+      <div class="card">
+        <div class="mock-row">
+          <img class="logo" src="https://a.espncdn.com/i/teamlogos/nfl/500/phi.png" alt="" width="42" height="42">
+          <div><div class="t">Eagles fans near Phoenix</div><div class="s">Within about 40 miles</div></div>
+          <span class="pill">Preview</span>
+        </div>
+        <div class="radar" id="radar"></div>
+      </div>
+      <div class="card">
+        <div class="mock-row">
+          <div class="pinicon">📍</div>
+          <div><div class="t">The Brass Tap</div><div class="s">Eagles bar · sound on for every game</div></div>
+          <div style="margin-left:auto;text-align:right"><div class="k">38</div><div class="s">going Sunday</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="s">Eagles · Phoenix room</div>
+        <div class="bubble">Anyone watching the late game? Brass Tap has it on the big screen.</div>
+        <div class="bubble me">On my way. Saving seats by the bar.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="marquee" aria-hidden="true"><div class="track" id="marquee"></div></div>
+
+<section class="block" id="how">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="eyebrow">How it works</span>
+      <h2>Three steps to game day</h2>
+      <p>Takes about a minute. You only share a rough area, never your address.</p>
+    </div>
+    <div class="steps">
+      <div class="step"><h3>Pick your teams</h3><p>Choose up to eight across the NFL, FBS college football, NBA, MLB, NHL and MLS. Follow the one you grew up with and the one you married into.</p></div>
+      <div class="step"><h3>Set your home base</h3><p>Pick your metro or use your location, which we round off to a 25-mile area before it leaves your phone.</p></div>
+      <div class="step"><h3>Find your crew</h3><p>See how many fans of your team live around you, where they watch, and who's heading out for the next game.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="block" id="features" style="padding-top:0">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="eyebrow">What's inside</span>
+      <h2>Home turf, anywhere</h2>
+    </div>
+    <div class="features">
+      <div class="feature">
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2z"/><path d="M9 4v14M15 6v14"/></svg></div>
+        <h3>Fan map</h3>
+        <p>A live map of where your team's fans live, shown by area, never as exact pins. Find out you're one of 200 Packers fans in Tampa.</p>
+      </div>
+      <div class="feature">
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="12" rx="2"/><path d="M8 21h8M12 17v4"/></svg></div>
+        <h3>Watch spots</h3>
+        <p>Bars and backer clubs that put your team's game on. Fans add them, and you can see how many people plan to be there for the next game.</p>
+      </div>
+      <div class="feature">
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg></div>
+        <h3>Game-day rooms</h3>
+        <p>A chat for your team nationwide, and one just for fans in your area. Plan a watch party or just yell about the refs.</p>
+      </div>
+      <div class="feature">
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg></div>
+        <h3>Your schedule</h3>
+        <p>Every team you follow in one list, in your time zone, with the TV network, so you know whether to find a bar or stay on the couch.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="block privacy" id="privacy">
+  <div class="wrap">
+    <div class="sec-head" style="margin:0">
+      <span class="eyebrow">Privacy</span>
+      <h2>We never show where you live</h2>
+      <p>A fan map is only useful if people feel safe on it. Here's how that works.</p>
+    </div>
+    <ul class="checks">
+      <li><div><b>Area, not address</b><span>Your location is rounded to a grid square about 25 miles wide on your own device. The exact spot is never sent or stored.</span></div></li>
+      <li><div><b>Enforced by the database</b><span>The server rejects anything more precise than that grid square, so no bug or bad actor can save a street-level location.</span></div></li>
+      <li><div><b>First name and initial</b><span>Other fans see the name you choose and your teams. That's it.</span></div></li>
+      <li><div><b>Delete anytime</b><span>Removing your profile takes you off the map immediately.</span></div></li>
+    </ul>
+  </div>
+</section>
+
+<section class="cta-band">
+  <div class="wrap">
+    <h2>Stop watching alone</h2>
+    <p>There are more of you out there than you think.</p>
+    <a class="btn lg primary" href="app.html">Find my people</a>
+  </div>
+</section>
+
+<footer class="site-foot">
+  <div class="wrap">
+    <span>© <span id="yr">2026</span> Distant Fan</span>
+    <span>Team names and logos belong to their teams and leagues. Schedules via ESPN.</span>
+  </div>
+</footer>
+
+<script type="module">
+  import { TEAMS } from './assets/js/teams.js?v=202609211704';
+  document.getElementById('yr').textContent = new Date().getFullYear();
+
+  // Logo marquee: a shuffled mix of pro teams, doubled so the loop is seamless.
+  const pros = TEAMS.filter(t => t.lg !== 'cfb' && t.logo).sort(() => Math.random() - .5).slice(0, 36);
+  const cfb = TEAMS.filter(t => t.lg === 'cfb').sort(() => Math.random() - .5).slice(0, 12);
+  const row = [...pros, ...cfb].sort(() => Math.random() - .5)
+    .map(t => `<img class="logo" src="${t.logo}" alt="" width="44" height="44" loading="lazy">`).join('');
+  document.getElementById('marquee').innerHTML = row + row;
+
+  // Hero radar: scattered fan dots around a "you" marker.
+  const W = 460, H = 110, pts = [];
+  let s = 7; const r = () => (s = (s * 16807) % 2147483647) / 2147483647;
+  for (let i = 0; i < 70; i++) {
+    const cx = W * .5 + (r() - .5) * W * (r() < .6 ? .5 : 1.05), cy = H * .5 + (r() - .5) * H * 1.1;
+    pts.push(`<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${(2 + r() * 3.5).toFixed(1)}" fill="#004c54" opacity="${(.35 + r() * .5).toFixed(2)}"/>`);
+  }
+  document.getElementById('radar').innerHTML = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid slice" width="100%" height="100%" style="display:block;background:var(--surface-2)">
+    ${[26, 52, 80].map(rr => `<circle cx="${W / 2}" cy="${H / 2}" r="${rr}" fill="none" stroke="currentColor" stroke-opacity=".12" stroke-dasharray="3 4"/>`).join('')}
+    ${pts.join('')}
+    <circle cx="${W / 2}" cy="${H / 2}" r="12" fill="var(--accent)" opacity=".25"/><circle cx="${W / 2}" cy="${H / 2}" r="6" fill="var(--accent)" stroke="#fff" stroke-width="2"/></svg>`;
+</script>
+</body>
+</html>
