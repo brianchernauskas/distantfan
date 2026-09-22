@@ -1,17 +1,15 @@
 // Firebase web config. These keys are public by design: access is controlled by
 // firestore.rules and Firebase Auth, not by keeping this file secret.
-// Leave FIREBASE_CONFIG as null to run in demo mode (data stays in this browser).
-export const FIREBASE_CONFIG = null;
-/* Paste from Firebase console → Project settings → Your apps → Web app:
+// Set FIREBASE_CONFIG to null to run in demo mode (data stays in this browser).
 export const FIREBASE_CONFIG = {
-  apiKey: '',
-  authDomain: '',
-  projectId: '',
-  storageBucket: '',
-  messagingSenderId: '',
-  appId: '',
+  apiKey: 'AIzaSyBEXcgPMMP6ef_NCpf1npkv_WAtiBQGfHM',
+  authDomain: 'distantfan-e8dbd.firebaseapp.com',
+  projectId: 'distantfan-e8dbd',
+  storageBucket: 'distantfan-e8dbd.firebasestorage.app',
+  messagingSenderId: '1025815650213',
+  appId: '1:1025815650213:web:6d33867eda6c0a3944d24c',
+  measurementId: 'G-9SX08M8C92',
 };
-*/
 
 export const SITE = {
   name: 'Distant Fan',
