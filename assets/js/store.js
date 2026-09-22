@@ -1,9 +1,9 @@
 // Data layer. Uses Firebase (Auth + Firestore) when FIREBASE_CONFIG is set,
 // otherwise a demo store in localStorage seeded with clearly fake fans and spots.
-import { FIREBASE_CONFIG, SITE } from './config.js?v=202609220946';
-import { TEAMS, TEAM_BY_ID } from './teams.js?v=202609220946';
-import { METROS } from './metros.js?v=202609220946';
-import { encode, center } from './geo.js?v=202609220946';
+import { FIREBASE_CONFIG, SITE } from './config.js?v=202609221130';
+import { TEAMS, TEAM_BY_ID } from './teams.js?v=202609221130';
+import { METROS } from './metros.js?v=202609221130';
+import { encode, center } from './geo.js?v=202609221130';
 
 export const mode = FIREBASE_CONFIG ? 'firebase' : 'demo';
 let impl;
@@ -25,6 +25,7 @@ export const saveProfile = call('saveProfile');
 export const deleteProfile = call('deleteProfile');
 export const fansFor = call('fansFor');
 export const spotsFor = call('spotsFor');
+export const spotsSample = call('spotsSample');
 export const addSpot = call('addSpot');
 export const removeSpot = call('removeSpot');
 export const checkinsFor = call('checkinsFor');
@@ -91,6 +92,10 @@ async function firebaseStore() {
     fansFor: teamId => list(F.query(F.collection(db, 'profiles'), F.where('teams', 'array-contains', teamId), F.limit(2000)))
       .then(r => r.map(({ id, ...p }) => ({ uid: id, ...p }))),
     spotsFor: teamId => list(F.query(F.collection(db, 'spots'), F.where('teams', 'array-contains', teamId), F.limit(500))),
+    // Unfiltered sample, so a team with nothing nearby yet can still show fans other teams' spots
+    // nearby - proof the map is alive, not a team-scoped read. Small dataset, so no server-side
+    // geo query yet; the caller filters by distance client-side like everywhere else here.
+    spotsSample: () => list(F.query(F.collection(db, 'spots'), F.limit(400))),
     addSpot: s => F.addDoc(F.collection(db, 'spots'), {
       name: clean(s.name, 80), address: clean(s.address, 120), club: clean(s.club, 80), note: clean(s.note, 200),
       lat: +s.lat, lng: +s.lng, teams: s.teams.slice(0, 6),
@@ -229,6 +234,7 @@ function demoStore() {
     async deleteProfile() { localStorage.removeItem(KEY); state = { user: null, profiles: {}, spots: [], checkins: [], rooms: {}, seeded: {} }; emitUser(); },
     async fansFor(teamId) { seedTeam(teamId); return Object.entries(state.profiles).filter(([, p]) => p.teams.includes(teamId)).map(([uid, p]) => ({ uid, ...p })); },
     async spotsFor(teamId) { seedTeam(teamId); return state.spots.filter(s => s.teams.includes(teamId)); },
+    async spotsSample() { return state.spots; },
     async addSpot(s) { state.spots.push({ ...s, id: `spot-${Date.now()}`, by: state.user.uid }); save(); },
     async removeSpot(id) { state.spots = state.spots.filter(s => s.id !== id); save(); },
     async checkinsFor(teamId) { seedTeam(teamId); return state.checkins.filter(c => c.teamId === teamId && active(c)); },

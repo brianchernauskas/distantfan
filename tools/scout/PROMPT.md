@@ -48,9 +48,25 @@ themselves as a particular team's home in that city.
 
 ## Rules for both modes
 
-Use WebSearch, then **WebFetch the page you're relying on** and confirm it names the venue for that
-team. Never list a venue you only saw in a search snippet. Never invent or guess an address or date.
-Get the street address from the source or from the venue's own site.
+Use WebSearch to find sources. **Don't use the built-in browser or Chrome tools**: this runs
+unattended, and every new site there waits for Brian to approve it.
+
+To read a source, try WebFetch first. If it 403s, or the page looks JavaScript-only with no real
+content, try `node fetch.mjs <url>` before giving up on it. It fetches like a real browser (curl
+under the hood, a real User-Agent, and a session cookie jar carried across redirects), which clears
+two blocks WebFetch trips on: plain bot-detection User-Agent sniffing (common on official fan-club
+sites), and the session-cookie handshake that iModules-hosted alumni CMS sites (a shared platform a
+lot of university alumni associations use) redirect through before serving the real page - chapter
+data that looks JS-only there is often already sitting in that page's static HTML, just hidden behind
+a CSS accordion. Add `--raw` to get unprocessed HTML instead of extracted text when you need to grep
+for a hidden panel. It can't clear a real Cloudflare managed challenge or a site with a broken TLS
+certificate - it says so plainly when that happens (look for "needs a browser" or "skip it" in its
+stderr). If both WebFetch and `fetch.mjs` come back empty or blocked, skip that team and list it under
+"needs a browser" in your summary rather than guessing at what the page contains.
+
+Either way, **read the page you're relying on** and confirm it names the venue for that team. Never
+list a venue you only saw in a search snippet. Never invent or guess an address or date. Get the
+street address from the source or from the venue's own site.
 
 **Confidence**
 - **high**: the source is the club, alumni chapter, team, or the venue itself; it names this venue

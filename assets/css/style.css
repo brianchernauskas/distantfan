@@ -209,6 +209,9 @@ main.view { min-height: 0; }
 /* map markers */
 .spot-pin { width: 38px; height: 38px; border-radius: 50% 50% 50% 4px; transform: rotate(-45deg); background: var(--team, var(--accent)); border: 2px solid #fff; box-shadow: 0 3px 10px rgb(0 0 0 / .35); display: grid; place-items: center; }
 .spot-pin img { width: 26px; height: 26px; border-radius: 50%; background: #fff; padding: 2px; transform: rotate(45deg); }
+/* De-emphasized pins for other teams' spots, shown so the map never looks empty when yours has none yet. */
+.spot-pin.other { width: 30px; height: 30px; background: var(--muted, #8a94a6); opacity: .8; filter: grayscale(.3); }
+.spot-pin.other img { width: 20px; height: 20px; }
 .me-pin { width: 18px; height: 18px; border-radius: 50%; background: var(--accent); border: 3px solid #fff; box-shadow: 0 0 0 6px color-mix(in srgb, var(--accent) 30%, transparent); }
 .leaflet-container { font: 14px var(--body); }
 .leaflet-tile-pane { filter: var(--map-filter); }

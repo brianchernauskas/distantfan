@@ -1,9 +1,9 @@
-import * as S from './store.js?v=202609220946';
-import { SITE, ADMINS } from './config.js?v=202609220946';
-import { TEAMS, TEAM_BY_ID, LEAGUES } from './teams.js?v=202609220946';
-import { METROS } from './metros.js?v=202609220946';
-import { encode, center, bounds, areaLabel, km } from './geo.js?v=202609220946';
-import { nextGames } from './schedule.js?v=202609220946';
+import * as S from './store.js?v=202609221130';
+import { SITE, ADMINS } from './config.js?v=202609221130';
+import { TEAMS, TEAM_BY_ID, LEAGUES } from './teams.js?v=202609221130';
+import { METROS } from './metros.js?v=202609221130';
+import { encode, center, bounds, areaLabel, km } from './geo.js?v=202609221130';
+import { nextGames } from './schedule.js?v=202609221130';
 
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -325,6 +325,19 @@ async function loadMap(fresh = false) {
   const spots = d.spots.map(s => ({ ...s, dist: km(me, s), going: going[s.id] || 0 })).sort((a, b) => a.dist - b.dist);
   const nearSpots = spots.filter(s => s.dist <= NEAR_KM);
 
+  // Nothing for this team here yet: show other teams' nearby spots so the map still looks
+  // alive instead of empty. Purely informational - no check-in, since it isn't this team's spot.
+  let otherSpots = [];
+  if (!nearSpots.length) {
+    try {
+      const sample = await S.spotsSample();
+      otherSpots = sample.filter(s => !s.teams?.includes(id))
+        .map(s => ({ ...s, dist: km(me, s) })).filter(s => s.dist <= NEAR_KM)
+        .sort((a, b) => a.dist - b.dist).slice(0, 6);
+    } catch (e) { console.error(e); }
+    if (id !== teamId || !map) return; // team switched while that extra fetch ran
+  }
+
   mapLayers.clearLayers();
   const hb = bounds(profile.cell);
   const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#ff7a1a';
@@ -338,6 +351,11 @@ async function loadMap(fresh = false) {
   for (const s of spots) {
     const icon = L.divIcon({ className: '', html: `<div class="spot-pin" style="--team:${esc(color)}">${t?.logo ? `<img src="${esc(t.logo)}" alt="">` : ''}</div>`, iconSize: [38, 38], iconAnchor: [19, 38], popupAnchor: [0, -36] });
     L.marker([s.lat, s.lng], { icon, title: s.name }).bindPopup(() => spotPopup(s, myCheckin)).addTo(mapLayers);
+  }
+  for (const s of otherSpots) {
+    const ot = TEAM_BY_ID[s.teams?.[0]];
+    const icon = L.divIcon({ className: '', html: `<div class="spot-pin other">${ot?.logo ? `<img src="${esc(ot.logo)}" alt="">` : ''}</div>`, iconSize: [30, 30], iconAnchor: [15, 30], popupAnchor: [0, -28] });
+    L.marker([s.lat, s.lng], { icon, title: s.name }).bindPopup(() => spotPopup(s, null, ot)).addTo(mapLayers);
   }
   L.marker([me.lat, me.lng], { icon: L.divIcon({ className: '', html: '<div class="me-pin"></div>', iconSize: [18, 18] }), interactive: false, zIndexOffset: 1000 }).addTo(mapLayers);
 
@@ -363,7 +381,12 @@ async function loadMap(fresh = false) {
         <button class="item" data-spot="${esc(s.id)}"><span class="pinicon">📍</span>
           <span class="main"><span class="t" style="display:block">${esc(s.name)}</span><span class="s">${fmtKm(s.dist)}${s.eventAt ? ` · ${esc(s.eventTitle || 'Watch party')}, ${fmtWhen(s.eventAt)}` : s.note ? ` · ${esc(s.note)}` : ''}</span></span>
           ${s.going ? `<span class="badge">${s.going} going</span>` : s.source === 'scout' ? '<span class="badge plain">found online</span>' : ''}</button>`).join('')
-        : `<p class="empty">No spots within ${Math.round(NEAR_KM * .621)} miles yet. Know a bar that shows ${esc(t?.short)} games? Add it and other fans will find it.</p>`}</div>
+        : `<p class="empty">No ${esc(t?.short)} spots within ${Math.round(NEAR_KM * .621)} miles yet. Know a bar that shows their games? Add it and other fans will find it.</p>
+           ${otherSpots.length ? `<div class="sub" style="margin-top:14px">${otherSpots.length} other team${otherSpots.length === 1 ? '' : 's'} already on the map near you</div>
+             ${otherSpots.map(s => `
+               <button class="item" data-other="${esc(s.id)}">${logo(TEAM_BY_ID[s.teams?.[0]], 'sm')}
+                 <span class="main"><span class="t" style="display:block">${esc(s.name)}</span><span class="s">${esc(TEAM_BY_ID[s.teams?.[0]]?.short || '')} · ${fmtKm(s.dist)}</span></span></button>`).join('')}`
+           : ''}`}</div>
       <button class="link-btn" style="font-size:14px;margin-top:10px" id="clubLink">Run a fan club or alumni chapter?</button>
     </div>
     <div class="panel">
@@ -391,6 +414,12 @@ async function loadMap(fresh = false) {
     mapLayers.eachLayer(l => { if (l.options?.title === s.name) l.openPopup(); });
     if (matchMedia('(max-width: 860px)').matches) $('#map').scrollIntoView({ behavior: 'smooth' });
   });
+  $$('[data-other]', side).forEach(b => b.onclick = () => {
+    const s = otherSpots.find(x => x.id === b.dataset.other);
+    map.setView([s.lat, s.lng], 14);
+    mapLayers.eachLayer(l => { if (l.options?.title === s.name) l.openPopup(); });
+    if (matchMedia('(max-width: 860px)').matches) $('#map').scrollIntoView({ behavior: 'smooth' });
+  });
 
   if (!nearFans.length && !nearSpots.length && d.fans.length) {
     const b = L.latLngBounds(Object.keys(cells).map(c => { const p = center(c); return [p.lat, p.lng]; }));
@@ -403,24 +432,26 @@ const views = () => ['map', 'games', 'chat', ...(isAdmin() ? ['review'] : [])];
 
 const fmtKm = k => { const mi = k * .621; return mi < 1 ? 'under a mile' : `${mi < 10 ? mi.toFixed(1) : Math.round(mi)} mi`; };
 
-function spotPopup(s, myCheckin) {
+function spotPopup(s, myCheckin, forTeam) {
   const el = document.createElement('div');
   const mine = s.by === user.uid || isAdmin();
   const here = myCheckin?.spotId === s.id;
   el.innerHTML = `<h4>${esc(s.name)}</h4>
+    ${forTeam ? `<p class="muted" style="display:flex;align-items:center;gap:6px;margin-top:-6px">${logo(forTeam, 'sm')} Home of ${esc(forTeam.name)} fans</p>` : ''}
     ${s.eventAt ? `<p><b>${esc(s.eventTitle || 'Watch party')}</b><br>${fmtWhen(s.eventAt)}</p>` : ''}
     ${s.club ? `<p>Home of <b>${esc(s.club)}</b></p>` : ''}
     <p>${s.address ? `${esc(s.address)}<br>` : ''}${s.note ? esc(s.note) : ''}</p>
-    <p><b>${s.going}</b> going to the next game${s.source === 'scout' ? '' : s.byName ? ` · added by ${esc(s.byName)}` : ''}</p>
+    ${forTeam ? '' : `<p><b>${s.going}</b> going to the next game${s.source === 'scout' ? '' : s.byName ? ` · added by ${esc(s.byName)}` : ''}</p>`}
     ${s.source === 'scout' ? `<p style="font-size:12px">Found online${s.sourceUrl ? ` via <a href="${esc(s.sourceUrl)}" target="_blank" rel="noopener">${esc(s.sourceName || 'source')}</a>` : ''} · checked ${new Date(s.checkedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}. Worth confirming before you go.</p>` : ''}
     <div class="row">
-      <button class="btn sm ${here ? '' : 'primary'}" data-go>${here ? 'Going ✓' : "I'm going"}</button>
+      ${forTeam ? '' : `<button class="btn sm ${here ? '' : 'primary'}" data-go>${here ? 'Going ✓' : "I'm going"}</button>`}
       <a class="btn sm" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=${s.lat},${s.lng}">Directions</a>
       ${mine ? '<button class="btn sm ghost" data-rm>Remove</button>' : ''}
     </div>
-    <button class="link-btn" style="font-size:12px;margin-top:10px" data-report>${s.source === 'scout' ? 'Still accurate? Tell us if not' : 'Something wrong with this spot?'}</button>`;
-  el.querySelector('[data-go]').onclick = () => here ? S.checkOut(teamId).then(() => { toast('Check-in cancelled'); loadMap(true); }) : goTo(s);
-  el.querySelector('[data-report]').onclick = () => openReportDialog(s);
+    ${forTeam ? `<p class="muted" style="font-size:12px;margin-top:10px">Follow ${esc(forTeam.short)} too? Add them from <b>+ Teams</b> above to check in here.</p>`
+      : `<button class="link-btn" style="font-size:12px;margin-top:10px" data-report>${s.source === 'scout' ? 'Still accurate? Tell us if not' : 'Something wrong with this spot?'}</button>`}`;
+  el.querySelector('[data-go]')?.addEventListener('click', () => here ? S.checkOut(teamId).then(() => { toast('Check-in cancelled'); loadMap(true); }) : goTo(s));
+  el.querySelector('[data-report]')?.addEventListener('click', () => openReportDialog(s));
   el.querySelector('[data-rm]')?.addEventListener('click', async () => {
     if (!confirm(`Remove ${s.name} from the map?`)) return;
     await S.removeSpot(s.id); toast('Spot removed'); loadMap(true);

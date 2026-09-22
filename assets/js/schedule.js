@@ -1,5 +1,5 @@
 // Upcoming games from ESPN's public schedule feed (CORS-enabled). Cached per team for 30 minutes.
-import { TEAM_BY_ID } from './teams.js?v=202609220946';
+import { TEAM_BY_ID } from './teams.js?v=202609221130';
 
 const PATH = { nfl: 'football/nfl', cfb: 'football/college-football', nba: 'basketball/nba', mlb: 'baseball/mlb', nhl: 'hockey/nhl', mls: 'soccer/usa.1' };
 const TTL = 30 * 60e3;
