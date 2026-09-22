@@ -1,9 +1,9 @@
 // Data layer. Uses Firebase (Auth + Firestore) when FIREBASE_CONFIG is set,
 // otherwise a demo store in localStorage seeded with clearly fake fans and spots.
-import { FIREBASE_CONFIG, SITE } from './config.js?v=202609220827';
-import { TEAMS, TEAM_BY_ID } from './teams.js?v=202609220827';
-import { METROS } from './metros.js?v=202609220827';
-import { encode, center } from './geo.js?v=202609220827';
+import { FIREBASE_CONFIG, SITE } from './config.js?v=202609220909';
+import { TEAMS, TEAM_BY_ID } from './teams.js?v=202609220909';
+import { METROS } from './metros.js?v=202609220909';
+import { encode, center } from './geo.js?v=202609220909';
 
 export const mode = FIREBASE_CONFIG ? 'firebase' : 'demo';
 let impl;
@@ -33,6 +33,9 @@ export const checkOut = call('checkOut');
 export const subscribeRoom = call('subscribeRoom');
 export const sendMessage = call('sendMessage');
 export const deleteMessage = call('deleteMessage');
+export const listQueue = call('listQueue');
+export const approveQueued = call('approveQueued');
+export const rejectQueued = call('rejectQueued');
 
 const clean = (s, max) => String(s || '').replace(/\s+/g, ' ').trim().slice(0, max);
 const active = c => (c.expiresAt || 0) > Date.now();
@@ -111,6 +114,22 @@ async function firebaseStore() {
       uid: me.uid, name: clean(name, 40), text: clean(text, 500), createdAt: F.serverTimestamp(),
     }),
     deleteMessage: (roomId, id) => F.deleteDoc(F.doc(db, 'rooms', roomId, 'messages', id)),
+
+    // Scout review queue (admin only; enforced by firestore.rules).
+    listQueue: () => list(F.query(F.collection(db, 'scoutQueue'), F.limit(200))),
+    async approveQueued(q) {
+      const { id, confidence, evidence, queuedAt, ...spot } = q;
+      const b = F.writeBatch(db);
+      b.set(F.doc(db, 'spots', `scout_${id}`), { ...spot, approvedBy: me.uid, createdAt: F.serverTimestamp() });
+      b.delete(F.doc(db, 'scoutQueue', id));
+      await b.commit();
+    },
+    async rejectQueued(q) {
+      const b = F.writeBatch(db);
+      b.set(F.doc(db, 'scoutRejects', q.id), { name: q.name, address: q.address || '', teams: q.teams, rejectedAt: F.serverTimestamp() });
+      b.delete(F.doc(db, 'scoutQueue', q.id));
+      await b.commit();
+    },
   };
 }
 
@@ -203,6 +222,9 @@ function demoStore() {
       (state.rooms[id] ||= []).push({ id: `m-${Date.now()}`, uid: state.user.uid, name: clean(name, 40), text: clean(text, 500), at: Date.now() });
       state.rooms[id] = state.rooms[id].slice(-100); save(); emitRoom(id);
     },
+    async listQueue() { return []; },
+    async approveQueued() {},
+    async rejectQueued() {},
     async deleteMessage(id, mid) { state.rooms[id] = (state.rooms[id] || []).filter(m => m.id !== mid); save(); emitRoom(id); },
   };
 }

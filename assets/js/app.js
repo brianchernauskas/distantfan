@@ -1,15 +1,16 @@
-import * as S from './store.js?v=202609220827';
-import { SITE } from './config.js?v=202609220827';
-import { TEAMS, TEAM_BY_ID, LEAGUES } from './teams.js?v=202609220827';
-import { METROS } from './metros.js?v=202609220827';
-import { encode, center, bounds, areaLabel, km } from './geo.js?v=202609220827';
-import { nextGames } from './schedule.js?v=202609220827';
+import * as S from './store.js?v=202609220909';
+import { SITE, ADMINS } from './config.js?v=202609220909';
+import { TEAMS, TEAM_BY_ID, LEAGUES } from './teams.js?v=202609220909';
+import { METROS } from './metros.js?v=202609220909';
+import { encode, center, bounds, areaLabel, km } from './geo.js?v=202609220909';
+import { nextGames } from './schedule.js?v=202609220909';
 
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const root = $('#root');
 const NEAR_KM = 80;
+const isAdmin = () => !!user && ADMINS.includes(user.uid);
 
 let user = null, profile = null, teamId = null, view = 'map';
 let map = null, mapLayers = null, unsubRoom = null, room = 'local', adding = false;
@@ -22,6 +23,7 @@ const ICON = {
   map: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2z"/><path d="M9 4v14M15 6v14"/></svg>',
   games: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>',
   chat: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg>',
+  review: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.5 5.1 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.5-6.9A2 2 0 0 0 16.8 4H7.2a2 2 0 0 0-1.7 1.1z"/></svg>',
   me: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>',
 };
 const BRAND = `<a class="brand" href="./" aria-label="Distant Fan home"><svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="8" cy="32" r="4.5" fill="currentColor" opacity=".35"/><path d="M12 29C15 20 19 17 23.5 17.5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-dasharray=".5 5" opacity=".55"/><path d="M29 3.5a8.5 8.5 0 0 0-8.5 8.5c0 6.4 8.5 15 8.5 15s8.5-8.6 8.5-15A8.5 8.5 0 0 0 29 3.5z" fill="var(--accent)"/><circle cx="29" cy="12" r="3.2" fill="var(--bg)"/></svg><span>Distant<b>Fan</b></span></a>`;
@@ -44,7 +46,7 @@ const errMsg = e => (e?.code || '').replace('auth/', '').replace(/-/g, ' ') || e
     try { profile = await S.getProfile(u.uid); } catch (e) { profile = null; console.error(e); }
     if (!profile) return renderOnboarding();
     teamId = profile.teams.includes(ls.get('df_team')) ? ls.get('df_team') : profile.teams[0];
-    view = ['map', 'games', 'chat'].includes(location.hash.slice(1)) ? location.hash.slice(1) : 'map';
+    view = views().includes(location.hash.slice(1)) ? location.hash.slice(1) : 'map';
     renderShell();
   });
 })();
@@ -240,7 +242,7 @@ const shortName = n => {
 /* ------------------------------------------------------------------ shell */
 function renderShell() {
   cleanupView();
-  const tabs = [['map', 'Map'], ['games', 'Games'], ['chat', 'Chat']];
+  const tabs = [['map', 'Map'], ['games', 'Games'], ['chat', 'Chat'], ...(isAdmin() ? [['review', 'Review']] : [])];
   const tabBtns = tabs.map(([k, n]) => `<button class="tab" data-view="${k}" aria-selected="${view === k}">${ICON[k]}<span>${n}</span></button>`).join('');
   root.innerHTML = `
     <div class="app">
@@ -261,12 +263,12 @@ function renderShell() {
   $$('[data-view]').forEach(b => b.onclick = () => { view = b.dataset.view; history.replaceState(null, '', `#${view}`); renderShell(); });
   $('#meBtn').onclick = $('#meBtn2').onclick = openProfile;
   drawTeambar();
-  ({ map: viewMap, games: viewGames, chat: viewChat })[view]();
+  ({ map: viewMap, games: viewGames, chat: viewChat, review: viewReview })[view]();
 }
 
 function drawTeambar() {
   const bar = $('#teambar');
-  bar.hidden = view === 'games';
+  bar.hidden = view === 'games' || view === 'review';
   bar.innerHTML = profile.teams.map(id => {
     const t = TEAM_BY_ID[id];
     return `<button class="chip" data-t="${id}" aria-pressed="${id === teamId}" style="--team:${esc(t?.color)}">${logo(t, 'sm')}${esc(t?.short || id)}</button>`;
@@ -282,7 +284,8 @@ function drawTeambar() {
 
 async function teamData(id, fresh = false) {
   if (!fresh && cache[id]) return cache[id];
-  const [fans, spots, checkins] = await Promise.all([S.fansFor(id), S.spotsFor(id), S.checkinsFor(id)]);
+  const [fans, allSpots, checkins] = await Promise.all([S.fansFor(id), S.spotsFor(id), S.checkinsFor(id)]);
+  const spots = allSpots.filter(s => !s.expiresAt || s.expiresAt > Date.now()); // scout listings expire unless re-confirmed
   return (cache[id] = { fans, spots, checkins });
 }
 const home = () => center(profile.cell);
@@ -358,8 +361,8 @@ async function loadMap(fresh = false) {
       <div class="row" style="justify-content:space-between"><h3>Watch spots nearby</h3><button class="btn sm primary" id="addSpot">+ Add</button></div>
       <div class="list">${nearSpots.length ? nearSpots.slice(0, 12).map(s => `
         <button class="item" data-spot="${esc(s.id)}"><span class="pinicon">📍</span>
-          <span class="main"><span class="t" style="display:block">${esc(s.name)}</span><span class="s">${fmtKm(s.dist)}${s.note ? ` · ${esc(s.note)}` : ''}</span></span>
-          ${s.going ? `<span class="badge">${s.going} going</span>` : ''}</button>`).join('')
+          <span class="main"><span class="t" style="display:block">${esc(s.name)}</span><span class="s">${fmtKm(s.dist)}${s.eventAt ? ` · ${esc(s.eventTitle || 'Watch party')}, ${fmtWhen(s.eventAt)}` : s.note ? ` · ${esc(s.note)}` : ''}</span></span>
+          ${s.going ? `<span class="badge">${s.going} going</span>` : s.source === 'scout' ? '<span class="badge plain">found online</span>' : ''}</button>`).join('')
         : `<p class="empty">No spots within ${Math.round(NEAR_KM * .621)} miles yet. Know a bar that shows ${esc(t?.short)} games? Add it and other fans will find it.</p>`}</div>
     </div>
     <div class="panel">
@@ -392,15 +395,21 @@ async function loadMap(fresh = false) {
   }
 }
 
+const fmtWhen = ms => new Date(ms).toLocaleString(undefined, { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+const views = () => ['map', 'games', 'chat', ...(isAdmin() ? ['review'] : [])];
+
 const fmtKm = k => { const mi = k * .621; return mi < 1 ? 'under a mile' : `${mi < 10 ? mi.toFixed(1) : Math.round(mi)} mi`; };
 
 function spotPopup(s, myCheckin) {
   const el = document.createElement('div');
-  const mine = s.by === user.uid;
+  const mine = s.by === user.uid || isAdmin();
   const here = myCheckin?.spotId === s.id;
   el.innerHTML = `<h4>${esc(s.name)}</h4>
+    ${s.eventAt ? `<p><b>${esc(s.eventTitle || 'Watch party')}</b><br>${fmtWhen(s.eventAt)}</p>` : ''}
+    ${s.club ? `<p>Home of <b>${esc(s.club)}</b></p>` : ''}
     <p>${s.address ? `${esc(s.address)}<br>` : ''}${s.note ? esc(s.note) : ''}</p>
-    <p><b>${s.going}</b> going to the next game${s.byName ? ` · added by ${esc(s.byName)}` : ''}</p>
+    <p><b>${s.going}</b> going to the next game${s.source === 'scout' ? '' : s.byName ? ` · added by ${esc(s.byName)}` : ''}</p>
+    ${s.source === 'scout' ? `<p style="font-size:12px">Found online${s.sourceUrl ? ` via <a href="${esc(s.sourceUrl)}" target="_blank" rel="noopener">${esc(s.sourceName || 'source')}</a>` : ''} · checked ${new Date(s.checkedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}. Worth confirming before you go.</p>` : ''}
     <div class="row">
       <button class="btn sm ${here ? '' : 'primary'}" data-go>${here ? 'Going ✓' : "I'm going"}</button>
       <a class="btn sm" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=${s.lat},${s.lng}">Directions</a>
@@ -572,6 +581,37 @@ function timeAgo(ms) {
   return new Date(ms).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 }
 
+/* ----------------------------------------------------------------- review */
+async function viewReview() {
+  const v = $('#view');
+  v.innerHTML = `<div class="page"><h2>Scout review</h2><p class="muted">Finds the weekly scout wasn't sure enough about to publish on its own. Approve puts them on the map; reject stops the scout suggesting them again.</p><div id="queue" style="display:grid;gap:14px"><div class="loading" style="min-height:160px">Loading…</div></div></div>`;
+  let items;
+  try { items = await S.listQueue(); } catch (e) { $('#queue').innerHTML = `<div class="panel"><p class="err">${esc(errMsg(e))}</p></div>`; return; }
+  if (view !== 'review') return;
+  items.sort((a, b) => (a.queuedAt || 0) - (b.queuedAt || 0));
+  const q = $('#queue');
+  if (!items.length) { q.innerHTML = '<div class="panel"><p class="empty">Nothing waiting. The scout runs Tuesday mornings.</p></div>'; return; }
+  q.innerHTML = items.map(it => `
+    <div class="panel" data-q="${esc(it.id)}" style="display:grid;gap:8px">
+      <div class="row">${it.teams.map(id => logo(TEAM_BY_ID[id], 'sm')).join('')}<b class="grow">${esc(it.name)}</b><span class="badge plain">${esc(it.confidence || 'medium')}</span></div>
+      <div class="muted" style="font-size:14px">${it.teams.map(id => esc(TEAM_BY_ID[id]?.name || id)).join(', ')}${it.club ? ` · ${esc(it.club)}` : ''}</div>
+      ${it.eventAt ? `<div><b>${esc(it.eventTitle || 'Watch party')}</b> · ${fmtWhen(it.eventAt)}</div>` : ''}
+      <div style="font-size:14px">${esc(it.address)}${it.note ? `<br>${esc(it.note)}` : ''}</div>
+      <div class="muted" style="font-size:13px">Why: ${esc(it.evidence || '—')}<br>Source: <a href="${esc(it.sourceUrl)}" target="_blank" rel="noopener">${esc(it.sourceName || it.sourceUrl)}</a> · <a href="https://www.google.com/maps/search/?api=1&query=${it.lat},${it.lng}" target="_blank" rel="noopener">map</a></div>
+      <div class="row"><button class="btn sm primary" data-ok>Approve</button><button class="btn sm ghost" data-no>Reject</button></div>
+    </div>`).join('');
+  $$('[data-q]', q).forEach(card => {
+    const it = items.find(x => x.id === card.dataset.q);
+    const act = async (fn, msg) => {
+      $$('button', card).forEach(b => b.disabled = true);
+      try { await fn(it); it.teams.forEach(t => delete cache[t]); card.remove(); toast(msg); if (!$('[data-q]', q)) viewReview(); }
+      catch (e) { toast(errMsg(e)); $$('button', card).forEach(b => b.disabled = false); }
+    };
+    $('[data-ok]', card).onclick = () => act(S.approveQueued, `${it.name} is on the map`);
+    $('[data-no]', card).onclick = () => act(S.rejectQueued, 'Rejected');
+  });
+}
+
 /* ---------------------------------------------------------------- profile */
 function isDark() {
   const t = document.documentElement.dataset.theme;
@@ -614,5 +654,5 @@ function openProfile() {
 
 window.addEventListener('hashchange', () => {
   const h = location.hash.slice(1);
-  if (profile && ['map', 'games', 'chat'].includes(h) && h !== view) { view = h; renderShell(); }
+  if (profile && views().includes(h) && h !== view) { view = h; renderShell(); }
 });

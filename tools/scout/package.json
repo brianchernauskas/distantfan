@@ -1,0 +1,9 @@
+{
+  "name": "distantfan-scout",
+  "private": true,
+  "type": "module",
+  "description": "Weekly watch-party scout for distantfan.com. See PROMPT.md.",
+  "dependencies": {
+    "firebase-admin": "^13.0.0"
+  }
+}

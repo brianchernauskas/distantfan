@@ -21,3 +21,6 @@ export const SITE = {
   // Local chat rooms group fans by a precision-3 cell (≈ 156 × 156 km).
   roomPrecision: 3,
 };
+
+// Firebase uids that see the Review tab for the scout's queued finds. Must match isAdmin() in firestore.rules.
+export const ADMINS = ['euJIvUd4sig4pGT4fE7SPSpE6lA3'];

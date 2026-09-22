@@ -6,6 +6,8 @@ service cloud.firestore {
     function me() { return request.auth.uid; }
     function str(v, min, max) { return v is string && v.size() >= min && v.size() <= max; }
     function data() { return request.resource.data; }
+    // Must match ADMINS in assets/js/config.js.
+    function isAdmin() { return signedIn() && request.auth.uid in ['euJIvUd4sig4pGT4fE7SPSpE6lA3']; }
 
     // Public fan profile. Home is a geohash of at most 4 characters (~39 × 20 km);
     // anything more precise is rejected, so a street-level location can never be stored.
@@ -33,7 +35,13 @@ service cloud.firestore {
         && data().teams is list && data().teams.size() >= 1 && data().teams.size() <= 6
         && data().createdAt == request.time;
       allow delete: if signedIn() && resource.data.by == me();
+      // The admin approves scout finds (extra source fields) and can remove any spot.
+      allow create, update, delete: if isAdmin();
     }
+
+    // Watch-party scout (tools/scout). Its admin key bypasses these rules; the admin reviews in the app.
+    match /scoutQueue/{id} { allow read, write: if isAdmin(); }
+    match /scoutRejects/{id} { allow read, write: if isAdmin(); }
 
     // One active check-in per fan per team; the doc id is `${uid}_${teamId}`.
     match /checkins/{id} {
