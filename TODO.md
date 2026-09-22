@@ -77,6 +77,9 @@ When picking up this file cold, work top to bottom unless told otherwise.
       locations, and to fire even when there are zero fans (the real state right now -- only one
       real profile exists in production). Verified with `--dry-run` against synthetic candidates
       before touching anything live.
+- [ ] Create an Instagram account for the site and give listed bars/restaurants a shout-out post
+      (tag the venue, mention what teams show there). Cheap relationship-builder with venues and
+      light social proof — see MARKETING.md Phase B for the framing.
 
 ## Phase 3 — Design & monetization
 

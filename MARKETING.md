@@ -39,6 +39,10 @@ The site is only as useful as its venue list. This phase overlaps with TODO.md's
 - Cross-post venue additions back into the fan-club groups from Phase A ("added 4 more Chiefs
   bars in the Phoenix area this week") — gives you a natural, recurring reason to post instead
   of one-and-done spam.
+- **Instagram account for the site**, used to give listed bars a public shout-out (tag the venue,
+  a photo or their own promo graphic, "Home of AZ Chiefs Kingdom — find your people at
+  distantfan.com"). Low effort per post, gives bars a reason to repost/engage (free exposure for
+  them), and doubles as light social proof for anyone who finds the account. See TODO.md.
 
 ## Phase C — Content & SEO (weeks 3–6+)
 
