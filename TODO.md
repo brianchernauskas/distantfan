@@ -25,8 +25,17 @@ When picking up this file cold, work top to bottom unless told otherwise.
 
 ## Phase 2 — Content & coverage
 
-- [ ] Research Arizona Wildcats football, KC Chiefs, and Kansas Jayhawks football venues/bars for
-      the greater Phoenix area (ties into distant-fan demand there).
+- [x] Research Arizona Wildcats football, KC Chiefs, and Kansas Jayhawks football venues/bars for
+      the greater Phoenix area. Found: **Dirtbag's Phoenix** (Wildcats, official PhoenixCats/Arizona
+      Alumni hangout, high confidence) and **Pub Rock Live** (Chiefs, self-declared "Home of AZ
+      Chiefs Kingdom," high confidence). Jayhawks lead is weak: **The Hub Grill & Bar** is only
+      confirmed via a one-off July 2024 KU Alumni happy hour, not a standing gameday venue (medium
+      confidence) -- worth a fresher look later. Also fixed a real bug found along the way: the
+      scout tool's Phoenix config (`tools/scout/lib.mjs`) was wrongly treating Arizona Wildcats as
+      a Phoenix "home team" (they play in Tucson, ~110mi away), so the automated weekly scout was
+      skipping them entirely -- now fixed so future scout runs cover them too. Candidates saved to
+      `tools/scout/runs/candidates-manual-2026-09-22.json` (gitignored, not yet published to the
+      live site -- see chat for the publish decision).
 - [ ] Add a "suggest a bar/venue" contact form so bar owners can reach you directly about being
       added to the site.
 - [ ] Broader push to get more venues/sites added generally (likely follows from the contact form

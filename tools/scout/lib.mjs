@@ -28,8 +28,10 @@ export const AREAS = {
     homeTeams: ['nfl-atl', 'nba-atl', 'mlb-atl', 'mls-atl', 'cfb-59'] },
   bos: { label: 'Boston', center: { lat: 42.36, lng: -71.06 }, radiusKm: 60,
     homeTeams: ['nfl-ne', 'nba-bos', 'mlb-bos', 'nhl-bos', 'mls-ne', 'cfb-103'] },
+  // Arizona Wildcats (cfb-12) play in Tucson, ~110mi away, so they're treated as an away
+  // team for Phoenix scouting purposes even though they're the state's flagship program.
   phx: { label: 'Phoenix', center: { lat: 33.45, lng: -112.07 }, radiusKm: 100,
-    homeTeams: ['nfl-ari', 'nba-phx', 'mlb-ari', 'cfb-9', 'cfb-12'] },
+    homeTeams: ['nfl-ari', 'nba-phx', 'mlb-ari', 'cfb-9'] },
 };
 
 // City sweep: which metros each weekday covers (Mon..Fri), so every city is searched weekly.
