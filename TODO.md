@@ -66,6 +66,17 @@ When picking up this file cold, work top to bottom unless told otherwise.
       generation + a schedule endpoint entry. The venue scout now covers cbb too. Known gap: Big
       East (UConn, Villanova, etc.) is basketball-only and not covered -- worth a follow-up if it
       matters before March Madness.
+- [x] **Ad-hoc fix (not a numbered item):** after item 9, you checked the live site and found
+      DFW empty under the Cowboys, and flagged that the map looks sparse when zoomed out. Turned
+      into two real fixes: `apply.mjs` no longer drops scout finds outside the 29 tracked metros
+      (it labels them by their own city instead -- directory mode was already reading whole
+      national fan-club directories and throwing most of that away), and a metro's own home team
+      is no longer unconditionally excluded -- city-mode searches can now surface it too (e.g.
+      Cowboys venues in Dallas), matching item 13's "watch your home team without going to the
+      game" positioning. Also fixed the map's auto-zoom-out to include spot pins, not just fan
+      locations, and to fire even when there are zero fans (the real state right now -- only one
+      real profile exists in production). Verified with `--dry-run` against synthetic candidates
+      before touching anything live.
 
 ## Phase 3 — Design & monetization
 
