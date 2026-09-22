@@ -7,8 +7,13 @@ const src = [
   ['nhl', 'hockey_nhl.json', 'NHL'],
   ['mls', 'soccer_usa.1.json', 'MLS'],
   ['cfb', 'football_cfb.json', 'College Football'],
+  ['cbb', 'basketball_mens-college-basketball.json', 'College Basketball'],
 ];
 const FBS = new Set(JSON.parse(fs.readFileSync(new URL('fbs-ids.json', import.meta.url))));
+// D-I college basketball is 362 teams; kept to the same ~68 Power 4 football schools already
+// tracked (tools/scout/p4-ids.json) so the list stays a size fans can actually pick from.
+// ESPN team ids are shared across a school's sports, so the football P4 ids apply directly.
+const CBB = new Set(JSON.parse(fs.readFileSync(new URL('cbb-ids.json', import.meta.url))));
 const out = [];
 for (const [lg, file] of src) {
   const j = JSON.parse(fs.readFileSync(new URL(file, import.meta.url)));
@@ -16,9 +21,10 @@ for (const [lg, file] of src) {
   for (const t of teams) {
     if (t.isActive === false) continue;
     if (lg === 'cfb' && !FBS.has(String(t.id))) continue;
+    if (lg === 'cbb' && !CBB.has(String(t.id))) continue;
     const logo = (t.logos || []).find(l => (l.rel || []).includes('default')) || (t.logos || [])[0];
     out.push({
-      id: lg === 'cfb' ? `cfb-${t.id}` : `${lg}-${t.abbreviation.toLowerCase()}`,
+      id: lg === 'cfb' || lg === 'cbb' ? `${lg}-${t.id}` : `${lg}-${t.abbreviation.toLowerCase()}`,
       lg,
       eid: String(t.id),
       name: t.displayName,

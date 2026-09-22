@@ -14,7 +14,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/css/style.css?v=202609221130">
+<link rel="stylesheet" href="assets/css/style.css?v=202609221424">
 </head>
 <body>
 
@@ -43,7 +43,7 @@
         <a class="btn lg primary" href="app.html">Find my people</a>
         <a class="btn lg ghost" href="#how">How it works</a>
       </div>
-      <p class="fine">Free. NFL, college football, NBA, MLB, NHL and MLS.</p>
+      <p class="fine">Free. NFL, college football, college basketball, NBA, MLB, NHL and MLS.</p>
       <p class="fine">Never left town? It works for you too — find a bar for the away games, or for when you just don't feel like fighting stadium traffic.</p>
     </div>
 
@@ -82,7 +82,7 @@
       <p>Takes about a minute. You only share a rough area, never your address.</p>
     </div>
     <div class="steps">
-      <div class="step"><h3>Pick your teams</h3><p>Choose up to eight across the NFL, FBS college football, NBA, MLB, NHL and MLS. Follow the one you grew up with and the one you married into.</p></div>
+      <div class="step"><h3>Pick your teams</h3><p>Choose up to eight across the NFL, FBS college football, NBA, major-conference college basketball, MLB, NHL and MLS. Follow the one you grew up with and the one you married into.</p></div>
       <div class="step"><h3>Set your home base</h3><p>Pick your metro or use your location, which we round off to a 3-mile area before it leaves your phone.</p></div>
       <div class="step"><h3>Find your crew</h3><p>See how many fans of your team live around you, where they watch, and who's heading out for the next game.</p></div>
     </div>
@@ -165,13 +165,13 @@
 </footer>
 
 <script type="module">
-  import { TEAMS } from './assets/js/teams.js?v=202609221130';
+  import { TEAMS } from './assets/js/teams.js?v=202609221424';
   document.getElementById('yr').textContent = new Date().getFullYear();
 
   // Logo marquee: a shuffled mix of pro teams, doubled so the loop is seamless.
-  const pros = TEAMS.filter(t => t.lg !== 'cfb' && t.logo).sort(() => Math.random() - .5).slice(0, 36);
-  const cfb = TEAMS.filter(t => t.lg === 'cfb').sort(() => Math.random() - .5).slice(0, 12);
-  const row = [...pros, ...cfb].sort(() => Math.random() - .5)
+  const pros = TEAMS.filter(t => t.lg !== 'cfb' && t.lg !== 'cbb' && t.logo).sort(() => Math.random() - .5).slice(0, 30);
+  const college = TEAMS.filter(t => t.lg === 'cfb' || t.lg === 'cbb').sort(() => Math.random() - .5).slice(0, 18);
+  const row = [...pros, ...college].sort(() => Math.random() - .5)
     .map(t => `<img class="logo" src="${t.logo}" alt="" width="44" height="44" loading="lazy">`).join('');
   document.getElementById('marquee').innerHTML = row + row;
 

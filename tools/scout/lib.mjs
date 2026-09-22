@@ -51,12 +51,12 @@ export const SPOT_TTL_DAYS = 60;   // a recurring spot drops off unless re-confi
 export const ROTATION = 4;         // teams are split into 4 buckets; one bucket per week
 
 const P4 = JSON.parse(fs.readFileSync(new URL('./p4-ids.json', import.meta.url)));
-const P4_IDS = new Set(Object.values(P4).flat().map(id => `cfb-${id}`));
-const CONF = Object.fromEntries(Object.entries(P4).flatMap(([c, ids]) => ids.map(id => [`cfb-${id}`, c])));
+const P4_IDS = new Set(Object.values(P4).flat().flatMap(id => [`cfb-${id}`, `cbb-${id}`]));
+const CONF = Object.fromEntries(Object.entries(P4).flatMap(([c, ids]) => ids.flatMap(id => [[`cfb-${id}`, c], [`cbb-${id}`, c]])));
 
-// Every tracked team: all pro teams plus Power 4 football and Notre Dame. Home teams are excluded per city in apply.mjs.
+// Every tracked team: all pro teams plus Power 4 football/basketball and Notre Dame. Home teams are excluded per city in apply.mjs.
 export function scoutTeams() {
-  return TEAMS.filter(t => t.lg !== 'cfb' || P4_IDS.has(t.id))
+  return TEAMS.filter(t => (t.lg !== 'cfb' && t.lg !== 'cbb') || P4_IDS.has(t.id))
     .map(t => ({ id: t.id, name: t.name, league: t.lg, conference: CONF[t.id] }));
 }
 

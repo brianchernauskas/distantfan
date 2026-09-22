@@ -14,7 +14,7 @@ Live at https://distantfan.com. It replaces the earlier Hostinger Horizons "FanS
 | `assets/js/config.js` | Firebase web config (`null` = demo mode) and site settings |
 | `assets/js/store.js` | Data layer. Firebase Auth + Firestore, or a localStorage demo with fake fans |
 | `assets/js/app.js` | All UI |
-| `assets/js/teams.js` | 292 teams (NFL, NBA, MLB, NHL, MLS, FBS), generated. Don't hand-edit |
+| `assets/js/teams.js` | 360 teams (NFL, NBA, MLB, NHL, MLS, FBS, Power 4 college basketball), generated. Don't hand-edit |
 | `assets/js/schedule.js` | Upcoming games from ESPN's public schedule feed (CORS-enabled) |
 | `assets/js/geo.js` | Geohash helpers. Homes are stored as coarse cells only |
 | `firestore.rules` | Security rules. Paste into the Firebase console |
@@ -71,11 +71,15 @@ After a deploy, if a change doesn't show up, use **hPanel → Performance → CD
 cd tools
 for l in football/nfl basketball/nba baseball/mlb hockey/nhl soccer/usa.1; do curl -s "https://site.api.espn.com/apis/site/v2/sports/$l/teams?limit=1000" -o "$(echo $l | tr '/' '_').json"; done
 curl -s "https://site.api.espn.com/apis/site/v2/sports/football/college-football/teams?limit=1000" -o football_cfb.json
+curl -s "https://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball/teams?limit=1000" -o basketball_mens-college-basketball.json
 node build-teams.mjs
 ```
 
-`fbs-ids.json` holds the FBS team IDs (ESPN group 80) and is committed. Team IDs are stable.
-Changing a team's id orphans it from existing profiles.
+`fbs-ids.json` holds the FBS team IDs (ESPN group 80) and is committed. `cbb-ids.json` holds the
+~68 Power 4 school IDs college basketball is filtered to (D-I is 362 teams — too many to pick
+from usefully); it reuses `tools/scout/p4-ids.json`'s football conference ids since ESPN team ids
+are shared across a school's sports. Team IDs are stable. Changing a team's id orphans it from
+existing profiles.
 
 ## Local preview
 
