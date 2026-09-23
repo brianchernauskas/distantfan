@@ -696,14 +696,14 @@ async function viewUsers() {
   const SETS = {
     spots: {
       label: 'Watch spots', items: spots, noun: ['watch spot', 'watch spots'],
-      city: s => metroOf(s), teams: s => s.teams || [],
+      city: s => [metroOf(s)], teams: s => s.teams || [],
       note: `${expired ? `${expired} lapsed scout listing${expired === 1 ? '' : 's'} not counted · ` : ''}each spot counted once in the total; a spot that serves several teams appears under each team`,
       line: s => `<div class="grow"><b>${esc(s.name)}</b>${s.club ? ` <span class="muted">· ${esc(s.club)}</span>` : ''}<div class="muted" style="font-size:13px">${esc(s.address || '')}${s.address ? ' · ' : ''}${(s.teams || []).map(id => esc(TEAM_BY_ID[id]?.short || id)).join(', ')}</div></div><span class="muted" style="font-size:12px">${String(s.id).startsWith('scout_') ? 'scout' : esc(s.byName || 'fan')}</span>`,
       sort: (a, b) => a.name.localeCompare(b.name),
     },
     fans: {
       label: 'Fans', items: people, noun: ['fan', 'fans'],
-      city: p => (p.area || 'Unknown').replace(/ area$/, ''), teams: p => p.teams || [],
+      city: p => [(p.area || 'Unknown').replace(/ area$/, '')], teams: p => p.teams || [],
       note: `${people.filter(p => p.updatedAt > weekAgo).length} new or updated in the last 7 days · a fan following several teams appears under each`,
       line: p => `<div class="grow"><b>${esc(p.name)}</b><div class="muted" style="font-size:13px">${esc(p.area || 'Unknown area')} · ${(p.teams || []).map(id => esc(TEAM_BY_ID[id]?.short || id)).join(', ')}</div></div><span class="muted" style="font-size:12px">${fmtDay(p.updatedAt)}</span>`,
       sort: (a, b) => a.name.localeCompare(b.name),
@@ -737,7 +737,7 @@ async function viewUsers() {
     $('#toggleBrowse').onclick = () => { browse = !browse; draw(); };
     $$('[data-g]').forEach(b => b.onclick = () => { group = b.dataset.g; draw(); });
   };
-  draw();
+  try { draw(); } catch (e) { console.error(e); v.innerHTML = shell(`<div class="panel"><p class="err">${esc(e.message)}</p></div>`); }
 }
 
 /* ----------------------------------------------------------------- review */
