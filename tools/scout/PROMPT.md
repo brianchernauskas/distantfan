@@ -130,4 +130,7 @@ node apply.mjs runs/candidates-<mode>-YYYY-MM-DD.json
 It geocodes, dedupes, publishes high-confidence finds, queues medium ones, expires stale listings,
 and writes `runs/report-<mode>-YYYY-MM-DD.md`. Finish with a short summary: counts of published,
 queued, refreshed, skipped and expired listings, broken down by city; the new venue names; and
-anything odd (for example a geocode failure worth a manual look). Don't commit anything to git.
+anything odd (for example a geocode failure worth a manual look). Don't commit anything to git,
+with one exception: after `apply.mjs`, run `node export-spots.mjs --commit`. It refreshes
+`data/spots.json` (the snapshot the site serves instead of reading every spot from Firestore) and
+commits and pushes only that file.

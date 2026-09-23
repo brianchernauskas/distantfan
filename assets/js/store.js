@@ -1,9 +1,9 @@
 // Data layer. Uses Firebase (Auth + Firestore) when FIREBASE_CONFIG is set,
 // otherwise a demo store in localStorage seeded with clearly fake fans and spots.
-import { FIREBASE_CONFIG, SITE } from './config.js?v=202609230946';
-import { TEAMS, TEAM_BY_ID } from './teams.js?v=202609230946';
-import { METROS } from './metros.js?v=202609230946';
-import { encode, center } from './geo.js?v=202609230946';
+import { FIREBASE_CONFIG, SITE } from './config.js?v=202609231056';
+import { TEAMS, TEAM_BY_ID } from './teams.js?v=202609231056';
+import { METROS } from './metros.js?v=202609231056';
+import { encode, center } from './geo.js?v=202609231056';
 
 export const mode = FIREBASE_CONFIG ? 'firebase' : 'demo';
 let impl;
@@ -68,6 +68,40 @@ async function firebaseStore() {
   const toUser = u => u && { uid: u.uid, email: u.email, name: u.displayName || (u.email || '').split('@')[0] };
   const list = async q => (await F.getDocs(q)).docs.map(d => ({ id: d.id, ...d.data() }));
 
+  // Watch spots come from data/spots.json (served free by GitHub Pages) plus a small Firestore delta
+  // for spots created since that snapshot, so page views don't each read the whole collection.
+  // tools/scout/export-spots.mjs regenerates the file. If it can't be loaded we fall back to queries.
+  let spotBase = null, spotCursor = 0, spotDeltaAt = 0, spotsDirty = false;
+  const spotMap = new Map();
+  const spotsReady = (async () => {
+    try {
+      const r = await fetch('data/spots.json', { cache: 'no-cache' });
+      if (!r.ok) return false;
+      spotBase = await r.json();
+      spotBase.spots.forEach(s => spotMap.set(s.id, s));
+      spotCursor = spotBase.generatedAt || 0;
+      return true;
+    } catch { return false; }
+  })();
+  // Returns live spots from the snapshot + delta, or null when there is no snapshot.
+  async function spotsCached() {
+    if (!(await spotsReady)) return null;
+    if (spotsDirty || Date.now() - spotDeltaAt > 60_000) {
+      spotsDirty = false; spotDeltaAt = Date.now();
+      try {
+        const fresh = await list(F.query(F.collection(db, 'spots'), F.where('createdAt', '>=', F.Timestamp.fromMillis(spotCursor)), F.limit(500)));
+        for (const s of fresh) {
+          const at = s.createdAt?.toMillis?.() || 0;
+          spotMap.set(s.id, { ...s, createdAt: at });
+          if (at > spotCursor) spotCursor = at;
+        }
+      } catch (e) { spotDeltaAt = 0; console.warn('spot delta failed', e); }
+    }
+    const now = Date.now();
+    return [...spotMap.values()].filter(s => !s.expiresAt || s.expiresAt > now);
+  }
+  const spotsGone = id => spotMap.delete(id);
+
   return {
     onUser: cb => A.onAuthStateChanged(auth, u => { me = toUser(u); cb(me); }),
     signInGoogle: () => A.signInWithPopup(auth, new A.GoogleAuthProvider()),
@@ -97,22 +131,23 @@ async function firebaseStore() {
 
     fansFor: teamId => list(F.query(F.collection(db, 'profiles'), F.where('teams', 'array-contains', teamId), F.limit(2000)))
       .then(r => r.map(({ id, ...p }) => ({ uid: id, ...p }))),
-    spotsFor: teamId => list(F.query(F.collection(db, 'spots'), F.where('teams', 'array-contains', teamId), F.limit(500))),
+    spotsFor: async teamId => (await spotsCached())?.filter(s => s.teams?.includes(teamId))
+      ?? list(F.query(F.collection(db, 'spots'), F.where('teams', 'array-contains', teamId), F.limit(500))),
     // Unfiltered sample, so a team with nothing nearby yet can still show fans other teams' spots
     // nearby - proof the map is alive, not a team-scoped read. Small dataset, so no server-side
     // geo query yet; the caller filters by distance client-side like everywhere else here.
-    spotsSample: () => list(F.query(F.collection(db, 'spots'), F.limit(400))),
+    spotsSample: async () => (await spotsCached()) ?? list(F.query(F.collection(db, 'spots'), F.limit(400))),
     // Spots in a latitude band around a point, plus only the check-ins that haven't expired, for the
     // all-teams city view. Reads scale with that band, not the whole collection; the caller trims to
     // an exact radius. (A single range field needs no composite index.)
-    spotsNear: (lat, radiusKm) => { const d = radiusKm / 111; return list(F.query(F.collection(db, 'spots'), F.where('lat', '>=', lat - d), F.where('lat', '<=', lat + d), F.limit(2000))); },
+    spotsNear: async (lat, radiusKm) => { const d = radiusKm / 111; return (await spotsCached())?.filter(s => s.lat >= lat - d && s.lat <= lat + d) ?? list(F.query(F.collection(db, 'spots'), F.where('lat', '>=', lat - d), F.where('lat', '<=', lat + d), F.limit(2000))); },
     checkinsActive: () => list(F.query(F.collection(db, 'checkins'), F.where('expiresAt', '>', Date.now()), F.limit(2000))),
-    addSpot: s => F.addDoc(F.collection(db, 'spots'), {
+    addSpot: async s => { const r = await F.addDoc(F.collection(db, 'spots'), {
       name: clean(s.name, 80), address: clean(s.address, 120), club: clean(s.club, 80), note: clean(s.note, 200),
       lat: +s.lat, lng: +s.lng, teams: s.teams.slice(0, 6),
       by: me.uid, byName: clean(s.byName, 40), createdAt: F.serverTimestamp(),
-    }),
-    removeSpot: id => F.deleteDoc(F.doc(db, 'spots', id)),
+    }); spotsDirty = true; return r; },
+    removeSpot: async id => { await F.deleteDoc(F.doc(db, 'spots', id)); spotsGone(id); },
 
     checkinsFor: teamId => list(F.query(F.collection(db, 'checkins'), F.where('teamId', '==', teamId), F.limit(1000)))
       .then(r => r.filter(active)),
@@ -143,6 +178,7 @@ async function firebaseStore() {
       b.set(F.doc(db, 'spots', `scout_${id}`), { ...spot, approvedBy: me.uid, createdAt: F.serverTimestamp() });
       b.delete(F.doc(db, 'scoutQueue', id));
       await b.commit();
+      spotsDirty = true;
     },
     async rejectQueued(q) {
       const b = F.writeBatch(db);
@@ -160,7 +196,7 @@ async function firebaseStore() {
     listProfiles: () => list(F.query(F.collection(db, 'profiles'), F.limit(5000)))
       .then(r => r.map(({ id, updatedAt, ...p }) => ({ uid: id, ...p, updatedAt: updatedAt?.toMillis?.() || 0 }))),
     // Every watch spot (readable by any signed-in fan), for the admin Users tab's nationwide counts.
-    listSpots: () => list(F.query(F.collection(db, 'spots'), F.limit(10000))),
+    listSpots: async () => (await spotsCached()) ?? list(F.query(F.collection(db, 'spots'), F.limit(10000))),
     listReports: () => list(F.query(F.collection(db, 'spotReports'), F.limit(200))),
     async removeReportedSpot(r) {
       const all = await list(F.query(F.collection(db, 'spotReports'), F.where('spotId', '==', r.spotId)));
@@ -170,6 +206,7 @@ async function firebaseStore() {
       // Stop the scout re-adding a listing a fan says is wrong.
       if (r.spotId.startsWith('scout_')) b.set(F.doc(db, 'scoutRejects', r.spotId.slice(6)), { name: r.spotName || '', reason: r.reason, rejectedAt: F.serverTimestamp() });
       await b.commit();
+      spotsGone(r.spotId);
     },
     dismissReport: id => F.deleteDoc(F.doc(db, 'spotReports', id)),
 
