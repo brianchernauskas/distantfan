@@ -1,9 +1,9 @@
 // Data layer. Uses Firebase (Auth + Firestore) when FIREBASE_CONFIG is set,
 // otherwise a demo store in localStorage seeded with clearly fake fans and spots.
-import { FIREBASE_CONFIG, SITE } from './config.js?v=202609231056';
-import { TEAMS, TEAM_BY_ID } from './teams.js?v=202609231056';
-import { METROS } from './metros.js?v=202609231056';
-import { encode, center } from './geo.js?v=202609231056';
+import { FIREBASE_CONFIG, SITE } from './config.js?v=202609231100';
+import { TEAMS, TEAM_BY_ID } from './teams.js?v=202609231100';
+import { METROS } from './metros.js?v=202609231100';
+import { encode, center } from './geo.js?v=202609231100';
 
 export const mode = FIREBASE_CONFIG ? 'firebase' : 'demo';
 let impl;
@@ -23,7 +23,7 @@ export const signOut = call('signOut');
 export const getProfile = call('getProfile');
 export const saveProfile = call('saveProfile');
 export const deleteProfile = call('deleteProfile');
-export const fansFor = call('fansFor');
+export const fanCellsFor = call('fanCellsFor');
 export const spotsFor = call('spotsFor');
 export const spotsSample = call('spotsSample');
 export const spotsNear = call('spotsNear');
@@ -102,6 +102,19 @@ async function firebaseStore() {
   }
   const spotsGone = id => spotMap.delete(id);
 
+  // Fan counts per home cell come from data/fans.json (counts only, exported by the same script).
+  // No per-person delta is possible for counts, so they trail by up to one export; the app adds the
+  // signed-in fan themselves. Falls back to counting a Firestore query if the file is missing.
+  let fansSnap;
+  const fansReady = fetch('data/fans.json', { cache: 'no-cache' }).then(r => r.ok ? r.json() : null).catch(() => null);
+  async function fanCellsFor(teamId) {
+    fansSnap ??= await fansReady;
+    if (fansSnap) return { cells: { ...(fansSnap.teams[teamId] || {}) }, generatedAt: fansSnap.generatedAt };
+    const cells = {};
+    for (const p of await list(F.query(F.collection(db, 'profiles'), F.where('teams', 'array-contains', teamId), F.limit(2000)))) if (p.cell) cells[p.cell] = (cells[p.cell] || 0) + 1;
+    return { cells, generatedAt: Date.now() };
+  }
+
   return {
     onUser: cb => A.onAuthStateChanged(auth, u => { me = toUser(u); cb(me); }),
     signInGoogle: () => A.signInWithPopup(auth, new A.GoogleAuthProvider()),
@@ -129,8 +142,7 @@ async function firebaseStore() {
       await auth.currentUser?.delete().catch(() => {}); // needs a recent sign-in; profile is gone either way
     },
 
-    fansFor: teamId => list(F.query(F.collection(db, 'profiles'), F.where('teams', 'array-contains', teamId), F.limit(2000)))
-      .then(r => r.map(({ id, ...p }) => ({ uid: id, ...p }))),
+    fanCellsFor,
     spotsFor: async teamId => (await spotsCached())?.filter(s => s.teams?.includes(teamId))
       ?? list(F.query(F.collection(db, 'spots'), F.where('teams', 'array-contains', teamId), F.limit(500))),
     // Unfiltered sample, so a team with nothing nearby yet can still show fans other teams' spots
@@ -290,7 +302,12 @@ function demoStore() {
       save();
     },
     async deleteProfile() { localStorage.removeItem(KEY); state = { user: null, profiles: {}, spots: [], checkins: [], rooms: {}, seeded: {} }; emitUser(); },
-    async fansFor(teamId) { seedTeam(teamId); return Object.entries(state.profiles).filter(([, p]) => p.teams.includes(teamId)).map(([uid, p]) => ({ uid, ...p })); },
+    async fanCellsFor(teamId) {
+      seedTeam(teamId);
+      const cells = {};
+      for (const p of Object.values(state.profiles)) if (p.cell && p.teams.includes(teamId)) cells[p.cell] = (cells[p.cell] || 0) + 1;
+      return { cells, generatedAt: Date.now() }; // demo counts already include the demo user
+    },
     async spotsFor(teamId) { seedTeam(teamId); return state.spots.filter(s => s.teams.includes(teamId)); },
     async spotsSample() { return state.spots; },
     async spotsNear() { return state.spots; },

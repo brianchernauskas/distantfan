@@ -132,5 +132,5 @@ and writes `runs/report-<mode>-YYYY-MM-DD.md`. Finish with a short summary: coun
 queued, refreshed, skipped and expired listings, broken down by city; the new venue names; and
 anything odd (for example a geocode failure worth a manual look). Don't commit anything to git,
 with one exception: after `apply.mjs`, run `node export-spots.mjs --commit`. It refreshes
-`data/spots.json` (the snapshot the site serves instead of reading every spot from Firestore) and
-commits and pushes only that file.
+`data/spots.json` and `data/fans.json` (the snapshots the site serves instead of reading spots and
+profiles from Firestore) and commits and pushes only those two files.

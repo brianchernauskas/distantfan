@@ -1,9 +1,9 @@
-import * as S from './store.js?v=202609231056';
-import { SITE, ADMINS } from './config.js?v=202609231056';
-import { TEAMS, TEAM_BY_ID, LEAGUES } from './teams.js?v=202609231056';
-import { METROS } from './metros.js?v=202609231056';
-import { encode, center, bounds, areaLabel, km, nearestMetro } from './geo.js?v=202609231056';
-import { nextGames } from './schedule.js?v=202609231056';
+import * as S from './store.js?v=202609231100';
+import { SITE, ADMINS } from './config.js?v=202609231100';
+import { TEAMS, TEAM_BY_ID, LEAGUES } from './teams.js?v=202609231100';
+import { METROS } from './metros.js?v=202609231100';
+import { encode, center, bounds, areaLabel, km, nearestMetro } from './geo.js?v=202609231100';
+import { nextGames } from './schedule.js?v=202609231100';
 
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -311,9 +311,12 @@ function drawTeambar() {
 
 async function teamData(id, fresh = false) {
   if (!fresh && cache[id]) return cache[id];
-  const [fans, allSpots, checkins] = await Promise.all([S.fansFor(id), S.spotsFor(id), S.checkinsFor(id)]);
+  const [{ cells, generatedAt }, allSpots, checkins] = await Promise.all([S.fanCellsFor(id), S.spotsFor(id), S.checkinsFor(id)]);
   const spots = allSpots.filter(s => !s.expiresAt || s.expiresAt > Date.now()); // scout listings expire unless re-confirmed
-  return (cache[id] = { fans, spots, checkins });
+  // Counts come from a snapshot, so add yourself if you saved your profile after it was taken.
+  const saved = profile.updatedAt?.toMillis?.() ?? profile.updatedAt ?? Infinity; // Infinity = saved this session
+  if (profile.teams.includes(id) && profile.cell && saved > generatedAt) { const c4 = profile.cell.slice(0, 4); cells[c4] = (cells[c4] || 0) + 1; }
+  return (cache[id] = { cells, spots, checkins });
 }
 const home = () => center(profile.cell);
 const goingBySpot = checkins => checkins.reduce((m, c) => (m[c.spotId] = (m[c.spotId] || 0) + 1, m), {});
@@ -346,10 +349,10 @@ async function loadMap(fresh = false) {
   const going = goingBySpot(d.checkins);
   const myCheckin = d.checkins.find(c => c.uid === user.uid);
 
-  // Fans grouped by coarse cell. Circles sit at the cell centre, never at a person.
-  const cells = {};
-  for (const f of d.fans) if (f.cell) (cells[f.cell] ||= []).push(f);
-  const nearFans = d.fans.filter(f => f.cell && f.uid !== user.uid && km(me, center(f.cell)) <= NEAR_KM);
+  // Fan counts per coarse cell. Circles sit at the cell centre, never at a person.
+  const cells = d.cells;
+  const fanTotal = Object.values(cells).reduce((a, n) => a + n, 0);
+  const nearFans = Math.max(0, Object.entries(cells).filter(([c]) => km(me, center(c)) <= NEAR_KM).reduce((a, [, n]) => a + n, 0) - 1); // minus you
   const spots = d.spots.map(s => ({ ...s, dist: km(me, s), going: going[s.id] || 0 })).sort((a, b) => a.dist - b.dist);
   const nearSpots = spots.filter(s => s.dist <= NEAR_KM);
 
@@ -370,10 +373,10 @@ async function loadMap(fresh = false) {
   const hb = bounds(profile.cell);
   const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#ff7a1a';
   L.rectangle([[hb.s, hb.w], [hb.n, hb.e]], { color: accent, weight: 1.5, dashArray: '4 5', fillOpacity: .06, interactive: false }).addTo(mapLayers);
-  for (const [cell, fans] of Object.entries(cells)) {
-    const c = center(cell), n = fans.length;
+  for (const [cell, n] of Object.entries(cells)) {
+    const c = center(cell);
     L.circleMarker([c.lat, c.lng], { radius: 6 + Math.sqrt(n) * 4, color: '#fff', weight: 1.5, fillColor: color, fillOpacity: .72 })
-      .bindPopup(`<h4>${n} ${esc(t?.short)} fan${n === 1 ? '' : 's'}</h4><p>${esc(areaLabel(cell))}</p>${fans.slice(0, 8).map(f => `<div>${esc(f.name)}</div>`).join('')}${n > 8 ? `<p style="margin-top:6px">and ${n - 8} more</p>` : ''}`)
+      .bindPopup(`<h4>${n} ${esc(t?.short)} fan${n === 1 ? '' : 's'}</h4><p>${esc(areaLabel(cell))}</p>`)
       .addTo(mapLayers);
   }
   for (const s of spots) {
@@ -389,7 +392,7 @@ async function loadMap(fresh = false) {
 
   // Top areas nationwide, by metro label.
   const areas = {};
-  for (const [cell, fans] of Object.entries(cells)) { const a = areaLabel(cell); areas[a] = (areas[a] || 0) + fans.length; }
+  for (const [cell, n] of Object.entries(cells)) { const a = areaLabel(cell); areas[a] = (areas[a] || 0) + n; }
   const topAreas = Object.entries(areas).sort((a, b) => b[1] - a[1]).slice(0, 6);
   const mySpot = myCheckin && spots.find(s => s.id === myCheckin.spotId);
 
@@ -397,9 +400,9 @@ async function loadMap(fresh = false) {
     <div class="panel">
       <div class="row">${logo(t, 'lg')}<div class="grow"><h3>${esc(t?.name)}</h3><div class="sub">${esc(profile.area)}</div></div></div>
       <div class="stat-row">
-        <div class="stat"><div class="n">${nearFans.length}</div><div class="l">fans near you</div></div>
+        <div class="stat"><div class="n">${nearFans}</div><div class="l">fans near you</div></div>
         <div class="stat"><div class="n">${nearSpots.length}</div><div class="l">watch spots</div></div>
-        <div class="stat"><div class="n">${d.fans.length}</div><div class="l">fans total</div></div>
+        <div class="stat"><div class="n">${fanTotal}</div><div class="l">fans total</div></div>
       </div>
       ${mySpot ? `<p class="ok" style="margin-top:12px">✓ You're going to <b>${esc(mySpot.name)}</b>${myCheckin.gameName ? ` for ${esc(myCheckin.gameName)}` : ''}. <button class="link-btn" id="unGo">Cancel</button></p>` : ''}
     </div>
