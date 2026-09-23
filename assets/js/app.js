@@ -1,9 +1,9 @@
-import * as S from './store.js?v=202609230838';
-import { SITE, ADMINS } from './config.js?v=202609230838';
-import { TEAMS, TEAM_BY_ID, LEAGUES } from './teams.js?v=202609230838';
-import { METROS } from './metros.js?v=202609230838';
-import { encode, center, bounds, areaLabel, km } from './geo.js?v=202609230838';
-import { nextGames } from './schedule.js?v=202609230838';
+import * as S from './store.js?v=202609230844';
+import { SITE, ADMINS } from './config.js?v=202609230844';
+import { TEAMS, TEAM_BY_ID, LEAGUES } from './teams.js?v=202609230844';
+import { METROS } from './metros.js?v=202609230844';
+import { encode, center, bounds, areaLabel, km } from './geo.js?v=202609230844';
+import { nextGames } from './schedule.js?v=202609230844';
 
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -685,6 +685,7 @@ async function viewUsers() {
   const tally = f => { const m = {}; people.forEach(p => f(p).forEach(k => m[k] = (m[k] || 0) + 1)); return Object.entries(m).sort((a, b) => b[1] - a[1]); };
   const areas = tally(p => [p.area || 'Unknown']);
   const teams = tally(p => p.teams || []);
+  let group = 'city';
   const weekAgo = Date.now() - 7 * 864e5;
   const fresh = people.filter(p => p.updatedAt > weekAgo).length;
   people.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
@@ -697,12 +698,28 @@ async function viewUsers() {
         <div style="display:grid;gap:4px;margin-top:6px">${areas.map(([a, n]) => `<div class="row"><span class="grow">${esc(a.replace(/ area$/, ''))}</span><b>${n}</b><span class="muted" style="font-size:12px;width:44px;text-align:right">${Math.round(n / people.length * 100)}%</span></div>`).join('')}</div></div>
       <div><b>By team</b><div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px">${chips(teams)}</div></div>
     </div>
-    <div class="panel" style="display:grid;gap:0;margin-top:14px">${people.map(p => `
-      <div class="row" style="padding:10px 0;border-top:1px solid var(--line)">
-        <div class="grow"><b>${esc(p.name)}</b><div class="muted" style="font-size:13px">${esc(p.area || 'Unknown area')} · ${(p.teams || []).map(id => esc(TEAM_BY_ID[id]?.short || id)).join(', ')}</div></div>
-        <span class="muted" style="font-size:12px">${p.updatedAt ? new Date(p.updatedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : ''}</span>
-      </div>`).join('')}</div>
+    <div class="row" id="grp" style="margin:14px 0 8px;gap:6px"><span class="muted">Group by</span>${[['city', 'City'], ['team', 'Team'], ['recent', 'Recent']].map(([k, n]) => `<button class="chip" data-g="${k}" aria-pressed="${k === group}">${n}</button>`).join('')}</div>
+    <div id="ulist" style="display:grid;gap:14px"></div>
   </div>`;
+  const line = p => `
+    <div class="row" style="padding:10px 0;border-top:1px solid var(--line)">
+      <div class="grow"><b>${esc(p.name)}</b><div class="muted" style="font-size:13px">${esc(p.area || 'Unknown area')} · ${(p.teams || []).map(id => esc(TEAM_BY_ID[id]?.short || id)).join(', ')}</div></div>
+      <span class="muted" style="font-size:12px">${p.updatedAt ? new Date(p.updatedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : ''}</span>
+    </div>`;
+  const draw = () => {
+    $$('[data-g]').forEach(b => b.setAttribute('aria-pressed', b.dataset.g === group));
+    const keyed = group === 'team' ? p => p.teams || [] : group === 'city' ? p => [(p.area || 'Unknown area').replace(/ area$/, '')] : null;
+    let groups;
+    if (!keyed) groups = [['All fans, most recent first', people]];
+    else {
+      const m = {}; people.forEach(p => keyed(p).forEach(k => (m[k] ||= []).push(p)));
+      groups = Object.entries(m).sort((a, b) => b[1].length - a[1].length || a[0].localeCompare(b[0]))
+        .map(([k, ps]) => [group === 'team' ? (TEAM_BY_ID[k]?.name || k) : k, ps.sort((a, b) => a.name.localeCompare(b.name))]);
+    }
+    $('#ulist').innerHTML = groups.map(([k, ps]) => `<div class="panel" style="display:grid;gap:0"><div class="row"><b class="grow" style="font-size:18px">${esc(k)}</b><span class="badge plain">${ps.length}</span></div>${ps.map(line).join('')}</div>`).join('');
+  };
+  $$('[data-g]').forEach(b => b.onclick = () => { group = b.dataset.g; draw(); });
+  draw();
 }
 
 /* ----------------------------------------------------------------- review */
