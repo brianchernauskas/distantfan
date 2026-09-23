@@ -55,6 +55,7 @@ p { margin: 0; }
 .btn.primary:hover { background: var(--accent-2); border-color: var(--accent-2); }
 .btn.ghost { background: transparent; }
 .btn.sm { min-height: 36px; padding: 0 14px; font-size: 14px; }
+@media (pointer: coarse) { .btn.sm { min-height: 44px; } }
 .btn.lg { min-height: 54px; padding: 0 28px; font-size: 17px; }
 .btn:disabled { opacity: .5; cursor: not-allowed; }
 .btn.block { width: 100%; }
