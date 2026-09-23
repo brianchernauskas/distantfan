@@ -6,3 +6,7 @@ node_modules/
 .DS_Store
 tools/scout/node_modules/
 tools/scout/runs/
+
+# Throwaway scout scratch scripts and logs
+tools/scout/_*.mjs
+tools/scout/err.txt
