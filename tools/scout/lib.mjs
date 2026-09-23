@@ -183,3 +183,38 @@ export async function adminDb() {
   if (!getApps().length) initializeApp({ credential: cert(JSON.parse(fs.readFileSync(key, 'utf8'))) });
   return getFirestore();
 }
+
+// "City, ST" label for a venue outside the tracked metros. Addresses often lack the comma between street
+// and city ("225 W Main St Charlottesville, VA 22902"), so read the city from the address text when the
+// street ends at a street-type word, and otherwise ask the Census reverse geocoder about the coordinates.
+const STATE_NAMES = {alabama:'AL',alaska:'AK',arizona:'AZ',arkansas:'AR',california:'CA',colorado:'CO',connecticut:'CT',delaware:'DE',florida:'FL',georgia:'GA',hawaii:'HI',idaho:'ID',illinois:'IL',indiana:'IN',iowa:'IA',kansas:'KS',kentucky:'KY',louisiana:'LA',maine:'ME',maryland:'MD',massachusetts:'MA',michigan:'MI',minnesota:'MN',mississippi:'MS',missouri:'MO',montana:'MT',nebraska:'NE',nevada:'NV','new hampshire':'NH','new jersey':'NJ','new mexico':'NM','new york':'NY','north carolina':'NC','north dakota':'ND',ohio:'OH',oklahoma:'OK',oregon:'OR',pennsylvania:'PA','rhode island':'RI','south carolina':'SC','south dakota':'SD',tennessee:'TN',texas:'TX',utah:'UT',vermont:'VT',virginia:'VA',washington:'WA','west virginia':'WV',wisconsin:'WI',wyoming:'WY'};
+const STREET_WORDS = new Set('st street ave avenue rd road blvd boulevard dr drive pkwy parkway hwy highway way ln lane ct court pl place trl trail cir circle sq square pike ter terrace loop row boardwalk plaza center pointe point route path fwy trace run a1a nw ne sw se n s e w north south east west alley market park bridge'.split(' '));
+const titleCase = s => s.toLowerCase().replace(/(^|[\s'-])([a-z])/g, (m, a, b) => a + b.toUpperCase());
+function cityFromAddress(address, st) {
+  let s = String(address).replace(/\b\d{5}(-\d{4})?\b/g, ' ').replace(/[.,#]/g, ' ').replace(/\s+/g, ' ').trim();
+  const names = Object.entries(STATE_NAMES).filter(([, c]) => c === st).map(([n]) => n);
+  const rx = new RegExp('\\b(' + [st, ...names].join('|') + ')\\s*$', 'i');
+  if (!rx.test(s)) return null;
+  s = s.replace(rx, '').trim().replace(/\b(suite|ste|unit|apt|floor)\s*\S+/gi, ' ').replace(/\s+/g, ' ').trim();
+  const w = s.split(' '), out = [];
+  for (let i = w.length - 1; i >= 0 && out.length < 3; i--) {
+    const x = w[i].toLowerCase();
+    if (STREET_WORDS.has(x) || /\d/.test(x)) break;
+    out.unshift(w[i]);
+  }
+  return out.length ? titleCase(out.join(' ')) : null;
+}
+export async function cityLabelFor(address, geo) {
+  const m = String(address || '').match(/,\s*([A-Za-z .'-]+),\s*([A-Z]{2})\b/);
+  if (m) return `${m[1].trim()}, ${m[2]}`;
+  try {
+    const u = `https://geocoding.geo.census.gov/geocoder/geographies/coordinates?x=${geo.lng}&y=${geo.lat}&benchmark=Public_AR_Current&vintage=Current_Current&layers=Incorporated%20Places,Census%20Designated%20Places,County%20Subdivisions,States&format=json`;
+    const g = (await (await fetch(u)).json()).result.geographies, st = g.States?.[0]?.STUSAB;
+    const place = (g['Incorporated Places'] || g['Census Designated Places'] || g['County Subdivisions'] || [])[0]?.BASENAME;
+    if (st) {
+      const city = cityFromAddress(address, st) || (place || '').replace(/\s*\(balance\)|\s+metropolitan government|\s+consolidated government/gi, '');
+      if (city) return `${city}, ${st}`;
+    }
+  } catch {}
+  return String(address || '').replace(/\s+/g, ' ').trim().slice(0, 60);
+}

@@ -319,3 +319,8 @@ dialog form { display: grid; gap: 14px; }
   .game > .btn { grid-column: 1 / -1; }
   .page > h2, .center-card h2 { font-size: 34px; }
 }
+
+/* Map scope: "All teams" chip and city header */
+.chip.all { padding: 5px 14px 5px 8px; }
+.chip.all .allicon { font-size: 16px; line-height: 1; }
+.allmark { width: 40px; height: 40px; border-radius: 50%; background: var(--accent-soft); display: grid; place-items: center; font-size: 20px; flex: none; }

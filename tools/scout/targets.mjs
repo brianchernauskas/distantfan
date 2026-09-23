@@ -30,11 +30,21 @@ if (mode === 'directory') {
 // Existing listings, grouped by city, so the scout can re-confirm rather than rediscover.
 if (!args.includes('--no-db')) {
   const db = await adminDb();
-  const snap = await db.collection('spots').get();
   const wantTeams = out.teams ? new Set(out.teams.map(t => t.id)) : null;
   const wantCities = new Set(out.cities.map(c => c.key));
+  // Query instead of scanning every spot (free tier is 50k reads/day). Directory mode asks for spots
+  // listing any bucket team (array-contains-any takes at most 30 values); city mode asks for the
+  // day's cities (`in` takes at most 30). Spots without a `city` field (older fan-added ones) aren't
+  // returned in city mode; they don't need re-confirming and apply.mjs still dedupes against them.
+  const col = db.collection('spots');
+  const queries = wantTeams
+    ? [...wantTeams].reduce((a, t, i) => ((a[Math.floor(i / 30)] ||= []).push(t), a), []).map(ids => col.where('teams', 'array-contains-any', ids))
+    : [col.where('city', 'in', [...wantCities].slice(0, 30))];
+  const docs = new Map();
+  for (const q of queries) for (const d of (await q.get()).docs) docs.set(d.id, d);
+  console.error(`firestore reads this run: ~${docs.size || 1}+`);
   const onMap = {};
-  for (const d of snap.docs) {
+  for (const d of docs.values()) {
     const s = d.data(), city = s.city || areaFor(s);
     if (!city || !wantCities.has(city)) continue;
     if (wantTeams && !(s.teams || []).some(t => wantTeams.has(t))) continue;

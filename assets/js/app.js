@@ -1,20 +1,23 @@
-import * as S from './store.js?v=202609230906';
-import { SITE, ADMINS } from './config.js?v=202609230906';
-import { TEAMS, TEAM_BY_ID, LEAGUES } from './teams.js?v=202609230906';
-import { METROS } from './metros.js?v=202609230906';
-import { encode, center, bounds, areaLabel, km, nearestMetro } from './geo.js?v=202609230906';
-import { nextGames } from './schedule.js?v=202609230906';
+import * as S from './store.js?v=202609230940';
+import { SITE, ADMINS } from './config.js?v=202609230940';
+import { TEAMS, TEAM_BY_ID, LEAGUES } from './teams.js?v=202609230940';
+import { METROS } from './metros.js?v=202609230940';
+import { encode, center, bounds, areaLabel, km, nearestMetro } from './geo.js?v=202609230940';
+import { nextGames } from './schedule.js?v=202609230940';
 
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const root = $('#root');
 const NEAR_KM = 16; // ~10 miles
+const WIDE_KM = 40; // ~25 miles, the city view's "wider" toggle
 const isAdmin = () => !!user && ADMINS.includes(user.uid);
 
 let user = null, profile = null, teamId = null, view = 'map';
 let map = null, mapLayers = null, unsubRoom = null, room = 'local', adding = false;
 let cache = {}; // per-team { fans, spots, checkins }
+// Map scope: 'all' = every team's spots in the city (default), or one followed team id.
+let mapTeam = 'all', mapMetro = null, wide = false, cityCache = null, cityToken = 0;
 
 const ls = { get: k => { try { return localStorage.getItem(k); } catch { return null; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch {} } };
 
@@ -57,6 +60,7 @@ const errMsg = e => (e?.code || '').replace('auth/', '').replace(/-/g, ' ') || e
     try { profile = await S.getProfile(u.uid); } catch (e) { profile = null; console.error(e); }
     if (!profile) return renderOnboarding();
     teamId = profile.teams.includes(ls.get('df_team')) ? ls.get('df_team') : profile.teams[0];
+    mapTeam = profile.teams.includes(ls.get('df_maptab')) ? ls.get('df_maptab') : 'all'; mapMetro = null;
     view = views().includes(location.hash.slice(1)) ? location.hash.slice(1) : 'map';
     renderShell();
   });
@@ -202,8 +206,9 @@ function renderOnboarding(editing = false) {
       try {
         await S.saveProfile(user.uid, draft);
         profile = { uid: user.uid, ...draft };
-        cache = {};
+        cache = {}; cityCache = null;
         if (!profile.teams.includes(teamId)) teamId = profile.teams[0];
+        if (mapTeam !== 'all' && !profile.teams.includes(mapTeam)) mapTeam = 'all';
         renderShell();
         toast(editing ? 'Profile updated' : `Welcome, ${draft.name.split(' ')[0]}!`);
       } catch (e) { err.textContent = errMsg(e); $('#next').disabled = false; }
@@ -278,17 +283,28 @@ function renderShell() {
 }
 
 function drawTeambar() {
-  const bar = $('#teambar');
+  const bar = $('#teambar'), onMap = view === 'map';
   bar.hidden = view === 'games' || view === 'review' || view === 'users';
-  bar.innerHTML = profile.teams.map(id => {
-    const t = TEAM_BY_ID[id];
-    return `<button class="chip" data-t="${id}" aria-pressed="${id === teamId}" style="--team:${esc(t?.color)}">${logo(t, 'sm')}${esc(t?.short || id)}</button>`;
-  }).join('') + '<button class="chip add" id="editTeams">+ Teams</button>';
+  const pressed = id => onMap ? id === mapTeam : id === teamId;
+  bar.innerHTML = (onMap ? `<button class="chip all" data-all aria-pressed="${mapTeam === 'all'}"><span class="allicon" aria-hidden="true">📍</span>All teams</button>` : '')
+    + profile.teams.map(id => {
+      const t = TEAM_BY_ID[id];
+      return `<button class="chip" data-t="${id}" aria-pressed="${pressed(id)}" style="--team:${esc(t?.color)}">${logo(t, 'sm')}${esc(t?.short || id)}</button>`;
+    }).join('') + '<button class="chip add" id="editTeams">+ Teams</button>';
+  const setScope = t => { // map view only: 'all' or a team id
+    mapTeam = t; ls.set('df_maptab', t);
+    if (t !== 'all') { teamId = t; ls.set('df_team', t); }
+    $$('[data-t]', bar).forEach(x => x.setAttribute('aria-pressed', x.dataset.t === mapTeam));
+    $('[data-all]', bar)?.setAttribute('aria-pressed', mapTeam === 'all');
+    loadMap();
+  };
+  $('[data-all]', bar)?.addEventListener('click', () => { if (mapTeam !== 'all') setScope('all'); });
   $$('[data-t]', bar).forEach(b => b.onclick = () => {
+    if (onMap) return setScope(b.dataset.t === mapTeam ? 'all' : b.dataset.t); // tap the active team again to widen back out
     if (b.dataset.t === teamId) return;
     teamId = b.dataset.t; ls.set('df_team', teamId);
     $$('[data-t]', bar).forEach(x => x.setAttribute('aria-pressed', x.dataset.t === teamId));
-    if (view === 'map') loadMap(); else if (view === 'chat') viewChat();
+    if (view === 'chat') viewChat();
   });
   $('#editTeams').onclick = () => renderOnboarding(true);
 }
@@ -320,11 +336,12 @@ function viewMap() {
 }
 
 async function loadMap(fresh = false) {
+  if (mapTeam === 'all') return loadCity(fresh);
   const id = teamId, t = TEAM_BY_ID[id], side = $('#side');
   if (!map || !side) return;
   let d;
   try { d = await teamData(id, fresh); } catch (e) { side.innerHTML = `<div class="panel"><p class="err">${esc(errMsg(e))}</p></div>`; return; }
-  if (id !== teamId || !map) return; // team switched while loading
+  if (id !== teamId || mapTeam === 'all' || !map) return; // team switched while loading
   const me = home(), color = t?.color || '#ff7a1a';
   const going = goingBySpot(d.checkins);
   const myCheckin = d.checkins.find(c => c.uid === user.uid);
@@ -346,7 +363,7 @@ async function loadMap(fresh = false) {
         .map(s => ({ ...s, dist: km(me, s) })).filter(s => s.dist <= NEAR_KM)
         .sort((a, b) => a.dist - b.dist).slice(0, 6);
     } catch (e) { console.error(e); }
-    if (id !== teamId || !map) return; // team switched while that extra fetch ran
+    if (id !== teamId || mapTeam === 'all' || !map) return; // team switched while that extra fetch ran
   }
 
   mapLayers.clearLayers();
@@ -446,12 +463,89 @@ async function loadMap(fresh = false) {
   }
 }
 
+/* ------------------------------------------------------- city (all teams) */
+// Default map scope: every watch spot near you regardless of team. Read-only for check-ins;
+// pick a team chip above to narrow down and say you're going.
+async function loadCity(fresh = false) {
+  const side = $('#side');
+  if (!map || !side) return;
+  const token = ++cityToken;
+  if (fresh || !cityCache) {
+    try {
+      const [all, cks] = await Promise.all([S.spotsAll(profile.teams), S.checkinsAll()]);
+      const t0 = Date.now();
+      cityCache = { spots: all.filter(s => !s.expiresAt || s.expiresAt > t0), going: cks.reduce((m, c) => (m[c.spotId] = (m[c.spotId] || 0) + 1, m), {}) };
+    } catch (e) { side.innerHTML = `<div class="panel"><p class="err">${esc(errMsg(e))}</p></div>`; return; }
+  }
+  if (token !== cityToken || mapTeam !== 'all' || !map) return; // scope changed while loading
+
+  const me = home(), pt = mapMetro || me, R = wide ? WIDE_KM : NEAR_KM, now = Date.now();
+  const upcoming = s => (s.eventAt > now ? s.eventAt : Infinity);
+  const spots = cityCache.spots.map(s => ({ ...s, dist: km(pt, s), going: cityCache.going[s.id] || 0 })).filter(s => s.dist <= R)
+    .sort((a, b) => (b.going - a.going) || (upcoming(a) - upcoming(b)) || a.dist - b.dist);
+  const lead = s => TEAM_BY_ID[(s.teams || []).find(x => profile.teams.includes(x)) || s.teams?.[0]]; // one of your teams first
+  const teamCount = new Set(spots.flatMap(s => s.teams || [])).size;
+  const goingTotal = spots.reduce((n, s) => n + s.going, 0);
+  const place = mapMetro ? `${mapMetro.name}, ${mapMetro.st}` : (profile.area || 'your area');
+
+  mapLayers.clearLayers();
+  if (!mapMetro) {
+    const hb = bounds(profile.cell), accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#ff7a1a';
+    L.rectangle([[hb.s, hb.w], [hb.n, hb.e]], { color: accent, weight: 1.5, dashArray: '4 5', fillOpacity: .06, interactive: false }).addTo(mapLayers);
+  }
+  for (const s of spots) {
+    const ot = lead(s);
+    const icon = L.divIcon({ className: '', html: `<div class="spot-pin" style="--team:${esc(ot?.color || '#ff7a1a')}">${ot?.logo ? `<img src="${esc(ot.logo)}" alt="">` : ''}</div>`, iconSize: [38, 38], iconAnchor: [19, 38], popupAnchor: [0, -36] });
+    L.marker([s.lat, s.lng], { icon, title: s.name }).bindPopup(() => spotPopup(s, null, ot, true)).addTo(mapLayers);
+  }
+  L.marker([me.lat, me.lng], { icon: L.divIcon({ className: '', html: '<div class="me-pin"></div>', iconSize: [18, 18] }), interactive: false, zIndexOffset: 1000 }).addTo(mapLayers);
+  if (!fresh) map.setView([pt.lat, pt.lng], wide ? 10 : 11);
+
+  side.innerHTML = `
+    <div class="panel">
+      <div class="row"><span class="allmark" aria-hidden="true">📍</span><div class="grow"><h3>Everything near ${esc(place)}</h3><div class="sub">Every team's watch spots. Pick a team above to narrow it down.</div></div></div>
+      <div class="stat-row">
+        <div class="stat"><div class="n">${spots.length}</div><div class="l">watch spots</div></div>
+        <div class="stat"><div class="n">${teamCount}</div><div class="l">teams shown</div></div>
+        <div class="stat"><div class="n">${goingTotal}</div><div class="l">going soon</div></div>
+      </div>
+      <div class="row" style="margin-top:12px;gap:8px;flex-wrap:wrap">
+        <select class="input" id="cityMetro" aria-label="City" style="flex:1;min-width:0"><option value="">My area</option>${[...METROS].sort((a, b) => a.name.localeCompare(b.name)).map(m => `<option value="${esc(m.name)}" ${mapMetro?.name === m.name ? 'selected' : ''}>${esc(m.name)}, ${m.st}</option>`).join('')}</select>
+        <button class="chip" id="wideBtn" aria-pressed="${wide}" style="padding:8px 14px">${wide ? '25 miles · closer' : '10 miles · wider'}</button>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="row" style="justify-content:space-between"><h3>Watch spots</h3><button class="btn sm primary" id="addSpot">+ Add</button></div>
+      <div class="list">${spots.length ? spots.slice(0, 40).map(s => {
+        const ot = lead(s), more = (s.teams?.length || 1) - 1;
+        return `<button class="item" data-spot="${esc(s.id)}">${logo(ot, 'sm')}
+          <span class="main"><span class="t" style="display:block">${esc(s.name)}</span><span class="s">${esc(ot?.short || '')}${more > 0 ? ` +${more}` : ''} · ${fmtKm(s.dist)}${s.eventAt > now ? ` · ${esc(s.eventTitle || 'Watch party')}, ${fmtWhen(s.eventAt)}` : s.note ? ` · ${esc(s.note)}` : ''}</span></span>
+          ${s.going ? `<span class="badge">${s.going} going</span>` : s.source === 'scout' ? '<span class="badge plain">found online</span>' : ''}</button>`;
+      }).join('') + (spots.length > 40 ? `<p class="empty">and ${spots.length - 40} more on the map</p>` : '')
+        : `<p class="empty">No watch spots within ${Math.round(R * .621)} miles yet.${wide ? '' : ' Try wider, or add one.'} Know a bar that shows games? Add it and other fans will find it.</p>`}</div>
+      <button class="link-btn" style="font-size:14px;margin-top:10px" id="clubLink">Run a fan club or alumni chapter?</button>
+    </div>`;
+
+  $('#addSpot').onclick = () => setAdding(true);
+  $('#clubLink').onclick = openClubDialog;
+  if (location.hash === '#club') { history.replaceState(null, '', '#map'); openClubDialog(); }
+  $('#wideBtn').onclick = () => { wide = !wide; loadCity(); };
+  $('#cityMetro').onchange = e => { mapMetro = METROS.find(m => m.name === e.target.value) || null; loadCity(); };
+  $$('[data-spot]', side).forEach(b => b.onclick = () => {
+    const s = spots.find(x => x.id === b.dataset.spot);
+    map.setView([s.lat, s.lng], 14);
+    mapLayers.eachLayer(l => { if (l.options?.title === s.name) l.openPopup(); });
+    if (matchMedia('(max-width: 860px)').matches) $('#map').scrollIntoView({ behavior: 'smooth' });
+  });
+}
+
 const fmtWhen = ms => new Date(ms).toLocaleString(undefined, { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
 const views = () => ['map', 'games', 'chat', ...(isAdmin() ? ['review', 'users'] : [])];
 
 const fmtKm = k => { const mi = k * .621; return mi < 1 ? 'under a mile' : `${mi < 10 ? mi.toFixed(1) : Math.round(mi)} mi`; };
 
-function spotPopup(s, myCheckin, forTeam) {
+function spotPopup(s, myCheckin, forTeam, browse = false) {
+  const followed = (s.teams || []).filter(x => profile.teams.includes(x)).map(x => TEAM_BY_ID[x]?.short).filter(Boolean);
   const el = document.createElement('div');
   const mine = s.by === user.uid || isAdmin();
   const here = myCheckin?.spotId === s.id;
@@ -460,14 +554,15 @@ function spotPopup(s, myCheckin, forTeam) {
     ${s.eventAt ? `<p><b>${esc(s.eventTitle || 'Watch party')}</b><br>${fmtWhen(s.eventAt)}</p>` : ''}
     ${s.club ? `<p>Home of <b>${esc(s.club)}</b></p>` : ''}
     <p>${s.address ? `${esc(s.address)}<br>` : ''}${s.note ? esc(s.note) : ''}</p>
-    ${forTeam ? '' : `<p><b>${s.going}</b> going to the next game${s.source === 'scout' ? '' : s.byName ? ` · added by ${esc(s.byName)}` : ''}</p>`}
+    ${forTeam && !browse ? '' : `<p><b>${s.going}</b> going to the next game${s.source === 'scout' ? '' : s.byName ? ` · added by ${esc(s.byName)}` : ''}</p>`}
     ${s.source === 'scout' ? `<p style="font-size:12px">Found online${s.sourceUrl ? ` via <a href="${esc(s.sourceUrl)}" target="_blank" rel="noopener">${esc(s.sourceName || 'source')}</a>` : ''} · checked ${new Date(s.checkedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}. Worth confirming before you go.</p>` : ''}
     <div class="row">
       ${forTeam ? '' : `<button class="btn sm ${here ? '' : 'primary'}" data-go>${here ? 'Going ✓' : "I'm going"}</button>`}
       <a class="btn sm" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=${s.lat},${s.lng}">Directions</a>
       ${mine ? '<button class="btn sm ghost" data-rm>Remove</button>' : ''}
     </div>
-    ${forTeam ? `<p class="muted" style="font-size:12px;margin-top:10px">Follow ${esc(forTeam.short)} too? Add them from <b>+ Teams</b> above to check in here.</p>`
+    ${browse ? `<p class="muted" style="font-size:12px;margin-top:10px">${followed.length ? `Pick ${esc(followed.join(' or '))} above to say you're going.` : `Follow ${esc(forTeam?.short || 'this team')} from <b>+ Teams</b> above to check in here.`}</p><button class="link-btn" style="font-size:12px;margin-top:6px" data-report>${s.source === 'scout' ? 'Still accurate? Tell us if not' : 'Something wrong with this spot?'}</button>`
+    : forTeam ? `<p class="muted" style="font-size:12px;margin-top:10px">Follow ${esc(forTeam.short)} too? Add them from <b>+ Teams</b> above to check in here.</p>`
       : `<button class="link-btn" style="font-size:12px;margin-top:10px" data-report>${s.source === 'scout' ? 'Still accurate? Tell us if not' : 'Something wrong with this spot?'}</button>`}`;
   el.querySelector('[data-go]')?.addEventListener('click', () => here ? S.checkOut(teamId).then(() => { toast('Check-in cancelled'); loadMap(true); }) : goTo(s));
   el.querySelector('[data-report]')?.addEventListener('click', () => openReportDialog(s));
@@ -527,7 +622,7 @@ function openSpotDialog(latlng, forClub = false) {
     try {
       await S.addSpot({ name: f.get('name'), address: f.get('address'), club: f.get('club'), note: f.get('note'), lat: latlng.lat, lng: latlng.lng, teams, byName: profile.name });
       dlg.close(); toast('Spot added. Thanks!');
-      teams.forEach(t => delete cache[t]); loadMap(true);
+      teams.forEach(t => delete cache[t]); cityCache = null; loadMap(true);
     } catch (x) { $('#spotErr', dlg).textContent = errMsg(x); }
   };
 }
@@ -605,7 +700,7 @@ async function viewGames() {
   }).join('') : '<div class="panel"><p class="empty">No upcoming games found for your teams. Off-season, or the schedule isn\'t out yet.</p></div>';
 
   $$('[data-out]').forEach(b => b.onclick = async () => { await S.checkOut(b.dataset.out); delete cache[b.dataset.out]; toast('Check-in cancelled'); viewGames(); });
-  $$('[data-add]').forEach(b => b.onclick = () => { teamId = b.dataset.add; ls.set('df_team', teamId); view = 'map'; history.replaceState(null, '', '#map'); renderShell(); setTimeout(() => setAdding(true), 300); });
+  $$('[data-add]').forEach(b => b.onclick = () => { teamId = b.dataset.add; ls.set('df_team', teamId); mapTeam = teamId; ls.set('df_maptab', teamId); view = 'map'; history.replaceState(null, '', '#map'); renderShell(); setTimeout(() => setAdding(true), 300); });
   $$('[data-go]').forEach(b => b.onclick = () => {
     const [tid, gid] = b.dataset.go.split('|');
     const g = games.find(x => x.teamId === tid && x.id === gid), d = data[tid], going = goingBySpot(d.checkins);
@@ -687,7 +782,10 @@ async function viewUsers() {
   const spots = allSpots.filter(s => !s.expiresAt || s.expiresAt > now); // same rule as the map: lapsed scout listings don't count
   const expired = allSpots.length - spots.length;
   const metroOf = pt => { const m = nearestMetro(pt); return m ? `${m.name}, ${m.st}` : 'Elsewhere'; };
-  const teamName = id => TEAM_BY_ID[id]?.name || id;
+  const SPORT_TAG = { cfb: 'Football', cbb: 'Basketball' };
+  const withSport = (t, f) => t ? `${t[f]}${SPORT_TAG[t.lg] ? ` (${SPORT_TAG[t.lg]})` : ''}` : null;
+  const teamName = id => withSport(TEAM_BY_ID[id], 'name') || id;
+  const teamShort = id => withSport(TEAM_BY_ID[id], 'short') || id;
   const fmtDay = ms => ms ? new Date(ms).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : '';
   const weekAgo = now - 7 * 864e5;
   people.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
@@ -698,14 +796,14 @@ async function viewUsers() {
       label: 'Watch spots', items: spots, noun: ['watch spot', 'watch spots'],
       city: s => [metroOf(s)], teams: s => s.teams || [],
       note: `${expired ? `${expired} lapsed scout listing${expired === 1 ? '' : 's'} not counted · ` : ''}each spot counted once in the total; a spot that serves several teams appears under each team`,
-      line: s => `<div class="grow"><b>${esc(s.name)}</b>${s.club ? ` <span class="muted">· ${esc(s.club)}</span>` : ''}<div class="muted" style="font-size:13px">${esc(s.address || '')}${s.address ? ' · ' : ''}${(s.teams || []).map(id => esc(TEAM_BY_ID[id]?.short || id)).join(', ')}</div></div><span class="muted" style="font-size:12px">${String(s.id).startsWith('scout_') ? 'scout' : esc(s.byName || 'fan')}</span>`,
+      line: s => `<div class="grow"><b>${esc(s.name)}</b>${s.club ? ` <span class="muted">· ${esc(s.club)}</span>` : ''}<div class="muted" style="font-size:13px">${esc(s.address || '')}${s.address ? ' · ' : ''}${(s.teams || []).map(id => esc(teamShort(id))).join(', ')}</div></div><span class="muted" style="font-size:12px">${String(s.id).startsWith('scout_') ? 'scout' : esc(s.byName || 'fan')}</span>`,
       sort: (a, b) => a.name.localeCompare(b.name),
     },
     fans: {
       label: 'Fans', items: people, noun: ['fan', 'fans'],
       city: p => [(p.area || 'Unknown').replace(/ area$/, '')], teams: p => p.teams || [],
       note: `${people.filter(p => p.updatedAt > weekAgo).length} new or updated in the last 7 days · a fan following several teams appears under each`,
-      line: p => `<div class="grow"><b>${esc(p.name)}</b><div class="muted" style="font-size:13px">${esc(p.area || 'Unknown area')} · ${(p.teams || []).map(id => esc(TEAM_BY_ID[id]?.short || id)).join(', ')}</div></div><span class="muted" style="font-size:12px">${fmtDay(p.updatedAt)}</span>`,
+      line: p => `<div class="grow"><b>${esc(p.name)}</b><div class="muted" style="font-size:13px">${esc(p.area || 'Unknown area')} · ${(p.teams || []).map(id => esc(teamShort(id))).join(', ')}</div></div><span class="muted" style="font-size:12px">${fmtDay(p.updatedAt)}</span>`,
       sort: (a, b) => a.name.localeCompare(b.name),
     },
   };
