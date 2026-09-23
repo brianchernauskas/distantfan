@@ -1,9 +1,9 @@
 // Data layer. Uses Firebase (Auth + Firestore) when FIREBASE_CONFIG is set,
 // otherwise a demo store in localStorage seeded with clearly fake fans and spots.
-import { FIREBASE_CONFIG, SITE } from './config.js?v=202609231100';
-import { TEAMS, TEAM_BY_ID } from './teams.js?v=202609231100';
-import { METROS } from './metros.js?v=202609231100';
-import { encode, center } from './geo.js?v=202609231100';
+import { FIREBASE_CONFIG, SITE } from './config.js?v=202609231104';
+import { TEAMS, TEAM_BY_ID } from './teams.js?v=202609231104';
+import { METROS } from './metros.js?v=202609231104';
+import { encode, center } from './geo.js?v=202609231104';
 
 export const mode = FIREBASE_CONFIG ? 'firebase' : 'demo';
 let impl;
@@ -66,7 +66,10 @@ async function firebaseStore() {
   let me = null;
 
   const toUser = u => u && { uid: u.uid, email: u.email, name: u.displayName || (u.email || '').split('@')[0] };
-  const list = async q => (await F.getDocs(q)).docs.map(d => ({ id: d.id, ...d.data() }));
+  // Rough Firestore read meter (documents returned). In the console: dfReads() shows this page load's total.
+  let reads = 0;
+  window.dfReads = () => reads;
+  const list = async q => { const docs = (await F.getDocs(q)).docs; reads += docs.length; return docs.map(d => ({ id: d.id, ...d.data() })); };
 
   // Watch spots come from data/spots.json (served free by GitHub Pages) plus a small Firestore delta
   // for spots created since that snapshot, so page views don't each read the whole collection.
@@ -153,7 +156,7 @@ async function firebaseStore() {
     // all-teams city view. Reads scale with that band, not the whole collection; the caller trims to
     // an exact radius. (A single range field needs no composite index.)
     spotsNear: async (lat, radiusKm) => { const d = radiusKm / 111; return (await spotsCached())?.filter(s => s.lat >= lat - d && s.lat <= lat + d) ?? list(F.query(F.collection(db, 'spots'), F.where('lat', '>=', lat - d), F.where('lat', '<=', lat + d), F.limit(2000))); },
-    checkinsActive: () => list(F.query(F.collection(db, 'checkins'), F.where('expiresAt', '>', Date.now()), F.limit(2000))),
+    checkinsActive: () => list(F.query(F.collection(db, 'checkins'), F.where('expiresAt', '>', Date.now()), F.limit(500))),
     addSpot: async s => { const r = await F.addDoc(F.collection(db, 'spots'), {
       name: clean(s.name, 80), address: clean(s.address, 120), club: clean(s.club, 80), note: clean(s.note, 200),
       lat: +s.lat, lng: +s.lng, teams: s.teams.slice(0, 6),
@@ -161,7 +164,7 @@ async function firebaseStore() {
     }); spotsDirty = true; return r; },
     removeSpot: async id => { await F.deleteDoc(F.doc(db, 'spots', id)); spotsGone(id); },
 
-    checkinsFor: teamId => list(F.query(F.collection(db, 'checkins'), F.where('teamId', '==', teamId), F.limit(1000)))
+    checkinsFor: teamId => list(F.query(F.collection(db, 'checkins'), F.where('teamId', '==', teamId), F.limit(300)))
       .then(r => r.filter(active)),
     checkIn: c => F.setDoc(F.doc(db, 'checkins', `${me.uid}_${c.teamId}`), {
       uid: me.uid, name: clean(c.name, 40), teamId: c.teamId, spotId: c.spotId,
@@ -171,11 +174,11 @@ async function firebaseStore() {
     checkOut: teamId => F.deleteDoc(F.doc(db, 'checkins', `${me.uid}_${teamId}`)),
 
     subscribeRoom(roomId, cb) {
-      const q = F.query(F.collection(db, 'rooms', roomId, 'messages'), F.orderBy('createdAt', 'desc'), F.limit(100));
-      return F.onSnapshot(q, snap => cb(snap.docs.map(d => {
+      const q = F.query(F.collection(db, 'rooms', roomId, 'messages'), F.orderBy('createdAt', 'desc'), F.limit(50));
+      return F.onSnapshot(q, snap => { reads += snap.docChanges().length; cb(snap.docs.map(d => {
         const m = d.data();
         return { id: d.id, ...m, at: m.createdAt?.toMillis?.() || Date.now() };
-      }).reverse()), err => cb([], err));
+      }).reverse()); }, err => cb([], err));
     },
     sendMessage: (roomId, text, name) => F.addDoc(F.collection(db, 'rooms', roomId, 'messages'), {
       uid: me.uid, name: clean(name, 40), text: clean(text, 500), createdAt: F.serverTimestamp(),
