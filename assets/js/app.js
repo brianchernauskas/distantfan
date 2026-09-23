@@ -1,9 +1,9 @@
-import * as S from './store.js?v=202609230844';
-import { SITE, ADMINS } from './config.js?v=202609230844';
-import { TEAMS, TEAM_BY_ID, LEAGUES } from './teams.js?v=202609230844';
-import { METROS } from './metros.js?v=202609230844';
-import { encode, center, bounds, areaLabel, km } from './geo.js?v=202609230844';
-import { nextGames } from './schedule.js?v=202609230844';
+import * as S from './store.js?v=202609230903';
+import { SITE, ADMINS } from './config.js?v=202609230903';
+import { TEAMS, TEAM_BY_ID, LEAGUES } from './teams.js?v=202609230903';
+import { METROS } from './metros.js?v=202609230903';
+import { encode, center, bounds, areaLabel, km, nearestMetro } from './geo.js?v=202609230903';
+import { nextGames } from './schedule.js?v=202609230903';
 
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -678,47 +678,61 @@ function timeAgo(ms) {
 /* ------------------------------------------------------------------- users */
 async function viewUsers() {
   const v = $('#view');
-  v.innerHTML = '<div class="page"><h2>Users</h2><div class="panel"><p class="muted">Loading…</p></div></div>';
-  let people;
-  try { people = await S.listProfiles(); } catch (e) { v.innerHTML = `<div class="page"><h2>Users</h2><div class="panel"><p class="err">${esc(errMsg(e))}</p></div></div>`; return; }
+  const shell = body => `<div class="page"><h2>Users</h2>${body}</div>`;
+  v.innerHTML = shell('<div class="panel"><p class="muted">Loading…</p></div>');
+  let people, allSpots;
+  try { [people, allSpots] = await Promise.all([S.listProfiles(), S.listSpots()]); } catch (e) { v.innerHTML = shell(`<div class="panel"><p class="err">${esc(errMsg(e))}</p></div>`); return; }
   if (view !== 'users') return;
-  const tally = f => { const m = {}; people.forEach(p => f(p).forEach(k => m[k] = (m[k] || 0) + 1)); return Object.entries(m).sort((a, b) => b[1] - a[1]); };
-  const areas = tally(p => [p.area || 'Unknown']);
-  const teams = tally(p => p.teams || []);
-  let group = 'city';
-  const weekAgo = Date.now() - 7 * 864e5;
-  const fresh = people.filter(p => p.updatedAt > weekAgo).length;
+  const now = Date.now();
+  const spots = allSpots.filter(s => !s.expiresAt || s.expiresAt > now); // same rule as the map: lapsed scout listings don't count
+  const expired = allSpots.length - spots.length;
+  const metroOf = pt => { const m = nearestMetro(pt); return m ? `${m.name}, ${m.st}` : 'Elsewhere'; };
+  const teamName = id => TEAM_BY_ID[id]?.name || id;
+  const fmtDay = ms => ms ? new Date(ms).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : '';
+  const weekAgo = now - 7 * 864e5;
   people.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
-  const chips = list => list.map(([k, n]) => `<span class="badge plain">${esc(TEAM_BY_ID[k]?.short || k)} · ${n}</span>`).join(' ');
-  v.innerHTML = `<div class="page">
-    <h2>Users</h2>
-    <div class="panel" style="display:grid;gap:10px">
-      <div class="row"><b style="font-size:32px;line-height:1">${people.length}</b><span class="muted grow">${people.length === 1 ? 'fan' : 'fans'} with a profile · ${fresh} new or updated in the last 7 days</span></div>
-      <div><b>By city</b> <span class="muted" style="font-size:13px">(${areas.length} ${areas.length === 1 ? 'area' : 'areas'}, nearest metro to each fan's home)</span>
-        <div style="display:grid;gap:4px;margin-top:6px">${areas.map(([a, n]) => `<div class="row"><span class="grow">${esc(a.replace(/ area$/, ''))}</span><b>${n}</b><span class="muted" style="font-size:12px;width:44px;text-align:right">${Math.round(n / people.length * 100)}%</span></div>`).join('')}</div></div>
-      <div><b>By team</b><div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px">${chips(teams)}</div></div>
-    </div>
-    <div class="row" id="grp" style="margin:14px 0 8px;gap:6px"><span class="muted">Group by</span>${[['city', 'City'], ['team', 'Team'], ['recent', 'Recent']].map(([k, n]) => `<button class="chip" data-g="${k}" aria-pressed="${k === group}">${n}</button>`).join('')}</div>
-    <div id="ulist" style="display:grid;gap:14px"></div>
-  </div>`;
-  const line = p => `
-    <div class="row" style="padding:10px 0;border-top:1px solid var(--line)">
-      <div class="grow"><b>${esc(p.name)}</b><div class="muted" style="font-size:13px">${esc(p.area || 'Unknown area')} · ${(p.teams || []).map(id => esc(TEAM_BY_ID[id]?.short || id)).join(', ')}</div></div>
-      <span class="muted" style="font-size:12px">${p.updatedAt ? new Date(p.updatedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : ''}</span>
-    </div>`;
-  const draw = () => {
-    $$('[data-g]').forEach(b => b.setAttribute('aria-pressed', b.dataset.g === group));
-    const keyed = group === 'team' ? p => p.teams || [] : group === 'city' ? p => [(p.area || 'Unknown area').replace(/ area$/, '')] : null;
-    let groups;
-    if (!keyed) groups = [['All fans, most recent first', people]];
-    else {
-      const m = {}; people.forEach(p => keyed(p).forEach(k => (m[k] ||= []).push(p)));
-      groups = Object.entries(m).sort((a, b) => b[1].length - a[1].length || a[0].localeCompare(b[0]))
-        .map(([k, ps]) => [group === 'team' ? (TEAM_BY_ID[k]?.name || k) : k, ps.sort((a, b) => a.name.localeCompare(b.name))]);
-    }
-    $('#ulist').innerHTML = groups.map(([k, ps]) => `<div class="panel" style="display:grid;gap:0"><div class="row"><b class="grow" style="font-size:18px">${esc(k)}</b><span class="badge plain">${ps.length}</span></div>${ps.map(line).join('')}</div>`).join('');
+
+  // Each dataset says how to find an entry's city and teams and how to draw one row.
+  const SETS = {
+    spots: {
+      label: 'Watch spots', items: spots, noun: ['watch spot', 'watch spots'],
+      city: s => metroOf(s), teams: s => s.teams || [],
+      note: `${expired ? `${expired} lapsed scout listing${expired === 1 ? '' : 's'} not counted · ` : ''}each spot counted once in the total; a spot that serves several teams appears under each team`,
+      line: s => `<div class="grow"><b>${esc(s.name)}</b>${s.club ? ` <span class="muted">· ${esc(s.club)}</span>` : ''}<div class="muted" style="font-size:13px">${esc(s.address || '')}${s.address ? ' · ' : ''}${(s.teams || []).map(id => esc(TEAM_BY_ID[id]?.short || id)).join(', ')}</div></div><span class="muted" style="font-size:12px">${String(s.id).startsWith('scout_') ? 'scout' : esc(s.byName || 'fan')}</span>`,
+      sort: (a, b) => a.name.localeCompare(b.name),
+    },
+    fans: {
+      label: 'Fans', items: people, noun: ['fan', 'fans'],
+      city: p => (p.area || 'Unknown').replace(/ area$/, ''), teams: p => p.teams || [],
+      note: `${people.filter(p => p.updatedAt > weekAgo).length} new or updated in the last 7 days · a fan following several teams appears under each`,
+      line: p => `<div class="grow"><b>${esc(p.name)}</b><div class="muted" style="font-size:13px">${esc(p.area || 'Unknown area')} · ${(p.teams || []).map(id => esc(TEAM_BY_ID[id]?.short || id)).join(', ')}</div></div><span class="muted" style="font-size:12px">${fmtDay(p.updatedAt)}</span>`,
+      sort: (a, b) => a.name.localeCompare(b.name),
+    },
   };
-  $$('[data-g]').forEach(b => b.onclick = () => { group = b.dataset.g; draw(); });
+  let set = 'spots', group = 'city';
+
+  const tally = (items, keys) => { const m = {}; items.forEach(i => keys(i).forEach(k => (m[k] ||= []).push(i))); return Object.entries(m).sort((a, b) => b[1].length - a[1].length || a[0].localeCompare(b[0])); };
+  const seg = (attr, cur, opts) => opts.map(([k, n]) => `<button class="chip" ${attr}="${k}" aria-pressed="${k === cur}">${n}</button>`).join('');
+
+  const draw = () => {
+    const D = SETS[set], n = D.items.length;
+    const cities = tally(D.items, D.city), teams = tally(D.items, D.teams);
+    const rows = (list, name) => list.map(([k, ps]) => `<div class="row"><span class="grow">${esc(name(k))}</span><b>${ps.length}</b><span class="muted" style="font-size:12px;width:44px;text-align:right">${n ? Math.round(ps.length / n * 100) : 0}%</span></div>`).join('');
+    const by = group === 'team' ? teams : cities;
+    const groups = group === 'recent' ? [['All, most recent first', D.items]] : by.map(([k, ps]) => [group === 'team' ? teamName(k) : k, [...ps].sort(D.sort)]);
+    v.innerHTML = shell(`
+      <div class="row" style="gap:6px;margin-bottom:12px">${seg('data-set', set, [['spots', `Watch spots · ${spots.length}`], ['fans', `Fans · ${people.length}`]])}</div>
+      <div class="panel" style="display:grid;gap:12px">
+        <div class="row"><b style="font-size:36px;line-height:1">${n}</b><span class="muted grow">${D.noun[n === 1 ? 0 : 1]} nationwide, all teams</span></div>
+        <div class="muted" style="font-size:13px">${D.note}</div>
+        <div><b>By team</b> <span class="muted" style="font-size:13px">(${teams.length})</span><div style="display:grid;gap:4px;margin-top:6px">${rows(teams, teamName)}</div></div>
+        <div><b>By city</b> <span class="muted" style="font-size:13px">(${cities.length}, nearest metro)</span><div style="display:grid;gap:4px;margin-top:6px">${rows(cities, k => k)}</div></div>
+      </div>
+      <div class="row" style="margin:14px 0 8px;gap:6px"><span class="muted">List by</span>${seg('data-g', group, [['city', 'City'], ['team', 'Team'], ['recent', 'Recent']])}</div>
+      <div style="display:grid;gap:14px">${groups.map(([k, ps]) => `<div class="panel" style="display:grid;gap:0"><div class="row"><b class="grow" style="font-size:18px">${esc(k)}</b><span class="badge plain">${ps.length}</span></div>${ps.map(i => `<div class="row" style="padding:10px 0;border-top:1px solid var(--line)">${D.line(i)}</div>`).join('')}</div>`).join('')}</div>`);
+    $$('[data-set]').forEach(b => b.onclick = () => { set = b.dataset.set; draw(); });
+    $$('[data-g]').forEach(b => b.onclick = () => { group = b.dataset.g; draw(); });
+  };
   draw();
 }
 
