@@ -1,9 +1,9 @@
-import * as S from './store.js?v=202609230903';
-import { SITE, ADMINS } from './config.js?v=202609230903';
-import { TEAMS, TEAM_BY_ID, LEAGUES } from './teams.js?v=202609230903';
-import { METROS } from './metros.js?v=202609230903';
-import { encode, center, bounds, areaLabel, km, nearestMetro } from './geo.js?v=202609230903';
-import { nextGames } from './schedule.js?v=202609230903';
+import * as S from './store.js?v=202609230906';
+import { SITE, ADMINS } from './config.js?v=202609230906';
+import { TEAMS, TEAM_BY_ID, LEAGUES } from './teams.js?v=202609230906';
+import { METROS } from './metros.js?v=202609230906';
+import { encode, center, bounds, areaLabel, km, nearestMetro } from './geo.js?v=202609230906';
+import { nextGames } from './schedule.js?v=202609230906';
 
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -709,7 +709,7 @@ async function viewUsers() {
       sort: (a, b) => a.name.localeCompare(b.name),
     },
   };
-  let set = 'spots', group = 'city';
+  let set = 'spots', group = 'city', showAll = false, browse = false;
 
   const tally = (items, keys) => { const m = {}; items.forEach(i => keys(i).forEach(k => (m[k] ||= []).push(i))); return Object.entries(m).sort((a, b) => b[1].length - a[1].length || a[0].localeCompare(b[0])); };
   const seg = (attr, cur, opts) => opts.map(([k, n]) => `<button class="chip" ${attr}="${k}" aria-pressed="${k === cur}">${n}</button>`).join('');
@@ -717,7 +717,9 @@ async function viewUsers() {
   const draw = () => {
     const D = SETS[set], n = D.items.length;
     const cities = tally(D.items, D.city), teams = tally(D.items, D.teams);
-    const rows = (list, name) => list.map(([k, ps]) => `<div class="row"><span class="grow">${esc(name(k))}</span><b>${ps.length}</b><span class="muted" style="font-size:12px;width:44px;text-align:right">${n ? Math.round(ps.length / n * 100) : 0}%</span></div>`).join('');
+    const top = list => showAll ? list : list.slice(0, 10);
+    const rows = (list, name) => { const max = list[0]?.[1].length || 1; return top(list).map(([k, ps]) => `<div style="display:grid;gap:3px"><div class="row"><span class="grow">${esc(name(k))}</span><b>${ps.length}</b><span class="muted" style="font-size:12px;width:44px;text-align:right">${n ? Math.round(ps.length / n * 100) : 0}%</span></div><div style="height:5px;border-radius:3px;background:var(--accent-soft)"><div style="height:100%;width:${ps.length / max * 100}%;border-radius:3px;background:var(--accent)"></div></div></div>`).join(''); };
+    const more = list => list.length > 10 ? `<span class="muted" style="font-size:13px">${showAll ? 'all' : 'top 10 of'} ${list.length}</span>` : `<span class="muted" style="font-size:13px">(${list.length})</span>`;
     const by = group === 'team' ? teams : cities;
     const groups = group === 'recent' ? [['All, most recent first', D.items]] : by.map(([k, ps]) => [group === 'team' ? teamName(k) : k, [...ps].sort(D.sort)]);
     v.innerHTML = shell(`
@@ -725,12 +727,14 @@ async function viewUsers() {
       <div class="panel" style="display:grid;gap:12px">
         <div class="row"><b style="font-size:36px;line-height:1">${n}</b><span class="muted grow">${D.noun[n === 1 ? 0 : 1]} nationwide, all teams</span></div>
         <div class="muted" style="font-size:13px">${D.note}</div>
-        <div><b>By team</b> <span class="muted" style="font-size:13px">(${teams.length})</span><div style="display:grid;gap:4px;margin-top:6px">${rows(teams, teamName)}</div></div>
-        <div><b>By city</b> <span class="muted" style="font-size:13px">(${cities.length}, nearest metro)</span><div style="display:grid;gap:4px;margin-top:6px">${rows(cities, k => k)}</div></div>
+        <div><b>By team</b> ${more(teams)}<div style="display:grid;gap:8px;margin-top:8px">${rows(teams, teamName)}</div></div>
+        <div><b>By city</b> ${more(cities)} <span class="muted" style="font-size:12px">nearest metro</span><div style="display:grid;gap:8px;margin-top:8px">${rows(cities, k => k)}</div></div>
       </div>
-      <div class="row" style="margin:14px 0 8px;gap:6px"><span class="muted">List by</span>${seg('data-g', group, [['city', 'City'], ['team', 'Team'], ['recent', 'Recent']])}</div>
-      <div style="display:grid;gap:14px">${groups.map(([k, ps]) => `<div class="panel" style="display:grid;gap:0"><div class="row"><b class="grow" style="font-size:18px">${esc(k)}</b><span class="badge plain">${ps.length}</span></div>${ps.map(i => `<div class="row" style="padding:10px 0;border-top:1px solid var(--line)">${D.line(i)}</div>`).join('')}</div>`).join('')}</div>`);
+      <div class="row" style="margin:14px 0 8px;gap:6px">${teams.length > 10 || cities.length > 10 ? `<button class="chip" id="toggleAll">${showAll ? 'Show top 10 only' : 'Show all teams & cities'}</button>` : ''}<button class="chip" id="toggleBrowse">${browse ? 'Hide full list' : 'Browse full list'}</button>${browse ? `<span class="muted">by</span>${seg('data-g', group, [['city', 'City'], ['team', 'Team'], ['recent', 'Recent']])}` : ''}</div>
+      ${browse ? `<div style="display:grid;gap:14px">${groups.map(([k, ps]) => `<div class="panel" style="display:grid;gap:0"><div class="row"><b class="grow" style="font-size:18px">${esc(k)}</b><span class="badge plain">${ps.length}</span></div>${ps.map(i => `<div class="row" style="padding:10px 0;border-top:1px solid var(--line)">${D.line(i)}</div>`).join('')}</div>`).join('')}</div>` : ''}`);
     $$('[data-set]').forEach(b => b.onclick = () => { set = b.dataset.set; draw(); });
+    $('#toggleAll')?.addEventListener('click', () => { showAll = !showAll; draw(); });
+    $('#toggleBrowse').onclick = () => { browse = !browse; draw(); };
     $$('[data-g]').forEach(b => b.onclick = () => { group = b.dataset.g; draw(); });
   };
   draw();
