@@ -1,9 +1,9 @@
-import * as S from './store.js?v=202609221512';
-import { SITE, ADMINS } from './config.js?v=202609221512';
-import { TEAMS, TEAM_BY_ID, LEAGUES } from './teams.js?v=202609221512';
-import { METROS } from './metros.js?v=202609221512';
-import { encode, center, bounds, areaLabel, km } from './geo.js?v=202609221512';
-import { nextGames } from './schedule.js?v=202609221512';
+import * as S from './store.js?v=202609230838';
+import { SITE, ADMINS } from './config.js?v=202609230838';
+import { TEAMS, TEAM_BY_ID, LEAGUES } from './teams.js?v=202609230838';
+import { METROS } from './metros.js?v=202609230838';
+import { encode, center, bounds, areaLabel, km } from './geo.js?v=202609230838';
+import { nextGames } from './schedule.js?v=202609230838';
 
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -24,6 +24,7 @@ const ICON = {
   games: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>',
   chat: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg>',
   review: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.5 5.1 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.5-6.9A2 2 0 0 0 16.8 4H7.2a2 2 0 0 0-1.7 1.1z"/></svg>',
+  users: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
   me: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>',
 };
 const BRAND = `<a class="brand" href="./" aria-label="Distant Fan home"><svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="8" cy="32" r="4.5" fill="currentColor" opacity=".35"/><path d="M12 29C15 20 19 17 23.5 17.5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-dasharray=".5 5" opacity=".55"/><path d="M29 3.5a8.5 8.5 0 0 0-8.5 8.5c0 6.4 8.5 15 8.5 15s8.5-8.6 8.5-15A8.5 8.5 0 0 0 29 3.5z" fill="var(--accent)"/><circle cx="29" cy="12" r="3.2" fill="var(--bg)"/></svg><span>Distant<b>Fan</b></span></a>`;
@@ -252,7 +253,7 @@ const shortName = n => {
 /* ------------------------------------------------------------------ shell */
 function renderShell() {
   cleanupView();
-  const tabs = [['map', 'Map'], ['games', 'Games'], ['chat', 'Chat'], ...(isAdmin() ? [['review', 'Review']] : [])];
+  const tabs = [['map', 'Map'], ['games', 'Games'], ['chat', 'Chat'], ...(isAdmin() ? [['review', 'Review'], ['users', 'Users']] : [])];
   const tabBtns = tabs.map(([k, n]) => `<button class="tab" data-view="${k}" aria-selected="${view === k}">${ICON[k]}<span>${n}</span></button>`).join('');
   root.innerHTML = `
     <div class="app">
@@ -273,12 +274,12 @@ function renderShell() {
   $$('[data-view]').forEach(b => b.onclick = () => { view = b.dataset.view; history.replaceState(null, '', `#${view}`); renderShell(); });
   $('#meBtn').onclick = $('#meBtn2').onclick = openProfile;
   drawTeambar();
-  ({ map: viewMap, games: viewGames, chat: viewChat, review: viewReview })[view]();
+  ({ map: viewMap, games: viewGames, chat: viewChat, review: viewReview, users: viewUsers })[view]();
 }
 
 function drawTeambar() {
   const bar = $('#teambar');
-  bar.hidden = view === 'games' || view === 'review';
+  bar.hidden = view === 'games' || view === 'review' || view === 'users';
   bar.innerHTML = profile.teams.map(id => {
     const t = TEAM_BY_ID[id];
     return `<button class="chip" data-t="${id}" aria-pressed="${id === teamId}" style="--team:${esc(t?.color)}">${logo(t, 'sm')}${esc(t?.short || id)}</button>`;
@@ -446,7 +447,7 @@ async function loadMap(fresh = false) {
 }
 
 const fmtWhen = ms => new Date(ms).toLocaleString(undefined, { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
-const views = () => ['map', 'games', 'chat', ...(isAdmin() ? ['review'] : [])];
+const views = () => ['map', 'games', 'chat', ...(isAdmin() ? ['review', 'users'] : [])];
 
 const fmtKm = k => { const mi = k * .621; return mi < 1 ? 'under a mile' : `${mi < 10 ? mi.toFixed(1) : Math.round(mi)} mi`; };
 
@@ -672,6 +673,36 @@ function timeAgo(ms) {
   if (s < 3600) return `${Math.floor(s / 60)}m ago`;
   if (s < 86400) return `${Math.floor(s / 3600)}h ago`;
   return new Date(ms).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+}
+
+/* ------------------------------------------------------------------- users */
+async function viewUsers() {
+  const v = $('#view');
+  v.innerHTML = '<div class="page"><h2>Users</h2><div class="panel"><p class="muted">Loading…</p></div></div>';
+  let people;
+  try { people = await S.listProfiles(); } catch (e) { v.innerHTML = `<div class="page"><h2>Users</h2><div class="panel"><p class="err">${esc(errMsg(e))}</p></div></div>`; return; }
+  if (view !== 'users') return;
+  const tally = f => { const m = {}; people.forEach(p => f(p).forEach(k => m[k] = (m[k] || 0) + 1)); return Object.entries(m).sort((a, b) => b[1] - a[1]); };
+  const areas = tally(p => [p.area || 'Unknown']);
+  const teams = tally(p => p.teams || []);
+  const weekAgo = Date.now() - 7 * 864e5;
+  const fresh = people.filter(p => p.updatedAt > weekAgo).length;
+  people.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+  const chips = list => list.map(([k, n]) => `<span class="badge plain">${esc(TEAM_BY_ID[k]?.short || k)} · ${n}</span>`).join(' ');
+  v.innerHTML = `<div class="page">
+    <h2>Users</h2>
+    <div class="panel" style="display:grid;gap:10px">
+      <div class="row"><b style="font-size:32px;line-height:1">${people.length}</b><span class="muted grow">${people.length === 1 ? 'fan' : 'fans'} with a profile · ${fresh} new or updated in the last 7 days</span></div>
+      <div><b>By city</b> <span class="muted" style="font-size:13px">(${areas.length} ${areas.length === 1 ? 'area' : 'areas'}, nearest metro to each fan's home)</span>
+        <div style="display:grid;gap:4px;margin-top:6px">${areas.map(([a, n]) => `<div class="row"><span class="grow">${esc(a.replace(/ area$/, ''))}</span><b>${n}</b><span class="muted" style="font-size:12px;width:44px;text-align:right">${Math.round(n / people.length * 100)}%</span></div>`).join('')}</div></div>
+      <div><b>By team</b><div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px">${chips(teams)}</div></div>
+    </div>
+    <div class="panel" style="display:grid;gap:0;margin-top:14px">${people.map(p => `
+      <div class="row" style="padding:10px 0;border-top:1px solid var(--line)">
+        <div class="grow"><b>${esc(p.name)}</b><div class="muted" style="font-size:13px">${esc(p.area || 'Unknown area')} · ${(p.teams || []).map(id => esc(TEAM_BY_ID[id]?.short || id)).join(', ')}</div></div>
+        <span class="muted" style="font-size:12px">${p.updatedAt ? new Date(p.updatedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : ''}</span>
+      </div>`).join('')}</div>
+  </div>`;
 }
 
 /* ----------------------------------------------------------------- review */

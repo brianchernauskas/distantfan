@@ -1,9 +1,9 @@
 // Data layer. Uses Firebase (Auth + Firestore) when FIREBASE_CONFIG is set,
 // otherwise a demo store in localStorage seeded with clearly fake fans and spots.
-import { FIREBASE_CONFIG, SITE } from './config.js?v=202609221512';
-import { TEAMS, TEAM_BY_ID } from './teams.js?v=202609221512';
-import { METROS } from './metros.js?v=202609221512';
-import { encode, center } from './geo.js?v=202609221512';
+import { FIREBASE_CONFIG, SITE } from './config.js?v=202609230838';
+import { TEAMS, TEAM_BY_ID } from './teams.js?v=202609230838';
+import { METROS } from './metros.js?v=202609230838';
+import { encode, center } from './geo.js?v=202609230838';
 
 export const mode = FIREBASE_CONFIG ? 'firebase' : 'demo';
 let impl;
@@ -42,6 +42,7 @@ export const listReports = call('listReports');
 export const removeReportedSpot = call('removeReportedSpot');
 export const dismissReport = call('dismissReport');
 export const listVenueLeads = call('listVenueLeads');
+export const listProfiles = call('listProfiles');
 export const dismissVenueLead = call('dismissVenueLead');
 
 const clean = (s, max) => String(s || '').replace(/\s+/g, ' ').trim().slice(0, max);
@@ -147,6 +148,9 @@ async function firebaseStore() {
       spotId: r.spotId, spotName: clean(r.spotName, 80), uid: me.uid, name: clean(r.name, 40),
       reason: clean(r.reason, 40), note: clean(r.note, 300), createdAt: F.serverTimestamp(),
     }),
+    // Admin Users tab. Profiles are already readable by any signed-in fan, so no rules change is needed.
+    listProfiles: () => list(F.query(F.collection(db, 'profiles'), F.limit(5000)))
+      .then(r => r.map(({ id, updatedAt, ...p }) => ({ uid: id, ...p, updatedAt: updatedAt?.toMillis?.() || 0 }))),
     listReports: () => list(F.query(F.collection(db, 'spotReports'), F.limit(200))),
     async removeReportedSpot(r) {
       const all = await list(F.query(F.collection(db, 'spotReports'), F.where('spotId', '==', r.spotId)));
@@ -258,6 +262,7 @@ function demoStore() {
     },
     async listQueue() { return []; },
     async reportSpot() {},
+    async listProfiles() { return Object.entries(state.profiles).map(([uid, p]) => ({ uid, ...p })); },
     async listReports() { return []; },
     async removeReportedSpot() {},
     async dismissReport() {},
