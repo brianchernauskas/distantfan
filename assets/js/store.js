@@ -1,9 +1,9 @@
 // Data layer. Uses Firebase (Auth + Firestore) when FIREBASE_CONFIG is set,
 // otherwise a demo store in localStorage seeded with clearly fake fans and spots.
-import { FIREBASE_CONFIG, SITE } from './config.js?v=202609230940';
-import { TEAMS, TEAM_BY_ID } from './teams.js?v=202609230940';
-import { METROS } from './metros.js?v=202609230940';
-import { encode, center } from './geo.js?v=202609230940';
+import { FIREBASE_CONFIG, SITE } from './config.js?v=202609230946';
+import { TEAMS, TEAM_BY_ID } from './teams.js?v=202609230946';
+import { METROS } from './metros.js?v=202609230946';
+import { encode, center } from './geo.js?v=202609230946';
 
 export const mode = FIREBASE_CONFIG ? 'firebase' : 'demo';
 let impl;
@@ -26,8 +26,8 @@ export const deleteProfile = call('deleteProfile');
 export const fansFor = call('fansFor');
 export const spotsFor = call('spotsFor');
 export const spotsSample = call('spotsSample');
-export const spotsAll = call('spotsAll');
-export const checkinsAll = call('checkinsAll');
+export const spotsNear = call('spotsNear');
+export const checkinsActive = call('checkinsActive');
 export const addSpot = call('addSpot');
 export const removeSpot = call('removeSpot');
 export const checkinsFor = call('checkinsFor');
@@ -102,9 +102,11 @@ async function firebaseStore() {
     // nearby - proof the map is alive, not a team-scoped read. Small dataset, so no server-side
     // geo query yet; the caller filters by distance client-side like everywhere else here.
     spotsSample: () => list(F.query(F.collection(db, 'spots'), F.limit(400))),
-    // Every spot and live check-in, for the all-teams city view. Filtered by distance client-side.
-    spotsAll: () => list(F.query(F.collection(db, 'spots'), F.limit(5000))),
-    checkinsAll: () => list(F.query(F.collection(db, 'checkins'), F.limit(5000))).then(r => r.filter(active)),
+    // Spots in a latitude band around a point, plus only the check-ins that haven't expired, for the
+    // all-teams city view. Reads scale with that band, not the whole collection; the caller trims to
+    // an exact radius. (A single range field needs no composite index.)
+    spotsNear: (lat, radiusKm) => { const d = radiusKm / 111; return list(F.query(F.collection(db, 'spots'), F.where('lat', '>=', lat - d), F.where('lat', '<=', lat + d), F.limit(2000))); },
+    checkinsActive: () => list(F.query(F.collection(db, 'checkins'), F.where('expiresAt', '>', Date.now()), F.limit(2000))),
     addSpot: s => F.addDoc(F.collection(db, 'spots'), {
       name: clean(s.name, 80), address: clean(s.address, 120), club: clean(s.club, 80), note: clean(s.note, 200),
       lat: +s.lat, lng: +s.lng, teams: s.teams.slice(0, 6),
@@ -254,8 +256,8 @@ function demoStore() {
     async fansFor(teamId) { seedTeam(teamId); return Object.entries(state.profiles).filter(([, p]) => p.teams.includes(teamId)).map(([uid, p]) => ({ uid, ...p })); },
     async spotsFor(teamId) { seedTeam(teamId); return state.spots.filter(s => s.teams.includes(teamId)); },
     async spotsSample() { return state.spots; },
-    async spotsAll(teamIds = []) { teamIds.forEach(seedTeam); return state.spots; },
-    async checkinsAll() { return state.checkins.filter(active); },
+    async spotsNear() { return state.spots; },
+    async checkinsActive() { return state.checkins.filter(active); },
     async addSpot(s) { state.spots.push({ ...s, id: `spot-${Date.now()}`, by: state.user.uid }); save(); },
     async removeSpot(id) { state.spots = state.spots.filter(s => s.id !== id); save(); },
     async checkinsFor(teamId) { seedTeam(teamId); return state.checkins.filter(c => c.teamId === teamId && active(c)); },

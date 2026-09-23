@@ -1,9 +1,9 @@
-import * as S from './store.js?v=202609230940';
-import { SITE, ADMINS } from './config.js?v=202609230940';
-import { TEAMS, TEAM_BY_ID, LEAGUES } from './teams.js?v=202609230940';
-import { METROS } from './metros.js?v=202609230940';
-import { encode, center, bounds, areaLabel, km, nearestMetro } from './geo.js?v=202609230940';
-import { nextGames } from './schedule.js?v=202609230940';
+import * as S from './store.js?v=202609230946';
+import { SITE, ADMINS } from './config.js?v=202609230946';
+import { TEAMS, TEAM_BY_ID, LEAGUES } from './teams.js?v=202609230946';
+import { METROS } from './metros.js?v=202609230946';
+import { encode, center, bounds, areaLabel, km, nearestMetro } from './geo.js?v=202609230946';
+import { nextGames } from './schedule.js?v=202609230946';
 
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -470,11 +470,13 @@ async function loadCity(fresh = false) {
   const side = $('#side');
   if (!map || !side) return;
   const token = ++cityToken;
-  if (fresh || !cityCache) {
+  const scope = mapMetro?.name || 'me'; // one fetch per center, sized for the wider radius so the 10/25 mile toggle is free
+  if (fresh || !cityCache || cityCache.scope !== scope) {
     try {
-      const [all, cks] = await Promise.all([S.spotsAll(profile.teams), S.checkinsAll()]);
+      const c0 = mapMetro || home();
+      const [all, cks] = await Promise.all([S.spotsNear(c0.lat, WIDE_KM), S.checkinsActive()]);
       const t0 = Date.now();
-      cityCache = { spots: all.filter(s => !s.expiresAt || s.expiresAt > t0), going: cks.reduce((m, c) => (m[c.spotId] = (m[c.spotId] || 0) + 1, m), {}) };
+      cityCache = { scope, spots: all.filter(s => !s.expiresAt || s.expiresAt > t0), going: cks.reduce((m, c) => (m[c.spotId] = (m[c.spotId] || 0) + 1, m), {}) };
     } catch (e) { side.innerHTML = `<div class="panel"><p class="err">${esc(errMsg(e))}</p></div>`; return; }
   }
   if (token !== cityToken || mapTeam !== 'all' || !map) return; // scope changed while loading
