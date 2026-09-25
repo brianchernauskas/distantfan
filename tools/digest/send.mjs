@@ -70,7 +70,7 @@ async function gamesFor(teamId) {
         const us = c.competitors.find(x => x.team?.id === team.eid), them = c.competitors.find(x => x.team?.id !== team.eid);
         if (!us || !them) return null;
         return { key: e.id, teamId, time: Date.parse(e.date), tbd: c.timeValid === false || e.timeValid === false, home: us.homeAway === 'home',
-          opp: them.team.displayName, tv: [...new Set((c.broadcasts || []).map(b => b.media?.shortName).filter(Boolean))] };
+          opp: them.team.displayName, oppLogo: them.team.logos?.[0]?.href || them.team.logo || '', tv: [...new Set((c.broadcasts || []).map(b => b.media?.shortName).filter(Boolean))] };
       }).filter(Boolean);
     } catch { return []; }
   })();
@@ -92,40 +92,74 @@ function build(pref, profile) {
   return { pt, metro, tz };
 }
 
+// ---- email layout (tables + inline styles so it holds up in Gmail, Outlook and Apple Mail)
+const FONT = "Arial,Helvetica,sans-serif";
+const teamColor = t => /^#[0-9a-f]{6}$/i.test(t?.color || '') ? t.color : '#df5a0b';
+// A logo on a white disc, so dark marks stay legible in dark-mode mail clients too.
+const tile = (src, size, alt = '') => src ? `<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td style="background:#ffffff;border:1px solid #e3ded2;border-radius:50%;padding:4px;line-height:0"><img src="${esc(src)}" alt="${esc(alt)}" width="${size - 10}" height="${size - 10}" style="display:block;width:${size - 10}px;height:${size - 10}px;border:0"></td></tr></table>` : '';
+
 function render({ pref, profile, games, tz, pt, welcome = false }) {
   const unsub = `${SITE}/unsubscribe.html?t=${pref.id}`;
   const fmtDay = ms => new Date(ms).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', timeZone: tz });
   const fmtTime = g => g.tbd ? 'time TBA' : new Date(g.time).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZoneName: 'short', timeZone: tz });
   const first = games[0], t = first && TEAM_BY_ID[first.teamId];
   const area = profile.area?.replace(/ area$/, '') || 'your area';
+  const firstName = (profile.name || 'there').split(' ')[0];
   const intro = welcome
     ? `Thanks for turning on game-day email. Every Thursday morning we'll send your teams' games for the week, with the watch spots nearest ${area}. ${games.length ? "Here's this week to start:" : 'None of your teams play in the next week, so your first full email comes when the schedule picks up.'}`
     : "here's your week.";
   const subject = welcome ? 'Welcome to Distant Fan game-day email' : games.length === 1
     ? `${short(t)} ${first.home ? 'vs' : 'at'} ${first.opp}: ${fmtDay(first.time)}. Where to watch near you`
-    : `${games.length} games this week for your teams: where to watch near ${profile.area?.replace(/ area$/, '') || 'you'}`;
+    : `${games.length} games this week for your teams: where to watch near ${area === 'your area' ? 'you' : area}`;
+
   const blocks = games.map(g => {
-    const team = TEAM_BY_ID[g.teamId], spots = spotsNear(pt, g.teamId);
+    const team = TEAM_BY_ID[g.teamId], spots = spotsNear(pt, g.teamId), col = teamColor(team);
     const spotHtml = spots.length
-      ? spots.map(s => `<li style="margin:4px 0"><b>${esc(s.name)}</b> <span style="color:#6b7480">· ${esc(s.address || '')} · ${(s.d * 0.621).toFixed(0)} mi</span></li>`).join('')
-      : `<li style="margin:4px 0;color:#6b7480">No spots listed near you yet. <a href="${SITE}/app.html" style="color:#df5a0b">Add one</a> and be the first.</li>`;
-    return { g, team, spots, html: `<div style="border:1px solid #e3ded2;border-radius:12px;padding:16px 18px;margin:14px 0;background:#fff">
-  <div style="font-size:13px;color:#6b7480">${esc(fmtDay(g.time))} · ${esc(fmtTime(g))}${g.tv.length ? ` · ${esc(g.tv.join(', '))}` : ''}</div>
-  <div style="font-size:19px;font-weight:700;margin:4px 0 8px">${esc(short(team))} ${g.home ? 'vs' : 'at'} ${esc(g.opp)}</div>
-  <div style="font-size:13px;font-weight:600;margin-bottom:4px">Where to watch near you</div>
-  <ul style="margin:0;padding-left:18px;font-size:14px">${spotHtml}</ul>
-</div>` };
+      ? spots.map(s => `<div style="margin:0 0 7px;font-size:14px;line-height:1.35">📍 <b style="color:#121820">${esc(s.name)}</b><br><span style="color:#6b7480;font-size:13px">${esc(s.address || '')}${s.address ? ' · ' : ''}${(s.d * 0.621).toFixed(0)} mi</span></div>`).join('')
+      : `<div style="font-size:14px;color:#6b7480">No spots listed near you yet. <a href="${SITE}/app.html" style="color:#df5a0b;font-weight:700">Add one</a> and be the first.</div>`;
+    return { g, team, spots, html: `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 14px;background:#ffffff;border:1px solid #e3ded2;border-left:6px solid ${col};border-radius:12px"><tr><td style="padding:16px 18px">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+<td width="56" valign="middle">${tile(team.logo, 52, team.name)}</td>
+<td valign="middle" style="padding:0 12px">
+<div style="font-size:12px;letter-spacing:.06em;text-transform:uppercase;font-weight:700;color:#6b7480">${esc(fmtDay(g.time))} · ${esc(fmtTime(g))}</div>
+<div style="font-size:19px;font-weight:800;line-height:1.2;margin:3px 0;color:#121820">${esc(short(team))} <span style="font-weight:600;color:#6b7480">${g.home ? 'vs' : 'at'}</span> ${esc(g.opp)}</div>
+${g.tv.length ? `<div style="font-size:13px;color:#6b7480">📺 ${esc(g.tv.join(', '))}</div>` : ''}
+</td>
+<td width="44" valign="middle" align="right">${tile(g.oppLogo, 40, g.opp)}</td>
+</tr></table>
+<div style="border-top:1px solid #eee9de;margin-top:14px;padding-top:12px">
+<div style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:${col === '#ffffff' ? '#6b7480' : col};margin-bottom:8px">Where to watch near you</div>
+${spotHtml}
+</div></td></tr></table>` };
   });
-  const html = `<!doctype html><html><body style="margin:0;background:#f5f3ee;font-family:Arial,Helvetica,sans-serif;color:#121820">
-<div style="max-width:560px;margin:0 auto;padding:24px 16px">
-  <div style="font-size:22px;font-weight:800;letter-spacing:.02em;text-transform:uppercase">Distant<span style="color:#df5a0b">Fan</span></div>
-  <p style="font-size:16px;margin:18px 0 4px">Hey ${esc((profile.name || 'there').split(' ')[0])}${welcome ? '. ' : ', '}${esc(intro)}</p>
-  ${games.length ? `<p style="font-size:14px;color:#6b7480;margin:0">Times shown for ${esc(area)}.</p>` : ''}
-  ${blocks.map(b => b.html).join('\n')}
-  <p style="text-align:center;margin:22px 0"><a href="${SITE}/app.html" style="background:#df5a0b;color:#fff;text-decoration:none;font-weight:700;padding:13px 26px;border-radius:999px;display:inline-block">See who's going</a></p>
-  <p style="font-size:12px;color:#8a939e;line-height:1.5;margin-top:26px">You're getting this because you turned on the weekly game-day email at distantfan.com. <a href="${unsub}" style="color:#8a939e">Unsubscribe</a> in one click.<br>${esc(cfg.postalAddress || '[postal address goes here]')}</p>
-</div></body></html>`;
-  const text = `Hey ${(profile.name || 'there').split(' ')[0]}${welcome ? '. ' : ', '}${intro}${games.length ? ` (times for ${area})` : ''}\n\n${blocks.map(b =>
+
+  const teamStrip = (profile.teams || []).map(id => TEAM_BY_ID[id]).filter(Boolean).map(tm => `<td style="padding:0 8px 0 0">${tile(tm.logo, 44, tm.name)}</td>`).join('');
+  const heading = welcome ? `You're in, ${esc(firstName)}.` : `Your week, ${esc(firstName)}.`;
+  const lead = welcome ? esc(intro) : `Your teams' games for the next few days, with the watch spots nearest ${esc(area)}.`;
+
+  const html = `<div style="background:#f5f3ee;padding:22px 10px;font-family:${FONT};color:#121820">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:580px;margin:0 auto">
+<tr><td style="background:#0b1016;border-radius:14px 14px 0 0;padding:16px 22px">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+<td width="54" valign="middle"><img src="${process.env.DIGEST_ASSET_BASE || SITE}/assets/img/email-logo.png" width="44" height="44" alt="Distant Fan" style="display:block;border:0;border-radius:10px"></td>
+<td valign="middle" style="font-family:${FONT};font-size:22px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:#ffffff">Distant<span style="color:#ff7a1a">Fan</span></td>
+<td valign="middle" align="right" style="font-size:12px;color:#98a5b5">Your team.<br>Wherever you are.</td>
+</tr></table></td></tr>
+<tr><td style="background:#ff7a1a;height:4px;line-height:4px;font-size:0">&nbsp;</td></tr>
+<tr><td style="padding:24px 4px 6px">
+<div style="font-size:30px;line-height:1.1;font-weight:800;color:#121820">${heading}</div>
+<p style="font-size:15px;line-height:1.55;color:#4a5563;margin:10px 0 16px">${lead}</p>
+${teamStrip ? `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 6px"><tr>${teamStrip}</tr></table>` : ''}
+${games.length ? `<div style="font-size:12px;color:#8a939e;margin:10px 0 0">Times shown for ${esc(area)}.</div>` : ''}
+</td></tr>
+<tr><td style="padding:16px 0 4px">
+${blocks.map(b => b.html).join('\n')}
+</td></tr>
+<tr><td align="center" style="padding:14px 0 6px"><a href="${SITE}/app.html" style="display:inline-block;background:#df5a0b;color:#ffffff;text-decoration:none;font-weight:700;font-size:16px;padding:14px 30px;border-radius:999px">See who's going</a></td></tr>
+<tr><td style="padding:22px 6px 4px;font-size:12px;line-height:1.55;color:#8a939e;text-align:center">You're getting this because you turned on the weekly game-day email at distantfan.com. <a href="${unsub}" style="color:#8a939e">Unsubscribe</a> in one click.<br>${esc(cfg.postalAddress || '[postal address goes here]')}</td></tr>
+</table></div>`;
+
+  const text = `Hey ${firstName}${welcome ? '. ' : ', '}${intro}${games.length ? ` (times for ${area})` : ''}\n\n${blocks.map(b =>
     `${fmtDay(b.g.time)} ${fmtTime(b.g)}: ${short(b.team)} ${b.g.home ? 'vs' : 'at'} ${b.g.opp}${b.g.tv.length ? ` (${b.g.tv.join(', ')})` : ''}\n` +
     (b.spots.length ? b.spots.map(s => `  - ${s.name}, ${s.address || ''}`).join('\n') : '  - No spots listed near you yet. Add one at ' + SITE + '/app.html') + '\n').join('\n')}\nSee who's going: ${SITE}/app.html\n\nUnsubscribe: ${unsub}\n${cfg.postalAddress || ''}\n`;
   return { subject, html, text, unsub };
@@ -140,7 +174,7 @@ async function sendEmailJs(to, m, name) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Origin: SITE },
     body: JSON.stringify({ service_id: ej.serviceId, template_id: ej.templateId, user_id: ej.publicKey, ...(ej.privateKey ? { accessToken: ej.privateKey } : {}),
-      template_params: { to_email: to, subject: m.subject, player_name: name, picks_text: m.text, submitted_at: '' } }),
+      template_params: { to_email: to, subject: m.subject, player_name: name, picks_text: m.text, message_html: m.html, submitted_at: '' } }),
   });
   if (!res.ok) throw new Error(`EmailJS ${res.status}: ${(await res.text()).slice(0, 200)}`);
 }
@@ -150,7 +184,7 @@ async function sendMail(to, m, name) {
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: { Authorization: `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ from: cfg.from, to, reply_to: cfg.replyTo || undefined, subject: m.subject, html: m.html, text: m.text, headers: { 'List-Unsubscribe': `<${m.unsub}>` } }),
+    body: JSON.stringify({ from: cfg.from, to, reply_to: cfg.replyTo || undefined, subject: m.subject, html: `<!doctype html><html><body style="margin:0">${m.html}</body></html>`, text: m.text, headers: { 'List-Unsubscribe': `<${m.unsub}>` } }),
   });
   if (!res.ok) throw new Error(`Resend ${res.status}: ${(await res.text()).slice(0, 200)}`);
 }
@@ -195,7 +229,7 @@ for (let i = 0; i < prefs.length; i++) {
   const mail = render({ pref, profile: prof, games, tz: ctx.tz, pt: ctx.pt, welcome: WELCOME });
   if (!SEND) {
     const f = path.join(outDir, `${i + 1}-${pref.id.slice(0, 6)}.html`);
-    fs.writeFileSync(f, mail.html);
+    fs.writeFileSync(f, `<!doctype html><html><body style="margin:0">${mail.html}</body></html>`);
     console.error(`[dry] ${pref.email}: ${games.length} game(s) · "${mail.subject}" -> ${path.relative(root, f)}`);
     continue;
   }
