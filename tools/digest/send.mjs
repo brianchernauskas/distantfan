@@ -115,48 +115,47 @@ function render({ pref, profile, games, tz, pt, welcome = false }) {
   const blocks = games.map(g => {
     const team = TEAM_BY_ID[g.teamId], spots = spotsNear(pt, g.teamId), col = teamColor(team);
     const spotHtml = spots.length
-      ? spots.map(s => `<div style="margin:0 0 7px;font-size:14px;line-height:1.35">📍 <b style="color:#121820">${esc(s.name)}</b><br><span style="color:#6b7480;font-size:13px">${esc(s.address || '')}${s.address ? ' · ' : ''}${(s.d * 0.621).toFixed(0)} mi</span></div>`).join('')
+      ? spots.map(s => `<div style="margin:0 0 9px;font-size:15px;line-height:1.35">📍 <b style="color:#121820">${esc(s.name)}</b><br><span style="color:#6b7480;font-size:14px">${esc(s.address || '')}${s.address ? ' · ' : ''}${(s.d * 0.621).toFixed(0)} mi</span></div>`).join('')
       : `<div style="font-size:14px;color:#6b7480">No spots listed near you yet. <a href="${SITE}/app.html" style="color:#df5a0b;font-weight:700">Add one</a> and be the first.</div>`;
-    return { g, team, spots, html: `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 14px;background:#ffffff;border:1px solid #e3ded2;border-left:6px solid ${col};border-radius:12px"><tr><td style="padding:16px 18px">
+    return { g, team, spots, html: `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 14px;background:#ffffff;border:1px solid #e3ded2;border-left:6px solid ${col};border-radius:12px"><tr><td style="padding:14px 14px">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
 <td width="56" valign="middle">${tile(team.logo, 52, team.name)}</td>
 <td valign="middle" style="padding:0 12px">
-<div style="font-size:12px;letter-spacing:.06em;text-transform:uppercase;font-weight:700;color:#6b7480">${esc(fmtDay(g.time))} · ${esc(fmtTime(g))}</div>
-<div style="font-size:19px;font-weight:800;line-height:1.2;margin:3px 0;color:#121820">${esc(short(team))} <span style="font-weight:600;color:#6b7480">${g.home ? 'vs' : 'at'}</span> ${esc(g.opp)}</div>
-${g.tv.length ? `<div style="font-size:13px;color:#6b7480">📺 ${esc(g.tv.join(', '))}</div>` : ''}
+<div style="font-size:13px;letter-spacing:.05em;text-transform:uppercase;font-weight:700;color:#6b7480">${esc(fmtDay(g.time))} · ${esc(fmtTime(g))}</div>
+<div style="font-size:20px;font-weight:800;line-height:1.2;margin:4px 0;color:#121820">${esc(short(team))} <span style="font-weight:600;color:#6b7480">${g.home ? 'vs' : 'at'}</span> ${esc(g.opp)}</div>
+${g.tv.length ? `<div style="font-size:14px;color:#6b7480">📺 ${esc(g.tv.join(', '))}</div>` : ''}
 </td>
 <td width="44" valign="middle" align="right">${tile(g.oppLogo, 40, g.opp)}</td>
 </tr></table>
 <div style="border-top:1px solid #eee9de;margin-top:14px;padding-top:12px">
-<div style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:${col === '#ffffff' ? '#6b7480' : col};margin-bottom:8px">Where to watch near you</div>
+<div style="font-size:12px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:${col === '#ffffff' ? '#6b7480' : col};margin-bottom:8px">Where to watch near you</div>
 ${spotHtml}
 </div></td></tr></table>` };
   });
 
-  const teamStrip = (profile.teams || []).map(id => TEAM_BY_ID[id]).filter(Boolean).map(tm => `<td style="padding:0 8px 0 0">${tile(tm.logo, 44, tm.name)}</td>`).join('');
+  const teamStrip = (profile.teams || []).map(id => TEAM_BY_ID[id]).filter(Boolean).map(tm => `<span style="display:inline-block;margin:0 8px 8px 0;vertical-align:top">${tile(tm.logo, 44, tm.name)}</span>`).join('');
   const heading = welcome ? `You're in, ${esc(firstName)}.` : `Your week, ${esc(firstName)}.`;
   const lead = welcome ? esc(intro) : `Your teams' games for the next few days, with the watch spots nearest ${esc(area)}.`;
 
-  const html = `<div style="background:#f5f3ee;padding:22px 10px;font-family:${FONT};color:#121820">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:580px;margin:0 auto">
+  const html = `<meta name="viewport" content="width=device-width, initial-scale=1"><div style="background:#f5f3ee;padding:16px 8px;font-family:${FONT};color:#121820;-webkit-text-size-adjust:100%">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:580px;margin:0 auto">
 <tr><td style="background:#0b1016;border-radius:14px 14px 0 0;padding:16px 22px">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
 <td width="54" valign="middle"><img src="${process.env.DIGEST_ASSET_BASE || SITE}/assets/img/email-logo.png" width="44" height="44" alt="Distant Fan" style="display:block;border:0;border-radius:10px"></td>
 <td valign="middle" style="font-family:${FONT};font-size:22px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:#ffffff">Distant<span style="color:#ff7a1a">Fan</span></td>
-<td valign="middle" align="right" style="font-size:12px;color:#98a5b5">Your team.<br>Wherever you are.</td>
 </tr></table></td></tr>
 <tr><td style="background:#ff7a1a;height:4px;line-height:4px;font-size:0">&nbsp;</td></tr>
 <tr><td style="padding:24px 4px 6px">
-<div style="font-size:30px;line-height:1.1;font-weight:800;color:#121820">${heading}</div>
-<p style="font-size:15px;line-height:1.55;color:#4a5563;margin:10px 0 16px">${lead}</p>
-${teamStrip ? `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 6px"><tr>${teamStrip}</tr></table>` : ''}
-${games.length ? `<div style="font-size:12px;color:#8a939e;margin:10px 0 0">Times shown for ${esc(area)}.</div>` : ''}
+<div style="font-size:28px;line-height:1.15;font-weight:800;color:#121820">${heading}</div>
+<p style="font-size:16px;line-height:1.55;color:#4a5563;margin:10px 0 16px">${lead}</p>
+${teamStrip ? `<div style="margin:0 0 4px;font-size:0;line-height:0">${teamStrip}</div>` : ''}
+${games.length ? `<div style="font-size:13px;color:#8a939e;margin:6px 0 0">Times shown for ${esc(area)}.</div>` : ''}
 </td></tr>
 <tr><td style="padding:16px 0 4px">
 ${blocks.map(b => b.html).join('\n')}
 </td></tr>
-<tr><td align="center" style="padding:14px 0 6px"><a href="${SITE}/app.html" style="display:inline-block;background:#df5a0b;color:#ffffff;text-decoration:none;font-weight:700;font-size:16px;padding:14px 30px;border-radius:999px">See who's going</a></td></tr>
-<tr><td style="padding:22px 6px 4px;font-size:12px;line-height:1.55;color:#8a939e;text-align:center">You're getting this because you turned on the weekly game-day email at distantfan.com. <a href="${unsub}" style="color:#8a939e">Unsubscribe</a> in one click.<br>${esc(cfg.postalAddress || '[postal address goes here]')}</td></tr>
+<tr><td align="center" style="padding:14px 0 6px"><a href="${SITE}/app.html" style="display:inline-block;background:#df5a0b;color:#ffffff;text-decoration:none;font-weight:700;font-size:17px;padding:15px 34px;border-radius:999px">See who's going</a></td></tr>
+<tr><td style="padding:22px 6px 4px;font-size:13px;line-height:1.55;color:#8a939e;text-align:center">You're getting this because you turned on the weekly game-day email at distantfan.com. <a href="${unsub}" style="color:#8a939e">Unsubscribe</a> in one click.<br>${esc(cfg.postalAddress || '[postal address goes here]')}</td></tr>
 </table></div>`;
 
   const text = `Hey ${firstName}${welcome ? '. ' : ', '}${intro}${games.length ? ` (times for ${area})` : ''}\n\n${blocks.map(b =>
