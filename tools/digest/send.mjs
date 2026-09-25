@@ -174,7 +174,7 @@ async function sendEmailJs(to, m, name) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Origin: SITE },
     body: JSON.stringify({ service_id: ej.serviceId, template_id: ej.templateId, user_id: ej.publicKey, ...(ej.privateKey ? { accessToken: ej.privateKey } : {}),
-      template_params: { to_email: to, subject: m.subject, player_name: name, picks_text: m.text, message_html: m.html, submitted_at: '' } }),
+      template_params: { to_email: to, email: to, to, recipient: to, user_email: to, from_name: 'Distant Fan', to_name: name, subject: m.subject, player_name: name, picks_text: m.text, message_html: m.html, submitted_at: '' } }),
   });
   if (!res.ok) throw new Error(`EmailJS ${res.status}: ${(await res.text()).slice(0, 200)}`);
 }
