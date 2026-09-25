@@ -7,7 +7,12 @@
 //   node tools/digest/send.mjs --send --only me@example.com   just that address (test)
 //   options: --days 7   look-ahead window     --force   ignore the "sent within 5 days" guard
 //
-// Setup (Brian): verify distantfan.com in Resend (adds DNS records at Hostinger), create an API key and
+// Provider: EmailJS by default (the same Gmail service as the draft-order pick'em site: plain text, sent from
+// that Gmail account, 200/month free; the API must be allowed for non-browser apps in EmailJS -> Account -> Security).
+// Resend is used instead when ~/.secrets/resend.key exists or config.provider is 'resend' (HTML, own domain).
+// Test one email to yourself: node tools/digest/send.mjs --test-to you@example.com
+//
+// Resend setup (optional upgrade): verify distantfan.com in Resend (adds DNS records at Hostinger), create an API key and
 // save it to ~/.secrets/resend.key (or set RESEND_API_KEY), then copy tools/digest/config.example.json to ~/.secrets/distantfan-digest.json and fill it in
 // (kept outside the repo because the site is public).
 // CAN-SPAM needs a postal address in every marketing email, so --send refuses to run until
@@ -22,7 +27,7 @@ import { adminDb } from '../scout/lib.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const arg = n => { const i = process.argv.indexOf(n); return i < 0 ? null : (process.argv[i + 1]?.startsWith('--') ? true : process.argv[i + 1] ?? true); };
-const SEND = process.argv.includes('--send'), FORCE = process.argv.includes('--force');
+const SEND = process.argv.includes('--send') || process.argv.includes('--test-to'), FORCE = process.argv.includes('--force');
 const ONLY = (arg('--only') || '').toString().toLowerCase();
 const DAYS = +(arg('--days') || 7);
 const SITE = 'https://distantfan.com';
@@ -35,11 +40,13 @@ const STATE_TZ = { HI: 'Pacific/Honolulu', AK: 'America/Anchorage', AZ: 'America
 // Config lives outside the repo (the site is public and this holds a postal address).
 const cfgPath = path.join(os.homedir(), '.secrets/distantfan-digest.json');
 const cfg = fs.existsSync(cfgPath) ? JSON.parse(fs.readFileSync(cfgPath, 'utf8')) : {};
-if (SEND) {
-  if (!cfg.from || !cfg.postalAddress || /REPLACE/i.test(cfg.postalAddress)) throw new Error('Save ~/.secrets/distantfan-digest.json (copy tools/digest/config.example.json; needs from + a real postalAddress) before --send.');
+const TEST_TO = (arg('--test-to') || '').toString();   // send the demo email to this one address (no database)
+const PROVIDER = cfg.provider || (fs.existsSync(path.join(os.homedir(), '.secrets/resend.key')) || process.env.RESEND_API_KEY ? 'resend' : 'emailjs');
+if (SEND && !TEST_TO) {
+  if (PROVIDER === 'resend' && !cfg.from || !cfg.postalAddress || /REPLACE/i.test(cfg.postalAddress)) throw new Error('Save ~/.secrets/distantfan-digest.json (copy tools/digest/config.example.json; needs from + a real postalAddress) before --send.');
 }
 const resendKey = process.env.RESEND_API_KEY || (fs.existsSync(path.join(os.homedir(), '.secrets/resend.key')) ? fs.readFileSync(path.join(os.homedir(), '.secrets/resend.key'), 'utf8').trim() : '');
-if (SEND && !resendKey) throw new Error('No Resend key: set RESEND_API_KEY or save it to ~/.secrets/resend.key');
+if (SEND && PROVIDER === 'resend' && !resendKey) throw new Error('No Resend key: set RESEND_API_KEY or save it to ~/.secrets/resend.key');
 
 const esc = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -118,7 +125,22 @@ function render({ pref, profile, games, tz, pt }) {
   return { subject, html, text, unsub };
 }
 
-async function sendMail(to, m) {
+// EmailJS (same Gmail service as the draft-order pick'em site): plain-text body only, sent from the
+// connected Gmail account. Its template is `{{picks_text}}`, so the digest's text version goes there.
+// Needs "Allow EmailJS API for non-browser applications" on in EmailJS -> Account -> Security.
+async function sendEmailJs(to, m, name) {
+  const ej = { serviceId: 'service_aaw5cl8', templateId: 'template_obor8bx', publicKey: '7HdyBZlJwZtLqAl2v', ...(cfg.emailjs || {}) };
+  const res = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Origin: SITE },
+    body: JSON.stringify({ service_id: ej.serviceId, template_id: ej.templateId, user_id: ej.publicKey, ...(ej.privateKey ? { accessToken: ej.privateKey } : {}),
+      template_params: { to_email: to, subject: m.subject, player_name: name, picks_text: m.text, submitted_at: '' } }),
+  });
+  if (!res.ok) throw new Error(`EmailJS ${res.status}: ${(await res.text()).slice(0, 200)}`);
+}
+
+async function sendMail(to, m, name) {
+  if (PROVIDER === 'emailjs') return sendEmailJs(to, m, name);
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: { Authorization: `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
@@ -128,12 +150,12 @@ async function sendMail(to, m) {
 }
 
 // ---- run
-const DEMO = process.argv.includes('--demo');
-if (DEMO && SEND) throw new Error('--demo never sends.');
+const DEMO = process.argv.includes('--demo') || !!TEST_TO;
+if (DEMO && SEND && !TEST_TO) throw new Error('--demo only sends with --test-to <address>.');
 const db = DEMO ? null : await adminDb();
 let prefs, profiles, logs;
 if (DEMO) {
-  prefs = [{ id: '0'.repeat(32), uid: 'demo', email: 'demo@example.com' }];
+  prefs = [{ id: '0'.repeat(32), uid: 'demo', email: TEST_TO || 'demo@example.com' }];
   profiles = [{ exists: true, data: () => ({ name: 'Brian C', cell: '9tbq', area: 'Phoenix area', teams: ['nfl-min', 'cfb-9', 'mlb-ari', 'nfl-buf'] }) }];
   logs = [{ exists: false }];
 } else {
@@ -170,8 +192,8 @@ for (let i = 0; i < prefs.length; i++) {
     continue;
   }
   try {
-    await sendMail(pref.email, mail);
-    await db.collection('mailLog').doc(pref.id).set({ lastSentAt: Date.now(), games: games.length });
+    await sendMail(pref.email, mail, (prof.name || '').split(' ')[0]);
+    if (db) await db.collection('mailLog').doc(pref.id).set({ lastSentAt: Date.now(), games: games.length });
     sent++; console.error(`sent ${pref.email} (${games.length} games)`);
   } catch (e) { console.error(`FAILED ${pref.email}: ${e.message}`); }
   await sleep(600);
