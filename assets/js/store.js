@@ -1,9 +1,9 @@
 // Data layer. Uses Firebase (Auth + Firestore) when FIREBASE_CONFIG is set,
 // otherwise a demo store in localStorage seeded with clearly fake fans and spots.
-import { FIREBASE_CONFIG, SITE } from './config.js?v=202609231156';
-import { TEAMS, TEAM_BY_ID } from './teams.js?v=202609231156';
-import { METROS } from './metros.js?v=202609231156';
-import { encode, center } from './geo.js?v=202609231156';
+import { FIREBASE_CONFIG, SITE } from './config.js?v=202609251408';
+import { TEAMS, TEAM_BY_ID } from './teams.js?v=202609251408';
+import { METROS } from './metros.js?v=202609251408';
+import { encode, center } from './geo.js?v=202609251408';
 
 export const mode = FIREBASE_CONFIG ? 'firebase' : 'demo';
 let impl;
@@ -23,6 +23,8 @@ export const signOut = call('signOut');
 export const getProfile = call('getProfile');
 export const saveProfile = call('saveProfile');
 export const deleteProfile = call('deleteProfile');
+export const getEmailPref = call('getEmailPref');
+export const setEmailPref = call('setEmailPref');
 export const fanCellsFor = call('fanCellsFor');
 export const spotsFor = call('spotsFor');
 export const spotsSample = call('spotsSample');
@@ -118,6 +120,9 @@ async function firebaseStore() {
     return { cells, generatedAt: Date.now() };
   }
 
+  // Game-day email opt-in: one doc per fan, keyed by a random token that the unsubscribe link carries.
+  const emailPrefFor = async uid => (await list(F.query(F.collection(db, 'emailPrefs'), F.where('uid', '==', uid), F.limit(1))))[0] || null;
+
   return {
     onUser: cb => A.onAuthStateChanged(auth, u => { me = toUser(u); cb(me); }),
     signInGoogle: () => A.signInWithPopup(auth, new A.GoogleAuthProvider()),
@@ -140,7 +145,16 @@ async function firebaseStore() {
       cell: p.cell.slice(0, SITE.homePrecision), area: clean(p.area, 60),
       updatedAt: F.serverTimestamp(),
     }),
+    getEmailPref: emailPrefFor,
+    async setEmailPref(uid, email, optIn) {
+      if (!email) return;
+      const cur = await emailPrefFor(uid);
+      const id = cur?.id || crypto.randomUUID().replace(/-/g, '');
+      await F.setDoc(F.doc(db, 'emailPrefs', id), { uid, email: clean(email, 120), optIn: !!optIn, updatedAt: F.serverTimestamp() });
+    },
     async deleteProfile(uid) {
+      const pref = await emailPrefFor(uid).catch(() => null);
+      if (pref) await F.deleteDoc(F.doc(db, 'emailPrefs', pref.id)).catch(() => {});
       await F.deleteDoc(F.doc(db, 'profiles', uid));
       await auth.currentUser?.delete().catch(() => {}); // needs a recent sign-in; profile is gone either way
     },
@@ -295,6 +309,8 @@ function demoStore() {
     resetPassword() { throw new Error('Password reset needs Firebase.'); },
     signInDemo(name) { state.user = { uid: 'me', name: clean(name, 40) || 'You', email: null }; save(); emitUser(); },
     signOut() { state.user = null; save(); emitUser(); },
+    async getEmailPref() { return null; },   // demo accounts have no email
+    async setEmailPref() {},
     async getProfile(uid) { return state.profiles[uid] ? { uid, ...state.profiles[uid] } : null; },
     async saveProfile(uid, p) {
       state.profiles[uid] = { name: clean(p.name, 40), teams: p.teams.slice(0, SITE.maxTeams), cell: p.cell.slice(0, SITE.homePrecision), area: p.area };

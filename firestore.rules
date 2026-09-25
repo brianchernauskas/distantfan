@@ -23,6 +23,24 @@ service cloud.firestore {
       allow delete: if signedIn() && me() == uid;
     }
 
+    // Game-day email opt-in (tools/digest reads it with the admin key). The doc id is a random 128-bit
+    // token that goes into each email's unsubscribe link, so it works as a capability URL: nobody can
+    // list the collection, and whoever holds the token can only switch optIn OFF, without signing in.
+    function emailShape() {
+      return data().keys().hasOnly(['uid', 'email', 'optIn', 'updatedAt'])
+        && data().uid == me() && str(data().email, 3, 120) && data().optIn is bool
+        && data().updatedAt == request.time;
+    }
+    match /emailPrefs/{id} {
+      allow read: if signedIn() && (resource.data.uid == me() || isAdmin());
+      allow create: if signedIn() && id.matches('^[0-9a-f]{32}$') && emailShape();
+      allow update: if (signedIn() && resource.data.uid == me() && emailShape())
+        || (data().diff(resource.data).affectedKeys().hasOnly(['optIn']) && data().optIn == false);
+      allow delete: if signedIn() && resource.data.uid == me();
+    }
+    // Send log so a fan is never emailed twice in a few days. Admin only.
+    match /mailLog/{id} { allow read, write: if isAdmin(); }
+
     // Watch spots are public places, so exact coordinates are fine here.
     match /spots/{id} {
       allow read: if signedIn();

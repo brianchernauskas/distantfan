@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Unsubscribe | Distant Fan</title>
+<meta name="theme-color" content="#0b1016">
+<link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css?v=202609251408">
+</head>
+<body>
+<main class="wrap" style="max-width:520px;padding:72px 0;display:grid;gap:18px">
+  <a class="brand" href="/" aria-label="Distant Fan home"><span>Distant<b>Fan</b></span></a>
+  <h1 id="h" style="font-size:44px">Unsubscribing…</h1>
+  <p id="p" class="muted"></p>
+  <p><a class="btn primary" href="/app.html">Open the app</a></p>
+</main>
+<script type="module">
+  import { FIREBASE_CONFIG } from './assets/js/config.js?v=202609251408';
+  const h = document.getElementById('h'), p = document.getElementById('p');
+  // The token in the link is the Firestore doc id; firestore.rules lets its holder switch optIn off, nothing else.
+  const t = new URLSearchParams(location.search).get('t') || '';
+  (async () => {
+    if (!/^[0-9a-f]{32}$/.test(t) || !FIREBASE_CONFIG) { h.textContent = 'Link not recognised'; p.textContent = 'This unsubscribe link looks incomplete. You can also turn the email off in the app under your profile.'; return; }
+    try {
+      const url = `https://firestore.googleapis.com/v1/projects/${FIREBASE_CONFIG.projectId}/databases/(default)/documents/emailPrefs/${t}?updateMask.fieldPaths=optIn&currentDocument.exists=true`;
+      const res = await fetch(url, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fields: { optIn: { booleanValue: false } } }) });
+      if (!res.ok) throw new Error(res.status);
+      h.textContent = "You're unsubscribed";
+      p.textContent = 'No more game-day emails. Changed your mind? Turn it back on in the app under your profile.';
+    } catch {
+      h.textContent = "That didn't go through";
+      p.textContent = 'Try the link again in a minute, or turn the email off in the app under your profile.';
+    }
+  })();
+</script>
+</body>
+</html>

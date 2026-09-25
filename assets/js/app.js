@@ -1,9 +1,9 @@
-import * as S from './store.js?v=202609231156';
-import { SITE, ADMINS } from './config.js?v=202609231156';
-import { TEAMS, TEAM_BY_ID, LEAGUES } from './teams.js?v=202609231156';
-import { METROS } from './metros.js?v=202609231156';
-import { encode, center, bounds, areaLabel, km, nearestMetro } from './geo.js?v=202609231156';
-import { nextGames } from './schedule.js?v=202609231156';
+import * as S from './store.js?v=202609251408';
+import { SITE, ADMINS } from './config.js?v=202609251408';
+import { TEAMS, TEAM_BY_ID, LEAGUES } from './teams.js?v=202609251408';
+import { METROS } from './metros.js?v=202609251408';
+import { encode, center, bounds, areaLabel, km, nearestMetro } from './geo.js?v=202609251408';
+import { nextGames } from './schedule.js?v=202609251408';
 
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -184,7 +184,8 @@ function renderOnboarding(editing = false) {
     <div class="panel"><div class="sub">Other fans will see</div>
       <div class="item" style="cursor:default;margin:6px -8px 0"><span class="avatar">${esc((draft.name || '?')[0].toUpperCase())}</span>
         <div class="main"><div class="t" id="pvName">${esc(draft.name)}</div><div class="s">${esc(draft.area)} · ${draft.teams.map(id => esc(TEAM_BY_ID[id]?.short)).join(', ')}</div></div></div>
-    </div>`;
+    </div>
+    ${!editing && S.mode === 'firebase' && user.email ? `<label class="row" style="gap:10px;align-items:flex-start;font-size:14px;cursor:pointer"><input type="checkbox" id="emailOpt" checked style="margin-top:3px"><span><b>Email me a weekly game-day heads-up</b><br><span class="muted">Your teams' games this week and the watch spots near you, sent to ${esc(user.email)}. Unsubscribe with one click, anytime.</span></span></label>` : ''}`;
 
   function setArea(cell, label) {
     draft.cell = cell; draft.area = label;
@@ -203,8 +204,10 @@ function renderOnboarding(editing = false) {
       draft.name = $('#dname').value.trim();
       if (!draft.name) { err.textContent = 'Add a display name.'; return; }
       $('#next').disabled = true;
+      const emailOpt = $('#emailOpt')?.checked;
       try {
         await S.saveProfile(user.uid, draft);
+        if (emailOpt != null) S.setEmailPref(user.uid, user.email, emailOpt).catch(console.error); // never blocks sign-up
         profile = { uid: user.uid, ...draft };
         cache = {}; cityCache = null;
         if (!profile.teams.includes(teamId)) teamId = profile.teams[0];
@@ -938,12 +941,23 @@ function openProfile() {
       <div class="sub muted">${esc(profile.area)}${user.email ? ` · ${esc(user.email)}` : ''}</div>
       <div class="picked">${profile.teams.map(id => `<span class="chip" style="cursor:default">${logo(TEAM_BY_ID[id], 'sm')}${esc(TEAM_BY_ID[id]?.short)}</span>`).join('')}</div>
       <button class="btn" data-a="edit">Edit teams, area and name</button>
+      ${S.mode === 'firebase' && user.email ? `<label class="row" style="gap:10px;align-items:flex-start;font-size:14px;cursor:pointer"><input type="checkbox" id="emailPref" disabled style="margin-top:3px"><span><b>Weekly game-day email</b><br><span class="muted">Your teams' games this week and the spots near you.</span></span></label>` : ''}
       <label class="field">Theme<select class="input" id="theme">${['auto', 'light', 'dark'].map(x => `<option value="${x}" ${x === theme ? 'selected' : ''}>${x[0].toUpperCase() + x.slice(1)}</option>`).join('')}</select></label>
       <div class="row"><button class="btn grow" data-a="out">Sign out</button><button class="btn ghost" data-a="close">Close</button></div>
       <button class="link-btn" style="color:var(--bad);justify-self:start;font-size:14px" data-a="del">Delete my profile</button>
     </div>`;
   document.body.append(dlg); dlg.showModal();
   dlg.addEventListener('close', () => dlg.remove());
+  const pref = dlg.querySelector('#emailPref');
+  if (pref) S.getEmailPref(user.uid).then(p => {
+    pref.checked = !!p?.optIn; pref.disabled = false;
+    pref.onchange = async () => {
+      pref.disabled = true;
+      try { await S.setEmailPref(user.uid, user.email, pref.checked); toast(pref.checked ? 'Game-day email on' : 'Game-day email off'); }
+      catch (x) { pref.checked = !pref.checked; toast(errMsg(x)); }
+      pref.disabled = false;
+    };
+  }).catch(() => { pref.closest('label').hidden = true; });
   dlg.querySelector('#theme').onchange = e => {
     const v = e.target.value;
     ls.set('df_theme', v === 'auto' ? '' : v);
