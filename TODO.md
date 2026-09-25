@@ -107,6 +107,18 @@ When picking up this file cold, work top to bottom unless told otherwise.
       (seeding fan-club communities) can start any time; Phases C–E assume more polish/content is
       in place first, so those still line up with finishing Phase 2/3 here.
 
+- [ ] **Submit the sitemap in Google Search Console** (Brian). Add `distantfan.com` as a property
+      (Domain property, verify with a DNS TXT record at Hostinger, or URL-prefix and upload the HTML
+      file), then Sitemaps -> add `sitemap.xml`. Pages are live (280 under `/watch/`, built by
+      `tools/build-pages.mjs`) but Google only finds them fast once the sitemap is submitted. After a
+      week or two, check Coverage for "Crawled, not indexed" (a sign of thin pages: raise `MIN_SPOTS`
+      in build-pages.mjs) and look at which team x city queries earn impressions. Consider Bing
+      Webmaster Tools too (it can import the Search Console property).
+- [x] Programmatic "where to watch" SEO pages (MARKETING.md Phase C). Shipped 2026-09-25.
+- [x] Weekly game-day email: opt-in, unsubscribe page, `tools/digest/send.mjs`, Thursday task
+      `distantfan-gameday-digest`. Shipped 2026-09-25; sends via the pick'em site's EmailJS Gmail
+      service (200/month free). Move to Resend if the list outgrows that.
+
 ## Phase 5 — Future platforms
 
 - [ ] Whiteboard what it'd take to turn this into an iOS + Android app (native vs. wrapped PWA,
