@@ -5,6 +5,8 @@
 //   node tools/digest/send.mjs                    dry run: writes previews to tools/digest/out/, sends nothing
 //   node tools/digest/send.mjs --send             send for real (needs the config + a Resend key, see below)
 //   node tools/digest/send.mjs --send --only me@example.com   just that address (test)
+//   node tools/digest/send.mjs --welcome --send  welcome email (with this week's games) to opted-in fans never mailed before;
+//                                        run by the distantfan-welcome-emails task twice a day
 //   options: --days 7   look-ahead window     --force   ignore the "sent within 5 days" guard
 //
 // Provider: EmailJS by default (the same Gmail service as the draft-order pick'em site: plain text, sent from
@@ -90,12 +92,16 @@ function build(pref, profile) {
   return { pt, metro, tz };
 }
 
-function render({ pref, profile, games, tz, pt }) {
+function render({ pref, profile, games, tz, pt, welcome = false }) {
   const unsub = `${SITE}/unsubscribe.html?t=${pref.id}`;
   const fmtDay = ms => new Date(ms).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', timeZone: tz });
   const fmtTime = g => g.tbd ? 'time TBA' : new Date(g.time).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZoneName: 'short', timeZone: tz });
-  const first = games[0], t = TEAM_BY_ID[first.teamId];
-  const subject = games.length === 1
+  const first = games[0], t = first && TEAM_BY_ID[first.teamId];
+  const area = profile.area?.replace(/ area$/, '') || 'your area';
+  const intro = welcome
+    ? `Thanks for turning on game-day email. Every Thursday morning we'll send your teams' games for the week, with the watch spots nearest ${area}. ${games.length ? "Here's this week to start:" : 'None of your teams play in the next week, so your first full email comes when the schedule picks up.'}`
+    : "here's your week.";
+  const subject = welcome ? 'Welcome to Distant Fan game-day email' : games.length === 1
     ? `${short(t)} ${first.home ? 'vs' : 'at'} ${first.opp}: ${fmtDay(first.time)}. Where to watch near you`
     : `${games.length} games this week for your teams: where to watch near ${profile.area?.replace(/ area$/, '') || 'you'}`;
   const blocks = games.map(g => {
@@ -113,13 +119,13 @@ function render({ pref, profile, games, tz, pt }) {
   const html = `<!doctype html><html><body style="margin:0;background:#f5f3ee;font-family:Arial,Helvetica,sans-serif;color:#121820">
 <div style="max-width:560px;margin:0 auto;padding:24px 16px">
   <div style="font-size:22px;font-weight:800;letter-spacing:.02em;text-transform:uppercase">Distant<span style="color:#df5a0b">Fan</span></div>
-  <p style="font-size:16px;margin:18px 0 4px">Hey ${esc((profile.name || 'there').split(' ')[0])}, here's your week.</p>
-  <p style="font-size:14px;color:#6b7480;margin:0">Times shown for ${esc(profile.area?.replace(/ area$/, '') || 'your area')}.</p>
+  <p style="font-size:16px;margin:18px 0 4px">Hey ${esc((profile.name || 'there').split(' ')[0])}${welcome ? '. ' : ', '}${esc(intro)}</p>
+  ${games.length ? `<p style="font-size:14px;color:#6b7480;margin:0">Times shown for ${esc(area)}.</p>` : ''}
   ${blocks.map(b => b.html).join('\n')}
   <p style="text-align:center;margin:22px 0"><a href="${SITE}/app.html" style="background:#df5a0b;color:#fff;text-decoration:none;font-weight:700;padding:13px 26px;border-radius:999px;display:inline-block">See who's going</a></p>
   <p style="font-size:12px;color:#8a939e;line-height:1.5;margin-top:26px">You're getting this because you turned on the weekly game-day email at distantfan.com. <a href="${unsub}" style="color:#8a939e">Unsubscribe</a> in one click.<br>${esc(cfg.postalAddress || '[postal address goes here]')}</p>
 </div></body></html>`;
-  const text = `Hey ${(profile.name || 'there').split(' ')[0]}, here's your week (times for ${profile.area?.replace(/ area$/, '') || 'your area'}):\n\n${blocks.map(b =>
+  const text = `Hey ${(profile.name || 'there').split(' ')[0]}${welcome ? '. ' : ', '}${intro}${games.length ? ` (times for ${area})` : ''}\n\n${blocks.map(b =>
     `${fmtDay(b.g.time)} ${fmtTime(b.g)}: ${short(b.team)} ${b.g.home ? 'vs' : 'at'} ${b.g.opp}${b.g.tv.length ? ` (${b.g.tv.join(', ')})` : ''}\n` +
     (b.spots.length ? b.spots.map(s => `  - ${s.name}, ${s.address || ''}`).join('\n') : '  - No spots listed near you yet. Add one at ' + SITE + '/app.html') + '\n').join('\n')}\nSee who's going: ${SITE}/app.html\n\nUnsubscribe: ${unsub}\n${cfg.postalAddress || ''}\n`;
   return { subject, html, text, unsub };
@@ -150,6 +156,7 @@ async function sendMail(to, m, name) {
 }
 
 // ---- run
+const WELCOME = process.argv.includes('--welcome');   // first email for fans who have never been mailed
 const DEMO = process.argv.includes('--demo') || !!TEST_TO;
 if (DEMO && SEND && !TEST_TO) throw new Error('--demo only sends with --test-to <address>.');
 const db = DEMO ? null : await adminDb();
@@ -173,6 +180,7 @@ let sent = 0, skipped = 0;
 for (let i = 0; i < prefs.length; i++) {
   const pref = prefs[i], prof = profiles[i].exists ? profiles[i].data() : null;
   if (!prof?.cell || !prof.teams?.length) { skipped++; continue; }
+  if (WELCOME && logs[i].exists) { skipped++; continue; }   // already mailed a welcome or a digest
   const last = logs[i].exists ? logs[i].data().lastSentAt : 0;
   if (!FORCE && SEND && last && Date.now() - last < RESEND_GAP_DAYS * 864e5) { skipped++; continue; }
   const now = Date.now(), end = now + DAYS * 864e5;
@@ -181,10 +189,10 @@ for (let i = 0; i < prefs.length; i++) {
     if (g.time < now - 3 * 3.6e6 || g.time > end || seen.has(g.key)) continue;
     seen.add(g.key); games.push(g);
   }
-  if (!games.length) { skipped++; continue; }
+  if (!games.length && !WELCOME) { skipped++; continue; }
   games.sort((a, b) => a.time - b.time); games.length = Math.min(games.length, MAX_GAMES);
   const ctx = build(pref, prof);
-  const mail = render({ pref, profile: prof, games, tz: ctx.tz, pt: ctx.pt });
+  const mail = render({ pref, profile: prof, games, tz: ctx.tz, pt: ctx.pt, welcome: WELCOME });
   if (!SEND) {
     const f = path.join(outDir, `${i + 1}-${pref.id.slice(0, 6)}.html`);
     fs.writeFileSync(f, mail.html);
@@ -193,7 +201,7 @@ for (let i = 0; i < prefs.length; i++) {
   }
   try {
     await sendMail(pref.email, mail, (prof.name || '').split(' ')[0]);
-    if (db) await db.collection('mailLog').doc(pref.id).set({ lastSentAt: Date.now(), games: games.length });
+    if (db) await db.collection('mailLog').doc(pref.id).set({ lastSentAt: Date.now(), games: games.length, ...(WELCOME ? { welcomedAt: Date.now() } : {}) });
     sent++; console.error(`sent ${pref.email} (${games.length} games)`);
   } catch (e) { console.error(`FAILED ${pref.email}: ${e.message}`); }
   await sleep(600);
