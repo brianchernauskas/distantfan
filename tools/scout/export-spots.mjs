@@ -66,4 +66,7 @@ if (changed.some(Boolean) && process.argv.includes('--commit')) {
   git('add', '--all', '--', ...files);
   git('commit', '-m', `Refresh spot and fan snapshots (${spots.length} spots, ${profiles.size} fans)`, '--', ...files); // only these files, never other staged work
   git('push');
+  // Ping IndexNow (Bing etc.) about new/changed pages; a failure here must not fail the export.
+  try { execFileSync(process.execPath, [path.join(root, 'tools/indexnow.mjs'), '--commit'], { cwd: root, stdio: 'inherit' }); }
+  catch { console.error('indexnow step failed; run node tools/indexnow.mjs --commit later'); }
 }
