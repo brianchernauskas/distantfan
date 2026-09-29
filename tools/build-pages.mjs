@@ -8,6 +8,7 @@
 //   watch/{team}/index.html            one team, every city where it has a page
 //   watch/{team}/{city}/index.html     the money page: "Where to watch {team} games in {city}"
 //   watch/in/{city}/index.html         one city, every team, every spot
+//   watch/at/{venue}-{city}/index.html one venue: who gathers there, address, nearby spots (skips chains)
 //
 // A team x city page only exists once it has MIN_SPOTS real spots, so nothing is thin. Spots are
 // assigned to the nearest metro within 60 km (same list the app uses); anything further out stays
@@ -50,11 +51,13 @@ const live = allSpots.filter(s => (!s.expiresAt || s.expiresAt > now) && Number.
 const byPair = new Map();       // `${teamId}|${metroKey}` -> spots
 const byCity = new Map();       // metroKey -> Set(spots)
 const metros = new Map();       // metroKey -> metro
+const spotMetro = new Map();    // spot -> metroKey (US metros only)
 for (const s of live) {
   const m = nearestMetro(s, METRO_KM);
   if (!m || m.st.length !== 2 || /^(ON|BC|QC|AB|UK|IE|MX|AU)$/.test(m.st)) continue; // US metros only
   const mk = citySlug(m);
   metros.set(mk, m);
+  spotMetro.set(s, mk);
   (byCity.get(mk) || byCity.set(mk, new Set()).get(mk)).add(s);
   for (const id of s.teams || []) {
     if (!TEAM_BY_ID[id]) continue;
@@ -82,6 +85,29 @@ for (const p of pairs) {
 }
 for (const l of pairsByTeam.values()) l.sort((a, b) => b.spots.length - a.spots.length || a.metro.name.localeCompare(b.metro.name));
 for (const l of pairsByCity.values()) l.sort((a, b) => b.spots.length - a.spots.length || disp(a.team).localeCompare(disp(b.team)));
+
+// ---- venue pages: one per independent bar with a real note and at least one known team.
+// Chains (same name on 5+ listings) are skipped: hundreds of near-identical pages help nobody.
+const CHAIN_MIN = 5;
+const nameCount = new Map();
+for (const s of live) nameCount.set(s.name, (nameCount.get(s.name) || 0) + 1);
+const venueUrl = new Map();     // spot -> /watch/at/{slug}/
+const venues = [];
+{
+  const taken = new Set();
+  const cands = live.filter(s => spotMetro.has(s) && (s.teams || []).some(id => TEAM_BY_ID[id]) && nameCount.get(s.name) < CHAIN_MIN && String(s.note || '').length >= 40)
+    .sort((a, b) => (a.id || '').localeCompare(b.id || ''));
+  for (const s of cands) {
+    const m = metros.get(spotMetro.get(s));
+    const tn = String(s.address || '').split(',').map(x => x.trim());
+    const twn = tn.length >= 3 ? tn[tn.length - 2] : m.name;
+    let slug = slugify(`${s.name} ${twn} ${m.st}`) || slugify(s.id);
+    if (taken.has(slug)) slug += '-' + crypto.createHash('md5').update(String(s.id)).digest('hex').slice(0, 4);
+    taken.add(slug);
+    venueUrl.set(s, `/watch/at/${slug}/`);
+    venues.push({ s, slug, metro: m, mk: spotMetro.get(s), town: twn });
+  }
+}
 
 // ---- fan counts per team x metro (fans.json cells are geohash-4, no names)
 const fansIn = new Map();
@@ -146,7 +172,7 @@ const spotUrl = (s, dest) => `https://www.google.com/maps/search/?api=1&query=${
 function spotCard(s) {
   const src = s.sourceUrl && /^https?:\/\//.test(s.sourceUrl) ? `<a href="${esc(s.sourceUrl)}" rel="nofollow noopener" target="_blank">${esc(s.sourceName || 'source')}</a>` : esc(s.sourceName || '');
   return `<li class="spot">
-  <h3>${esc(s.name)}</h3>
+  <h3>${venueUrl.has(s) ? `<a href="${venueUrl.get(s)}">${esc(s.name)}</a>` : esc(s.name)}</h3>
   ${s.club ? `<div class="club">${esc(s.club)}</div>` : ''}
   ${s.address ? `<div class="addr"><a href="${esc(spotUrl(s))}" rel="nofollow noopener" target="_blank">${esc(s.address)}</a></div>` : ''}
   ${s.note ? `<p>${esc(s.note)}</p>` : ''}
@@ -238,6 +264,53 @@ ${nextGameScript()}`;
     ld: [itemListLd(`${name} watch spots in ${city}`, spots)],
   }));
   urls.push({ loc: url, lastmod: isoDay(lc) });
+}
+
+// venues
+for (const v of venues) {
+  const { s, slug, metro, mk, town: twn } = v;
+  const url = venueUrl.get(s), city = cityName(metro);
+  const teams = (s.teams || []).map(id => TEAM_BY_ID[id]).filter(Boolean);
+  const tnames = teams.map(t => t.short);
+  const lead = teams[0];
+  const nearby = teams.flatMap(t => (byPair.get(`${t.id}|${mk}`) || []).filter(o => o !== s && venueUrl.has(o)).map(o => ({ o, t }))).filter((x, i, a) => a.findIndex(y => y.o === x.o) === i).slice(0, 8);
+  const pairLinks = teams.map(t => pairs.find(p => p.team.id === t.id && p.mk === mk)).filter(Boolean);
+  const src = s.sourceUrl && /^https?:\/\//.test(s.sourceUrl) ? `<a href="${esc(s.sourceUrl)}" rel="nofollow noopener" target="_blank">${esc(s.sourceName || 'source')}</a>` : esc(s.sourceName || '');
+  const lc = s.checkedAt || s.createdAt || 0;
+  const body = `
+<header class="watch-hero">${teamLogo(lead, 'logo lg')}<div>
+  <span class="eyebrow">${esc(twn)}, ${esc(metro.st)} · ${esc(joinList(tnames.slice(0, 3)))} fans</span>
+  <h1>${esc(s.name)}: ${esc(joinList(tnames.slice(0, 3)))} fan bar in ${esc(twn)}</h1>
+  <p class="lede">${esc(s.note)}</p>
+</div></header>
+
+<div class="nextgame" id="nextgame" data-path="${esc(ESPN_PATH[lead.lg])}" data-eid="${esc(lead.eid)}" data-short="${esc(lead.short)}" hidden></div>
+
+<section class="venue">
+  <dl>
+    <dt>Address</dt><dd>${s.address ? `<a href="${esc(spotUrl(s))}" rel="nofollow noopener" target="_blank">${esc(s.address)}</a>` : esc(city)}</dd>
+    <dt>Fans who gather here</dt><dd>${esc(joinList(teams.map(disp)))}</dd>
+    ${s.club ? `<dt>Group</dt><dd>${esc(s.club)}</dd>` : ''}
+    ${lc ? `<dt>Last checked</dt><dd>${esc(monthYear(lc))}${src ? ` · Source: ${src}` : ''}</dd>` : ''}
+  </dl>
+  <p class="muted">Looking for a ${esc(lead.short)} bar in ${esc(twn)}? Call ${esc(s.name)} before game day to confirm they will have your game on, since schedules and rooms change.</p>
+</section>
+
+${CTA(`Watching at ${esc(s.name)}?`)}
+
+<section class="more">
+  <p>Something out of date? <a href="/app.html">Tell us in the app</a>.</p>
+  ${nearby.length ? `<h2>More fan bars in ${esc(metro.name)}</h2><div class="chips">${nearby.map(x => chip(venueUrl.get(x.o), x.o.name)).join('')}</div>` : ''}
+  <p>${pairLinks.map(p => `<a href="/watch/${p.ts}/${p.mk}/">${esc(disp(p.team))} in ${esc(metro.name)}</a>`).join(' · ')}${pairLinks.length ? ' · ' : ''}<a href="/watch/in/${mk}/">All teams in ${esc(city)}</a></p>
+</section>
+${nextGameScript()}`;
+  out.set(`watch/at/${slug}/index.html`, page({
+    url, title: `${s.name}, ${twn} ${metro.st}: ${joinList(tnames.slice(0, 2))} fan bar`,
+    desc: `${s.name} at ${s.address || city}: where ${joinList(tnames.slice(0, 3))} fans watch games in ${twn}. ${s.club ? s.club + '. ' : ''}Updated ${monthYear(lc || generatedAt)}.`.slice(0, 200),
+    body, crumbs: [['Home', '/'], ['Where to watch', '/watch/'], [city, `/watch/in/${mk}/`], [s.name, url]],
+    ld: [{ '@context': 'https://schema.org', '@type': 'BarOrPub', name: s.name, ...(s.address ? { address: s.address } : {}), geo: { '@type': 'GeoCoordinates', latitude: +s.lat.toFixed(5), longitude: +s.lng.toFixed(5) }, description: s.note }],
+  }));
+  urls.push({ loc: url, lastmod: isoDay(lc || generatedAt) });
 }
 
 // team hubs
@@ -374,4 +447,4 @@ for (const p of stale) { fs.unlinkSync(p); removed++; }
   try { if (!fs.readdirSync(d).length) fs.rmdirSync(d); } catch {}
 })(path.join(root, 'watch'));
 
-console.error(`pages: ${pairs.length} team x city, ${pairsByTeam.size} team hubs, ${cityPages.length} city hubs, 1 hub; wrote ${wrote}, removed ${removed} (min ${MIN_SPOTS} spots/pair)`);
+console.error(`pages: ${pairs.length} team x city, ${pairsByTeam.size} team hubs, ${cityPages.length} city hubs, 1 hub, ${venues.length} venues; wrote ${wrote}, removed ${removed} (min ${MIN_SPOTS} spots/pair)`);

@@ -50,3 +50,10 @@
 @media (max-width: 640px) { .watch-hero { flex-direction: column; align-items: flex-start; } }
 
 .watch .intro { color: var(--muted); max-width: 46em; margin: 0 0 20px; line-height: 1.6; }
+.venue { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px 20px; margin: 0 0 26px; }
+.venue dl { display: grid; grid-template-columns: max-content 1fr; gap: 8px 18px; margin: 0 0 14px; }
+.venue dt { color: var(--faint); font-size: 13px; text-transform: uppercase; letter-spacing: .04em; }
+.venue dd { margin: 0; }
+.venue dd a { color: var(--muted); text-decoration: underline; text-decoration-color: var(--line); text-underline-offset: 3px; }
+.spot h3 a { color: inherit; text-decoration: none; }
+.spot h3 a:hover { text-decoration: underline; }
