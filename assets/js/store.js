@@ -1,9 +1,9 @@
 // Data layer. Uses Firebase (Auth + Firestore) when FIREBASE_CONFIG is set,
 // otherwise a demo store in localStorage seeded with clearly fake fans and spots.
-import { FIREBASE_CONFIG, SITE } from './config.js?v=202609291518';
-import { TEAMS, TEAM_BY_ID } from './teams.js?v=202609291518';
-import { METROS } from './metros.js?v=202609291518';
-import { encode, center } from './geo.js?v=202609291518';
+import { FIREBASE_CONFIG, SITE } from './config.js?v=202609291535';
+import { TEAMS, TEAM_BY_ID } from './teams.js?v=202609291535';
+import { METROS } from './metros.js?v=202609291535';
+import { encode, center } from './geo.js?v=202609291535';
 
 export const mode = FIREBASE_CONFIG ? 'firebase' : 'demo';
 let impl;
@@ -189,12 +189,22 @@ async function firebaseStore() {
     }),
     checkOut: teamId => F.deleteDoc(F.doc(db, 'checkins', `${me.uid}_${teamId}`)),
 
+    // Live listener on the newest 30 messages. Every message that arrives is one read per
+    // listener, so it is dropped while the tab is hidden and re-attached (one 30-doc catch-up) on return.
     subscribeRoom(roomId, cb) {
-      const q = F.query(F.collection(db, 'rooms', roomId, 'messages'), F.orderBy('createdAt', 'desc'), F.limit(50));
-      return F.onSnapshot(q, snap => { reads += snap.docChanges().length; cb(snap.docs.map(d => {
+      const q = F.query(F.collection(db, 'rooms', roomId, 'messages'), F.orderBy('createdAt', 'desc'), F.limit(30));
+      let off = null, dead = false;
+      const attach = () => { off = F.onSnapshot(q, snap => { reads += snap.docChanges().length; cb(snap.docs.map(d => {
         const m = d.data();
         return { id: d.id, ...m, at: m.createdAt?.toMillis?.() || Date.now() };
-      }).reverse()); }, err => cb([], err));
+      }).reverse()); }, err => cb([], err)); };
+      const onVis = () => {
+        if (dead) return;
+        if (document.hidden) { off?.(); off = null; } else if (!off) attach();
+      };
+      document.addEventListener('visibilitychange', onVis);
+      if (!document.hidden) attach();
+      return () => { dead = true; document.removeEventListener('visibilitychange', onVis); off?.(); off = null; };
     },
     sendMessage: (roomId, text, name) => F.addDoc(F.collection(db, 'rooms', roomId, 'messages'), {
       uid: me.uid, name: clean(name, 40), text: clean(text, 500), createdAt: F.serverTimestamp(),

@@ -1,9 +1,9 @@
-import * as S from './store.js?v=202609291518';
-import { SITE, ADMINS } from './config.js?v=202609291518';
-import { TEAMS, TEAM_BY_ID, LEAGUES } from './teams.js?v=202609291518';
-import { METROS } from './metros.js?v=202609291518';
-import { encode, center, bounds, areaLabel, km, nearestMetro } from './geo.js?v=202609291518';
-import { nextGames } from './schedule.js?v=202609291518';
+import * as S from './store.js?v=202609291535';
+import { SITE, ADMINS } from './config.js?v=202609291535';
+import { TEAMS, TEAM_BY_ID, LEAGUES } from './teams.js?v=202609291535';
+import { METROS } from './metros.js?v=202609291535';
+import { encode, center, bounds, areaLabel, km, nearestMetro } from './geo.js?v=202609291535';
+import { nextGames } from './schedule.js?v=202609291535';
 
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -729,6 +729,7 @@ function pickSpot(spots, done) {
 }
 
 /* ------------------------------------------------------------------- chat */
+let lastSend = 0;
 function viewChat() {
   unsubRoom?.();
   const t = TEAM_BY_ID[teamId];
@@ -765,6 +766,8 @@ function viewChat() {
     e.preventDefault();
     const inp = e.target.text, text = inp.value.trim();
     if (!text) return;
+    if (Date.now() - lastSend < 2000) { toast('Slow down a little.'); return; }
+    lastSend = Date.now();
     inp.value = '';
     try { await S.sendMessage(rid, text, profile.name); } catch (x) { inp.value = text; toast(errMsg(x)); }
   };
