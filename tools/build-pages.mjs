@@ -93,7 +93,7 @@ for (const [tid, cells] of Object.entries(fansData.teams || {})) {
 }
 
 // ---- shared chrome
-const V = { style: hash('assets/css/style.css'), watch: hash('assets/css/watch.css') };
+const V = { style: hash('assets/css/style.css'), watch: hash('assets/css/watch.css'), analytics: hash('assets/js/analytics.js') };
 const BRAND = `<a class="brand" href="/" aria-label="Distant Fan home"><svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="8" cy="32" r="4.5" fill="currentColor" opacity=".35"/><path d="M12 29C15 20 19 17 23.5 17.5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-dasharray=".5 5" opacity=".55"/><path d="M29 3.5a8.5 8.5 0 0 0-8.5 8.5c0 6.4 8.5 15 8.5 15s8.5-8.6 8.5-15A8.5 8.5 0 0 0 29 3.5z" fill="var(--accent)"/><circle cx="29" cy="12" r="3.2" fill="var(--bg)"/></svg><span>Distant<b>Fan</b></span></a>`;
 
 function page({ url, title, desc, body, crumbs, ld = [], image }) {
@@ -119,6 +119,7 @@ function page({ url, title, desc, body, crumbs, ld = [], image }) {
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/css/style.css?v=${V.style}">
 <link rel="stylesheet" href="/assets/css/watch.css?v=${V.watch}">
+<script type="module" src="/assets/js/analytics.js?v=${V.analytics}"></script>
 ${[crumbLd, ...ld].map(o => `<script type="application/ld+json">${JSON.stringify(o).replace(/</g, '\\u003c')}</script>`).join('\n')}
 </head>
 <body>
