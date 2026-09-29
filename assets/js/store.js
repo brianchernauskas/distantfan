@@ -1,9 +1,9 @@
 // Data layer. Uses Firebase (Auth + Firestore) when FIREBASE_CONFIG is set,
 // otherwise a demo store in localStorage seeded with clearly fake fans and spots.
-import { FIREBASE_CONFIG, SITE } from './config.js?v=202609251408';
-import { TEAMS, TEAM_BY_ID } from './teams.js?v=202609251408';
-import { METROS } from './metros.js?v=202609251408';
-import { encode, center } from './geo.js?v=202609251408';
+import { FIREBASE_CONFIG, SITE } from './config.js?v=202609291447';
+import { TEAMS, TEAM_BY_ID } from './teams.js?v=202609291447';
+import { METROS } from './metros.js?v=202609291447';
+import { encode, center } from './geo.js?v=202609291447';
 
 export const mode = FIREBASE_CONFIG ? 'firebase' : 'demo';
 let impl;
@@ -63,6 +63,8 @@ async function firebaseStore() {
     import(`${base}/firebase-firestore.js`),
   ]);
   const app = initializeApp(FIREBASE_CONFIG);
+  // Analytics is best-effort: ad blockers or unsupported browsers must never break the app.
+  import(`${base}/firebase-analytics.js`).then(async an => { if (await an.isSupported()) an.getAnalytics(app); }).catch(() => {});
   const auth = A.getAuth(app);
   const db = F.getFirestore(app);
   let me = null;
