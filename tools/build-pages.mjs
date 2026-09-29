@@ -134,6 +134,10 @@ ${body}
 `;
 }
 
+// Fan-group names people actually search for ("browns backers", "husker bar"); only used in copy.
+const FAN_TERM = { 'nfl-cle': 'Browns Backers', 'nfl-buf': 'Bills Backers', 'nfl-gb': 'Packer Backers', 'nfl-kc': 'Chiefs Kingdom', 'nfl-den': 'Broncos Country', 'nfl-lv': 'Raider Nation', 'nfl-sf': '49ers Faithful', 'nfl-pit': 'Steelers Nation', 'nfl-phi': 'Eagles fans', 'nfl-ne': 'Patriots fans', 'nfl-chi': 'Bears fans', 'nfl-dal': 'Cowboys fans' };
+const town = s => { const p = String(s.address || '').split(',').map(x => x.trim()); return p.length >= 3 ? p[p.length - 2] : ''; };
+const joinList = a => a.length <= 1 ? a.join('') : a.length === 2 ? a.join(' and ') : `${a.slice(0, -1).join(', ')} and ${a[a.length - 1]}`;
 const lastChecked = list => Math.max(0, ...list.map(s => s.checkedAt || s.createdAt || 0));
 const chip = (href, label, n) => `<a class="chip" href="${href}">${esc(label)}${n != null ? ` <b>${n}</b>` : ''}</a>`;
 const teamLogo = (t, cls = 'logo') => t.logo ? `<img class="${cls}" src="${esc(t.logo)}" alt="" width="56" height="56" loading="lazy">` : '';
@@ -158,6 +162,35 @@ const itemListLd = (name, list) => ({
 
 const CTA = (line) => `<section class="cta"><div><h2>${line}</h2><p>Free. Follow your teams, see the fans near you and who's going to the next game. You only share a rough area, never your address.</p></div><a class="btn lg primary" href="/app.html">Find my people</a></section>`;
 
+// Snippet copy: lead with the wording searchers use ("<team> bars in <city>"), name the venues.
+function pageTitle(team, name, metro, n) {
+  const t = `${team.name} bars in ${metro.name}: ${n} places to watch`;
+  return t.length <= 62 ? t : `${team.short} bars in ${metro.name}: ${n} places to watch the game`;
+}
+function pageDesc(team, metro, spots, lc) {
+  const term = FAN_TERM[team.id] || `${team.short} fans`;
+  const upd = ` Updated ${monthYear(lc)}.`;
+  const names = spots.slice(0, 3).map(s => s.name);
+  const rest = spots.length - names.length;
+  for (const k of [3, 2, 1]) {
+    const n = names.slice(0, k), r = spots.length - k;
+    const d = `${term} in ${metro.name}: watch the game at ${joinList(n)}${r > 0 ? ` and ${r} more` : ''}.${upd}`;
+    if (d.length <= 158) return d;
+  }
+  return `${term} in ${metro.name}: ${spots.length} bars and fan clubs.${upd}`;
+}
+function intro(team, metro, spots) {
+  const term = FAN_TERM[team.id] || `${team.short} fans`;
+  const t = s => { const x = town(s); return x && x !== metro.name ? ` in ${esc(x)}` : ''; };
+  const towns = [...new Set(spots.map(town).filter(x => x && x !== metro.name))];
+  const top = spots.slice(0, 3).map(s => `${esc(s.name)}${t(s)}`);
+  const more = spots.length - top.length;
+  const mine = c => [team.short, team.loc, team.abbr, team.name].some(w => w && c.toLowerCase().includes(w.toLowerCase()));
+  const clubs = [...new Set(spots.map(s => s.club).filter(c => c && mine(c)))].slice(0, 3);
+  const art = /^[aeiou]/i.test(team.short) ? 'an' : 'a';
+  return `<p class="intro">Looking for ${art} ${esc(team.short)} bar in ${esc(metro.name)}? ${esc(term)} in the area${towns.length > 1 ? `, from ${esc(joinList(towns.slice(0, 4)))},` : ''} watch games at ${joinList(top)}${more > 0 ? `, plus ${more} more below` : ''}.${clubs.length ? ` Listed groups include ${esc(joinList(clubs))}.` : ''} Call ahead on game days to make sure the bar will have your game on.</p>`;
+}
+
 // ---- outputs
 const out = new Map();  // path under root -> html
 const urls = [];        // { loc, lastmod }
@@ -180,6 +213,8 @@ for (const p of pairs) {
   <p class="lede">${plural(spots.length, 'bar and fan watch spot')} in the ${esc(metro.name)} area where ${esc(team.short)} fans watch the game${clubs ? `, including ${plural(clubs, 'official fan club and alumni chapter')}` : ''}. Last checked ${esc(monthYear(lc))}.</p>
 </div></header>
 
+${intro(team, metro, spots)}
+
 <div class="nextgame" id="nextgame" data-path="${esc(path_)}" data-eid="${esc(team.eid)}" data-short="${esc(team.short)}" hidden></div>
 
 <ul class="spots">
@@ -197,8 +232,8 @@ ${CTA(`Watching ${esc(team.short)} in ${esc(metro.name)}?`)}
 </section>
 ${nextGameScript()}`;
   out.set(`watch/${ts}/${mk}/index.html`, page({
-    url, title: `${name} watch spots in ${city} (${spots.length} bars & fan clubs)`,
-    desc: `Where ${team.short} fans watch games in ${metro.name}: ${spots.slice(0, 3).map(s => s.name).join(', ')}${spots.length > 3 ? ` and ${spots.length - 3} more` : ''}. Updated ${monthYear(lc)}.`,
+    url, title: pageTitle(team, name, metro, spots.length),
+    desc: pageDesc(team, metro, spots, lc),
     body, crumbs: [['Home', '/'], ['Where to watch', '/watch/'], [name, `/watch/${ts}/`], [metro.name, url]],
     ld: [itemListLd(`${name} watch spots in ${city}`, spots)],
   }));

@@ -48,3 +48,5 @@
 .plain li { margin: 4px 0; font-size: 15px; }
 
 @media (max-width: 640px) { .watch-hero { flex-direction: column; align-items: flex-start; } }
+
+.watch .intro { color: var(--muted); max-width: 46em; margin: 0 0 20px; line-height: 1.6; }
