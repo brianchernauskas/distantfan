@@ -12,6 +12,10 @@
 //
 //   node fetch.mjs <url>          readable text (scripts/styles stripped, tags collapsed)
 //   node fetch.mjs <url> --raw    unprocessed HTML (use when grep-ing for hidden panels)
+//   node fetch.mjs <url> <url> ... --grep "<regex>"
+//                                 several pages in one call; with --grep, print only matching
+//                                 lines plus 2 lines of context each (case-insensitive). Use this
+//                                 instead of shell loops/pipes so unattended runs need no approval.
 
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
@@ -64,21 +68,35 @@ function htmlToText(html) {
   return text.split('\n').map(l => l.replace(/[ \t]+/g, ' ').trim()).filter(Boolean).join('\n');
 }
 
-const url = process.argv[2];
-const raw = process.argv.includes('--raw');
-if (!url) { console.error('usage: node fetch.mjs <url> [--raw]'); process.exit(2); }
+const args = process.argv.slice(2);
+const raw = args.includes('--raw');
+const gi = args.indexOf('--grep');
+const grep = gi >= 0 ? new RegExp(args[gi + 1], 'i') : null;
+const urls = args.filter((a, i) => !a.startsWith('--') && !(gi >= 0 && i === gi + 1));
+if (!urls.length) { console.error('usage: node fetch.mjs <url> [<url> ...] [--raw] [--grep "<regex>"]'); process.exit(2); }
 
-try {
-  const { status, url: finalUrl, body } = await fetchLikeBrowser(url);
-  console.error(`# fetched ${finalUrl} -> HTTP ${status}${finalUrl !== url ? ` (redirected from ${url})` : ''}`);
-  if (status >= 400 || !body) { console.error('# non-OK status or empty body - the source may not have real content here'); }
-  if (/Enable JavaScript and cookies to continue|Just a moment\.\.\./i.test(body)) {
-    console.error('# still hit a Cloudflare managed challenge - this site genuinely needs a browser, skip it');
+function excerpt(text) {
+  const lines = text.split('\n');
+  const keep = new Set();
+  lines.forEach((l, i) => { if (grep.test(l)) for (let j = i - 2; j <= i + 2; j++) if (j >= 0 && j < lines.length) keep.add(j); });
+  return [...keep].sort((a, b) => a - b).map(i => lines[i]).join('\n') || '(no matching lines)';
+}
+
+for (const url of urls) {
+  if (urls.length > 1) console.log(`\n===== ${url}`);
+  try {
+    const { status, url: finalUrl, body } = await fetchLikeBrowser(url);
+    console.error(`# fetched ${finalUrl} -> HTTP ${status}${finalUrl !== url ? ` (redirected from ${url})` : ''}`);
+    if (status >= 400 || !body) { console.error('# non-OK status or empty body - the source may not have real content here'); }
+    if (/Enable JavaScript and cookies to continue|Just a moment\.\.\./i.test(body)) {
+      console.error('# still hit a Cloudflare managed challenge - this site genuinely needs a browser, skip it');
+    }
+    const out = raw ? body : htmlToText(body);
+    console.log(grep ? excerpt(out) : out);
+    if (status >= 400) process.exitCode = 1;
+  } catch (err) {
+    console.error(`# fetch failed: ${err.message}`);
+    console.error('# this usually means a broken site (expired TLS cert, DNS failure) - skip it');
+    process.exitCode = 1;
   }
-  console.log(raw ? body : htmlToText(body));
-  if (status >= 400) process.exitCode = 1;
-} catch (err) {
-  console.error(`# fetch failed: ${err.message}`);
-  console.error('# this usually means a broken site (expired TLS cert, DNS failure) - skip it');
-  process.exit(1);
 }

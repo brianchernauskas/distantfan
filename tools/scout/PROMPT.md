@@ -59,6 +59,13 @@ home-team finds from city mode; it only strips them out of directory-mode result
 
 ## Rules for both modes
 
+Run the scout scripts as plain commands from the working directory (`node targets.mjs ...`,
+`node fetch.mjs <url>`, `node apply.mjs ...`, `node export-spots.mjs --commit`) -- no pipes, `;`
+chains, `cd` prefixes or wrapper scripts -- and write the candidates file straight into `runs/` with
+the Write tool. Those exact forms are pre-approved; anything else stops the unattended run at a
+permission prompt. In the candidates file, give college teams as `"<Name> (Football)"` (e.g.
+`"Texas Longhorns (Football)"`) or `apply.mjs` skips them as unrecognised.
+
 Use WebSearch to find sources. **Don't use the built-in browser or Chrome tools**: this runs
 unattended, and every new site there waits for Brian to approve it.
 
@@ -74,6 +81,15 @@ for a hidden panel. It can't clear a real Cloudflare managed challenge or a site
 certificate - it says so plainly when that happens (look for "needs a browser" or "skip it" in its
 stderr). If both WebFetch and `fetch.mjs` come back empty or blocked, skip that team and list it under
 "needs a browser" in your summary rather than guessing at what the page contains.
+
+**Keep every shell command plain so the run never stops for an approval.** Only these are
+pre-approved: `node targets.mjs ...`, `node fetch.mjs ...`, `node apply.mjs ...`,
+`node export-spots.mjs ...`, `node runs/build-*.mjs`, and writing files under `runs/`. Don't wrap
+them in loops, pipes, `;`-chains, variables, `Select-String`, `curl`, or temp-file redirects -- any
+of that needs Brian to click approve. To read several pages at once, pass them all to one call and
+filter with `--grep`: `node fetch.mjs <url1> <url2> <url3> --grep "Where We Meet|\d+ .* (St|Ave|Rd|Blvd)"`.
+To build the candidates file, write a script to `runs/build-<mode>-YYYY-MM-DD.mjs` and run it
+with `node runs/build-<mode>-YYYY-MM-DD.mjs` rather than editing JSON through the shell.
 
 Either way, **read the page you're relying on** and confirm it names the venue for that team. Never
 list a venue you only saw in a search snippet. Never invent or guess an address or date. Get the
