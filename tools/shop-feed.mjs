@@ -87,7 +87,11 @@ process.stderr.write('\n');
 const dir = path.join(root, 'data/shop');
 fs.mkdirSync(dir, { recursive: true });
 for (const f of fs.readdirSync(dir)) if (f.endsWith('.json')) fs.unlinkSync(path.join(dir, f));
-for (const [id, items] of Object.entries(byTeam)) fs.writeFileSync(path.join(dir, `${id}.json`), JSON.stringify(items) + '\n');
+// data/shop-pages.json maps team id -> that team's real Fanatics shop path. Fanatics signs these URLs (the /z- part),
+// so they can't be generated here; they are harvested from Fanatics product pages in a browser and kept in that file.
+const pagesFile = path.join(root, 'data/shop-pages.json');
+const pageMap = fs.existsSync(pagesFile) ? JSON.parse(fs.readFileSync(pagesFile, 'utf8')) : {};
+for (const [id, items] of Object.entries(byTeam)) fs.writeFileSync(path.join(dir, `${id}.json`), JSON.stringify({ page: pageMap[id] || null, items }) + '\n');
 const covered = Object.keys(byTeam).length;
 console.error(`wrote data/shop/: ${kept} products across ${covered} of ${TEAMS.length} teams`);
 

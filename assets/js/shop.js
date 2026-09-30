@@ -1,13 +1,13 @@
-import { AFFILIATE } from './config.js?v=202609301247';
-import { TEAM_BY_ID } from './teams.js?v=202609301247';
+import { AFFILIATE } from './config.js?v=202609301543';
+import { TEAM_BY_ID } from './teams.js?v=202609301543';
 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 // The strip shows when the affiliate is live, or for a preview with ?shop=1 in the URL.
 export const shopOn = () => AFFILIATE.enabled || /[?&]shop=1\b/.test(location.search + location.hash);
 
-export function shopLink(t) {
-  const dest = AFFILIATE.teamUrls[t.id] || AFFILIATE.searchUrl.replace('{q}', encodeURIComponent(t.name));
+export function shopLink(t, page) {
+  const dest = (page && 'https://www.fanatics.com' + page) || AFFILIATE.teamUrls[t.id] || AFFILIATE.searchUrl.replace('{q}', encodeURIComponent(t.name));
   return AFFILIATE.linkTemplate.replace('{urlenc}', encodeURIComponent(dest)).replace('{url}', dest).replace('{team}', encodeURIComponent(t.id));
 }
 
@@ -31,10 +31,22 @@ export async function hydrateShop(teamIds, perTeam = 3) {
   const box = document.querySelector('.shop');
   if (!box) return;
   // One small file per team; a missing one (no products for that team) just 404s and is skipped.
+  // Each file is { page, items }: `page` is the team's real Fanatics shop path (signed by Fanatics, so it can't be
+  // built by hand), which upgrades that team's card from a search link to the team page.
   const got = await Promise.all(teamIds.map(async id => {
-    try { const r = await fetch(`data/shop/${encodeURIComponent(id)}.json`); return r.ok ? (await r.json()).slice(0, perTeam).map(p => ({ ...p, id })) : []; } catch { return []; }
+    try {
+      const r = await fetch(`data/shop/${encodeURIComponent(id)}.json`);
+      if (!r.ok) return { id, items: [] };
+      const d = await r.json();
+      return { id, page: d.page, items: (d.items || []).slice(0, perTeam).map(p => ({ ...p, id })) };
+    } catch { return { id, items: [] }; }
   }));
-  const lists = got.filter(l => l.length);
+  if (!box.isConnected) return;
+  for (const g of got) {
+    const t = TEAM_BY_ID[g.id], a = g.page && t && box.querySelector(`.shop-card[data-shop="${CSS.escape(g.id)}"]`);
+    if (a) a.href = shopLink(t, g.page);
+  }
+  const lists = got.map(g => g.items).filter(l => l.length);
   const tiles = [];
   for (let i = 0; i < perTeam; i++) for (const l of lists) if (l[i]) tiles.push(l[i]);
   if (!tiles.length || !box.isConnected) return;
