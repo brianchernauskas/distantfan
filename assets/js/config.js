@@ -24,3 +24,18 @@ export const SITE = {
 
 // Firebase uids that see the Review tab for the scout's queued finds. Must match isAdmin() in firestore.rules.
 export const ADMINS = ['euJIvUd4sig4pGT4fE7SPSpE6lA3'];
+
+// Fanatics affiliate strip on the Games tab. Stays hidden until `enabled` is true; add ?shop=1 to the
+// app URL to preview it while off. After the affiliate program approves the site, paste the network's
+// deep-link format into `linkTemplate` ({url} = the destination as-is, {urlenc} = URL-encoded) and set enabled: true.
+// Example shape only: 'https://track.example.com/click?id=YOUR_ID&u={urlenc}'
+export const AFFILIATE = {
+  enabled: false,
+  store: 'Fanatics',
+  linkTemplate: '{url}',
+  // Fanatics' team pages carry opaque ids, so until real deep links are mapped each card lands on a team search.
+  searchUrl: 'https://www.fanatics.com/search?query={q}',
+  // Optional per-team overrides once known: { 'nfl-pit': 'https://www.fanatics.com/nfl/pittsburgh-steelers/...' }
+  teamUrls: {},
+  disclosure: 'Distant Fan earns a commission on purchases made through these links, at no extra cost to you.',
+};

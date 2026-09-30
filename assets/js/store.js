@@ -1,9 +1,9 @@
 // Data layer. Uses Firebase (Auth + Firestore) when FIREBASE_CONFIG is set,
 // otherwise a demo store in localStorage seeded with clearly fake fans and spots.
-import { FIREBASE_CONFIG, SITE } from './config.js?v=202609291535';
-import { TEAMS, TEAM_BY_ID } from './teams.js?v=202609291535';
-import { METROS } from './metros.js?v=202609291535';
-import { encode, center } from './geo.js?v=202609291535';
+import { FIREBASE_CONFIG, SITE } from './config.js?v=202609300730';
+import { TEAMS, TEAM_BY_ID } from './teams.js?v=202609300730';
+import { METROS } from './metros.js?v=202609300730';
+import { encode, center } from './geo.js?v=202609300730';
 
 export const mode = FIREBASE_CONFIG ? 'firebase' : 'demo';
 let impl;
