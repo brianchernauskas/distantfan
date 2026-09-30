@@ -13,3 +13,6 @@ tools/scout/err.txt
 
 # Digest email previews (dry run output)
 tools/digest/out/
+
+# Native app build output (tools/build-app.mjs)
+www/

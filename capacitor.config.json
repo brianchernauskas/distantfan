@@ -1,0 +1,11 @@
+{
+  "appId": "com.distantfan.app",
+  "appName": "Distant Fan",
+  "webDir": "www",
+  "plugins": {
+    "FirebaseAuthentication": {
+      "skipNativeAuth": true,
+      "providers": ["google.com"]
+    }
+  }
+}

@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Distant Fan</string>
+    <string name="title_activity_main">Distant Fan</string>
+    <string name="package_name">com.distantfan.app</string>
+    <string name="custom_url_scheme">com.distantfan.app</string>
+</resources>

@@ -1,0 +1,23 @@
+{
+  "name": "distantfan-app",
+  "private": true,
+  "type": "module",
+  "description": "Build tooling for the native (Capacitor) app. The website itself has no build step: GitHub Pages serves the repo root.",
+  "scripts": {
+    "build:app": "node tools/build-app.mjs",
+    "app:sync": "node tools/build-app.mjs && cap sync android",
+    "app:android": "npm run app:sync && cap open android"
+  },
+  "dependencies": {
+    "@capacitor-firebase/authentication": "^8.5.2",
+    "@capacitor/android": "^8.5.2",
+    "@capacitor/core": "^8.5.2",
+    "@capacitor/geolocation": "^8.2.2",
+    "firebase": "12.19.0",
+    "leaflet": "1.9.4"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.5.2",
+    "esbuild": "^0.25.0"
+  }
+}

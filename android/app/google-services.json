@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "1025815650213",
+    "project_id": "distantfan-e8dbd",
+    "storage_bucket": "distantfan-e8dbd.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1025815650213:android:4609bf705fe4ef3644d24c",
+        "android_client_info": {
+          "package_name": "com.distantfan.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1025815650213-anbh6gr2p4sf5v3iuqj4n72hirc90mkg.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.distantfan.app",
+            "certificate_hash": "612884ea1f470426cb81fbe62ba6f6194dfc8426"
+          }
+        },
+        {
+          "client_id": "1025815650213-60cvsveaonsmo868kdim63f3fghojijb.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBzXnjxDyv3BVZeUaWAPrUsJnrN0SFIDPY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1025815650213-60cvsveaonsmo868kdim63f3fghojijb.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
