@@ -1,14 +1,14 @@
-// Build data/shop.json: a few real Fanatics products per team, from impact.com's product catalog.
+// Build data/shop/<teamId>.json: a few real Fanatics products per team, from impact.com's product catalog.
 //
 //   node tools/shop-feed.mjs --probe     fetch one page, print the field names and a sample item (check this first)
-//   node tools/shop-feed.mjs             page through the catalog, match items to teams, write data/shop.json
-//   node tools/shop-feed.mjs --commit    ...then commit + push data/shop.json
+//   node tools/shop-feed.mjs             page through the catalog, match items to teams, write data/shop/
+//   node tools/shop-feed.mjs --commit    ...then commit + push data/shop/
 //
 // Credentials live outside the repo in ~/.secrets/distantfan-impact.json (Brian creates it; Claude never
 // reads it):  { "accountSid": "IR...", "authToken": "...", "catalogId": 5812 }
 // 5812 = "Fanatics Top Products" (50,000 items); 5042 = the full 765k catalog (much slower to page).
 //
-// The site never calls impact.com: shop.js reads the small data/shop.json snapshot, so no keys ship to
+// The site never calls impact.com: shop.js reads the small per-team data/shop/*.json snapshots, so no keys ship to
 // the browser and page views cost nothing. Product Url values from the catalog are already tracking links.
 import fs from 'node:fs';
 import os from 'node:os';
@@ -82,15 +82,18 @@ while (next) {
 }
 process.stderr.write('\n');
 
-const out = { generatedAt: new Date().toISOString(), catalogId, teams: byTeam };
-const file = path.join(root, 'data/shop.json');
-fs.writeFileSync(file, JSON.stringify(out) + '\n');
+// One small file per team (data/shop/<teamId>.json) so the app fetches only the teams a fan follows,
+// instead of one ~700 KB file on every Games view. Stale team files from a previous run are removed.
+const dir = path.join(root, 'data/shop');
+fs.mkdirSync(dir, { recursive: true });
+for (const f of fs.readdirSync(dir)) if (f.endsWith('.json')) fs.unlinkSync(path.join(dir, f));
+for (const [id, items] of Object.entries(byTeam)) fs.writeFileSync(path.join(dir, `${id}.json`), JSON.stringify(items) + '\n');
 const covered = Object.keys(byTeam).length;
-console.error(`wrote data/shop.json: ${kept} products across ${covered} of ${TEAMS.length} teams`);
+console.error(`wrote data/shop/: ${kept} products across ${covered} of ${TEAMS.length} teams`);
 
 if (args.includes('--commit')) {
   const git = (...a) => execFileSync('git', a, { cwd: root, stdio: 'inherit' });
-  git('add', 'data/shop.json');
-  try { execFileSync('git', ['diff', '--cached', '--quiet', '--', 'data/shop.json'], { cwd: root }); console.error('no change'); }
-  catch { git('commit', '-m', `Refresh shop feed (${kept} products, ${covered} teams)`, '--', 'data/shop.json'); git('push'); }
+  git('add', '-A', 'data/shop');
+  try { execFileSync('git', ['diff', '--cached', '--quiet', '--', 'data/shop'], { cwd: root }); console.error('no change'); }
+  catch { git('commit', '-m', `Refresh shop feed (${kept} products, ${covered} teams)`, '--', 'data/shop'); git('push'); }
 }

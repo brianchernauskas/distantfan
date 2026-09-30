@@ -1,5 +1,5 @@
-import { AFFILIATE } from './config.js?v=202609300757';
-import { TEAM_BY_ID } from './teams.js?v=202609300757';
+import { AFFILIATE } from './config.js?v=202609301017';
+import { TEAM_BY_ID } from './teams.js?v=202609301017';
 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
@@ -24,21 +24,23 @@ export function shopStrip(teamIds, logo) {
 
 const money = n => '$' + (Number.isInteger(n) ? n : n.toFixed(2));
 
-// Product tiles come from data/shop.json (written by tools/shop-feed.mjs). Cards render first; when the
-// snapshot exists and has products for the fan's teams, a tile row is added below them. Any failure leaves
+// Product tiles come from data/shop/<teamId>.json (written by tools/shop-feed.mjs). Cards render first; when the
+// snapshots exist for the fan's teams, a tile row is added below them. Any failure leaves
 // the cards alone. Tiles round-robin across teams so a fan following several sees each of them.
 export async function hydrateShop(teamIds, perTeam = 3) {
   const box = document.querySelector('.shop');
   if (!box) return;
-  let snap;
-  try { const r = await fetch('data/shop.json', { cache: 'no-cache' }); if (!r.ok) return; snap = await r.json(); } catch { return; }
-  const lists = teamIds.map(id => (snap.teams?.[id] || []).slice(0, perTeam).map(p => ({ ...p, id }))).filter(l => l.length);
+  // One small file per team; a missing one (no products for that team) just 404s and is skipped.
+  const got = await Promise.all(teamIds.map(async id => {
+    try { const r = await fetch(`data/shop/${encodeURIComponent(id)}.json`); return r.ok ? (await r.json()).slice(0, perTeam).map(p => ({ ...p, id })) : []; } catch { return []; }
+  }));
+  const lists = got.filter(l => l.length);
   const tiles = [];
   for (let i = 0; i < perTeam; i++) for (const l of lists) if (l[i]) tiles.push(l[i]);
   if (!tiles.length || !box.isConnected) return;
   const row = document.createElement('div');
   row.className = 'shop-products';
-  row.innerHTML = tiles.slice(0, 12).map(p => `<a class="shop-tile" href="${esc(p.u)}" target="_blank" rel="sponsored noopener" data-shop="${esc(p.id)}">
+  row.innerHTML = tiles.slice(0, 12).map(p => `<a class="shop-tile" href="${esc(p.u + (p.u.includes('?') ? '&' : '?') + 'subId1=' + encodeURIComponent(p.id))}" target="_blank" rel="sponsored noopener" data-shop="${esc(p.id)}">
     <img src="${esc(p.i)}" alt="" loading="lazy">
     <span class="n">${esc(p.n)}</span>
     <span class="pr"><b>${money(p.p)}</b>${p.o && p.o > p.p ? ` <s>${money(p.o)}</s>` : ''}</span>
