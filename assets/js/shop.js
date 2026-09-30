@@ -1,5 +1,5 @@
-import { AFFILIATE } from './config.js?v=202609301546';
-import { TEAM_BY_ID } from './teams.js?v=202609301546';
+import { AFFILIATE } from './config.js?v=202609301601';
+import { TEAM_BY_ID } from './teams.js?v=202609301601';
 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
@@ -20,6 +20,29 @@ export function shopStrip(teamIds, logo) {
     <div class="shop-cards">${teams.map(t => `<a class="shop-card" href="${esc(shopLink(t))}" target="_blank" rel="sponsored noopener" style="--team:${esc(t.color)}" data-shop="${esc(t.id)}">${logo(t, 'lg')}<span class="n">${esc(t.short)} gear</span><span class="s">Shop at ${esc(AFFILIATE.store)}</span></a>`).join('')}</div>
     <p class="shop-note">${esc(AFFILIATE.disclosure)}</p>
   </section>`;
+}
+
+// Slim one-team banner for the map's side panel, under the stats panel: above the fold on desktop, and the first
+// thing under the map on mobile. Never over the map itself, where it would cover pins and the add-spot hint.
+export function shopBanner(teamId, logo) {
+  const t = TEAM_BY_ID[teamId];
+  if (!shopOn() || !t) return '';
+  return `<aside class="shop-banner" aria-label="Team gear" style="--team:${esc(t.color)}">
+    <a href="${esc(shopLink(t))}" target="_blank" rel="sponsored noopener" data-shop="${esc(t.id)}" data-banner>${logo(t, 'sm')}<span class="main"><b>Rep the ${esc(t.short)}</b><span>Shop ${esc(t.short)} gear at ${esc(AFFILIATE.store)}</span></span><span class="badge plain">Sponsored</span></a>
+    <p class="shop-note">${esc(AFFILIATE.disclosure)}</p>
+  </aside>`;
+}
+
+// Upgrades the banner's search link to the team's real shop page when a fresh harvested one exists (same rule as the cards).
+export async function hydrateBanner(teamId) {
+  const a = document.querySelector('.shop-banner a[data-banner]'), t = TEAM_BY_ID[teamId];
+  if (!a || !t) return;
+  try {
+    const r = await fetch(`data/shop/${encodeURIComponent(teamId)}.json`);
+    if (!r.ok) return;
+    const d = await r.json();
+    if (a.isConnected && d.page && d.pageAt && (Date.now() - Date.parse(d.pageAt)) / 864e5 < AFFILIATE.pageMaxAgeDays) a.href = shopLink(t, d.page);
+  } catch {}
 }
 
 const money = n => '$' + (Number.isInteger(n) ? n : n.toFixed(2));

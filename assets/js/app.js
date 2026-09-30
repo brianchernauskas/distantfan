@@ -1,10 +1,10 @@
-import * as S from './store.js?v=202609301546';
-import { SITE, ADMINS } from './config.js?v=202609301546';
-import { TEAMS, TEAM_BY_ID, LEAGUES } from './teams.js?v=202609301546';
-import { METROS } from './metros.js?v=202609301546';
-import { encode, center, bounds, areaLabel, km, nearestMetro } from './geo.js?v=202609301546';
-import { nextGames } from './schedule.js?v=202609301546';
-import { shopStrip, hydrateShop } from './shop.js?v=202609301546';
+import * as S from './store.js?v=202609301601';
+import { SITE, ADMINS } from './config.js?v=202609301601';
+import { TEAMS, TEAM_BY_ID, LEAGUES } from './teams.js?v=202609301601';
+import { METROS } from './metros.js?v=202609301601';
+import { encode, center, bounds, areaLabel, km, nearestMetro } from './geo.js?v=202609301601';
+import { nextGames } from './schedule.js?v=202609301601';
+import { shopStrip, hydrateShop, shopBanner, hydrateBanner } from './shop.js?v=202609301601';
 
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -236,7 +236,7 @@ function renderOnboarding(editing = false) {
         if (!native && !navigator.geolocation) { err.textContent = 'Location is not available in this browser. Pick a metro instead.'; return; }
         $('#locate').disabled = true; $('#locate').textContent = 'Locating…';
         // Inside the Capacitor app, use the native location plugin (native.js); on the web, the browser API.
-        const locate = native ? (ok, fail, o) => import('./native.js?v=202609301546').then(n => n.getPosition(ok, fail, o)) : (ok, fail, o) => navigator.geolocation.getCurrentPosition(ok, fail, o);
+        const locate = native ? (ok, fail, o) => import('./native.js?v=202609301601').then(n => n.getPosition(ok, fail, o)) : (ok, fail, o) => navigator.geolocation.getCurrentPosition(ok, fail, o);
         locate(p => {
           // Round to a coarse cell immediately; the coordinates are discarded here.
           const cell = encode(p.coords.latitude, p.coords.longitude, SITE.homePrecision);
@@ -413,6 +413,7 @@ async function loadMap(fresh = false) {
       </div>
       ${mySpot ? `<p class="ok" style="margin-top:12px">✓ You're going to <b>${esc(mySpot.name)}</b>${myCheckin.gameName ? ` for ${esc(myCheckin.gameName)}` : ''}. <button class="link-btn" id="unGo">Cancel</button></p>` : ''}
     </div>
+    ${shopBanner(id, logo)}
     <div class="panel">
       <div class="row" style="justify-content:space-between"><h3>Watch spots nearby</h3><button class="btn sm primary" id="addSpot">+ Add</button></div>
       <div class="list">${nearSpots.length ? nearSpots.slice(0, 12).map(s => `
@@ -441,6 +442,7 @@ async function loadMap(fresh = false) {
       <div class="list">${topAreas.map(([a, n]) => `<div class="item" style="cursor:default"><span class="main"><span class="t">${esc(a)}</span></span><span class="badge plain">${n}</span></div>`).join('') || '<p class="empty">No fans yet.</p>'}</div>
     </div>`;
 
+  hydrateBanner(id);
   $('#addSpot').onclick = () => setAdding(true);
   $('#clubLink').onclick = openClubDialog;
   if (location.hash === '#club') { history.replaceState(null, '', '#map'); openClubDialog(); }
@@ -526,6 +528,7 @@ async function loadCity(fresh = false) {
         <button class="chip" id="wideBtn" aria-pressed="${wide}" style="padding:8px 14px">${wide ? '25 miles · closer' : '10 miles · wider'}</button>
       </div>
     </div>
+    ${shopBanner(profile.teams[0], logo)}
     <div class="panel">
       <div class="row" style="justify-content:space-between"><h3>Watch spots</h3><button class="btn sm primary" id="addSpot">+ Add</button></div>
       <div class="list">${spots.length ? spots.slice(0, 40).map(s => {
@@ -538,6 +541,7 @@ async function loadCity(fresh = false) {
       <button class="link-btn" style="font-size:14px;margin-top:10px" id="clubLink">Run a fan club or alumni chapter?</button>
     </div>`;
 
+  hydrateBanner(profile.teams[0]);
   $('#addSpot').onclick = () => setAdding(true);
   $('#clubLink').onclick = openClubDialog;
   if (location.hash === '#club') { history.replaceState(null, '', '#map'); openClubDialog(); }
