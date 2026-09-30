@@ -16,3 +16,6 @@ tools/digest/out/
 
 # Native app build output (tools/build-app.mjs)
 www/
+
+# Firebase Android config (contains API key; download from Firebase console)
+android/app/google-services.json
