@@ -1,10 +1,10 @@
-import * as S from './store.js?v=202609300742';
-import { SITE, ADMINS } from './config.js?v=202609300742';
-import { TEAMS, TEAM_BY_ID, LEAGUES } from './teams.js?v=202609300742';
-import { METROS } from './metros.js?v=202609300742';
-import { encode, center, bounds, areaLabel, km, nearestMetro } from './geo.js?v=202609300742';
-import { nextGames } from './schedule.js?v=202609300742';
-import { shopStrip } from './shop.js?v=202609300742';
+import * as S from './store.js?v=202609300757';
+import { SITE, ADMINS } from './config.js?v=202609300757';
+import { TEAMS, TEAM_BY_ID, LEAGUES } from './teams.js?v=202609300757';
+import { METROS } from './metros.js?v=202609300757';
+import { encode, center, bounds, areaLabel, km, nearestMetro } from './geo.js?v=202609300757';
+import { nextGames } from './schedule.js?v=202609300757';
+import { shopStrip, hydrateShop } from './shop.js?v=202609300757';
 
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -708,6 +708,7 @@ async function viewGames() {
     </div>`;
   }).join('') : '<div class="panel"><p class="empty">No upcoming games found for your teams. Off-season, or the schedule isn\'t out yet.</p></div>';
   $('#games').insertAdjacentHTML('afterend', shopStrip(profile.teams, logo));
+  hydrateShop(profile.teams);
 
   $$('[data-out]').forEach(b => b.onclick = async () => { await S.checkOut(b.dataset.out); delete cache[b.dataset.out]; toast('Check-in cancelled'); viewGames(); });
   $$('[data-add]').forEach(b => b.onclick = () => { teamId = b.dataset.add; ls.set('df_team', teamId); mapTeam = teamId; ls.set('df_maptab', teamId); view = 'map'; history.replaceState(null, '', '#map'); renderShell(); setTimeout(() => setAdding(true), 300); });
