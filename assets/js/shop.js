@@ -1,5 +1,5 @@
-import { AFFILIATE } from './config.js?v=202609300730';
-import { TEAM_BY_ID } from './teams.js?v=202609300730';
+import { AFFILIATE } from './config.js?v=202609300742';
+import { TEAM_BY_ID } from './teams.js?v=202609300742';
 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
@@ -8,7 +8,7 @@ export const shopOn = () => AFFILIATE.enabled || /[?&]shop=1\b/.test(location.se
 
 export function shopLink(t) {
   const dest = AFFILIATE.teamUrls[t.id] || AFFILIATE.searchUrl.replace('{q}', encodeURIComponent(t.name));
-  return AFFILIATE.linkTemplate.replace('{urlenc}', encodeURIComponent(dest)).replace('{url}', dest);
+  return AFFILIATE.linkTemplate.replace('{urlenc}', encodeURIComponent(dest)).replace('{url}', dest).replace('{team}', encodeURIComponent(t.id));
 }
 
 // One card per followed team. `logo` is the app's logo() renderer, passed in to avoid a circular import.
