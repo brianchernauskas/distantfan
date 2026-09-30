@@ -10,6 +10,7 @@ tools/scout/runs/
 # Throwaway scout scratch scripts and logs
 tools/scout/_*.mjs
 tools/scout/err.txt
+tools/scout/uwerr.txt
 
 # Digest email previews (dry run output)
 tools/digest/out/
