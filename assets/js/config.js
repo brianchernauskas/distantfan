@@ -38,5 +38,9 @@ export const AFFILIATE = {
   searchUrl: 'https://www.fanatics.com/search?query={q}',
   // Optional per-team overrides once known: { 'nfl-pit': 'https://www.fanatics.com/nfl/pittsburgh-steelers/...' }
   teamUrls: {},
+  // Team-shop page links are signed by Fanatics and harvested by hand (tools/shop-pages.mjs), and there is no way to
+  // test one from here. So one is used only for this many days after it was harvested; after that the card falls back
+  // to the search link until the links are refreshed.
+  pageMaxAgeDays: 21,
   disclosure: 'Distant Fan earns a commission on purchases made through these links, at no extra cost to you.',
 };

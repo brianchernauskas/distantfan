@@ -1,5 +1,5 @@
-import { AFFILIATE } from './config.js?v=202609301543';
-import { TEAM_BY_ID } from './teams.js?v=202609301543';
+import { AFFILIATE } from './config.js?v=202609301546';
+import { TEAM_BY_ID } from './teams.js?v=202609301546';
 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
@@ -38,12 +38,14 @@ export async function hydrateShop(teamIds, perTeam = 3) {
       const r = await fetch(`data/shop/${encodeURIComponent(id)}.json`);
       if (!r.ok) return { id, items: [] };
       const d = await r.json();
-      return { id, page: d.page, items: (d.items || []).slice(0, perTeam).map(p => ({ ...p, id })) };
+      return { id, page: d.page, pageAt: d.pageAt, items: (d.items || []).slice(0, perTeam).map(p => ({ ...p, id })) };
     } catch { return { id, items: [] }; }
   }));
   if (!box.isConnected) return;
   for (const g of got) {
-    const t = TEAM_BY_ID[g.id], a = g.page && t && box.querySelector(`.shop-card[data-shop="${CSS.escape(g.id)}"]`);
+    // A team page is used only while fresh; a stale or undated one is ignored and the card keeps its search link.
+    const fresh = g.page && g.pageAt && (Date.now() - Date.parse(g.pageAt)) / 864e5 < AFFILIATE.pageMaxAgeDays;
+    const t = TEAM_BY_ID[g.id], a = fresh && t && box.querySelector(`.shop-card[data-shop="${CSS.escape(g.id)}"]`);
     if (a) a.href = shopLink(t, g.page);
   }
   const lists = got.map(g => g.items).filter(l => l.length);

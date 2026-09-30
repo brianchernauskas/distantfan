@@ -90,8 +90,12 @@ for (const f of fs.readdirSync(dir)) if (f.endsWith('.json')) fs.unlinkSync(path
 // data/shop-pages.json maps team id -> that team's real Fanatics shop path. Fanatics signs these URLs (the /z- part),
 // so they can't be generated here; they are harvested from Fanatics product pages in a browser and kept in that file.
 const pagesFile = path.join(root, 'data/shop-pages.json');
-const pageMap = fs.existsSync(pagesFile) ? JSON.parse(fs.readFileSync(pagesFile, 'utf8')) : {};
-for (const [id, items] of Object.entries(byTeam)) fs.writeFileSync(path.join(dir, `${id}.json`), JSON.stringify({ page: pageMap[id] || null, items }) + '\n');
+const pageData = fs.existsSync(pagesFile) ? JSON.parse(fs.readFileSync(pagesFile, 'utf8')) : {};
+const pageMap = pageData.pages || {};
+const pageAt = pageData.harvestedAt || null;
+if (pageAt) { const age = (Date.now() - Date.parse(pageAt)) / 864e5; console.error(`team-page links harvested ${pageAt.slice(0, 10)} (${age.toFixed(0)} days ago)${age > 14 ? ' - STALE SOON: re-harvest, see tools/shop-pages.mjs' : ''}`); }
+for (const [id, items] of Object.entries(byTeam)) fs.writeFileSync(path.join(dir, `${id}.json`), JSON.stringify({ page: pageMap[id] || null, pageAt: pageMap[id] ? pageAt : null, items }) + '\n');
+fs.writeFileSync(path.join(dir, '_index.json'), JSON.stringify(Object.keys(byTeam).sort()) + '\n'); // team list for tools/harvest-team-pages.js
 const covered = Object.keys(byTeam).length;
 console.error(`wrote data/shop/: ${kept} products across ${covered} of ${TEAMS.length} teams`);
 
