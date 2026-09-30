@@ -127,7 +127,13 @@ async function firebaseStore() {
 
   return {
     onUser: cb => A.onAuthStateChanged(auth, u => { me = toUser(u); cb(me); }),
-    signInGoogle: () => A.signInWithPopup(auth, new A.GoogleAuthProvider()),
+    // Inside the Capacitor app popups don't work, so use the native Google account chooser (native.js).
+    signInGoogle: async () => {
+      if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
+        return (await import('./native.js?v=202609301017')).signInGoogle(A, auth);
+      }
+      return A.signInWithPopup(auth, new A.GoogleAuthProvider());
+    },
     signInEmail: (email, pw) => A.signInWithEmailAndPassword(auth, email, pw),
     async signUpEmail(email, pw, name) {
       const cred = await A.createUserWithEmailAndPassword(auth, email, pw);
@@ -136,7 +142,10 @@ async function firebaseStore() {
     },
     resetPassword: email => A.sendPasswordResetEmail(auth, email),
     signInDemo: () => { throw new Error('Demo sign-in is only available in demo mode.'); },
-    signOut: () => A.signOut(auth),
+    signOut: async () => {
+      if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) await (await import('./native.js?v=202609301017')).signOut();
+      return A.signOut(auth);
+    },
 
     async getProfile(uid) {
       const s = await F.getDoc(F.doc(db, 'profiles', uid));

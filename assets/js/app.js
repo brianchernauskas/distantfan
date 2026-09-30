@@ -232,9 +232,12 @@ function renderOnboarding(editing = false) {
     }
     if (step === 2) {
       $('#locate').onclick = () => {
-        if (!navigator.geolocation) { err.textContent = 'Location is not available in this browser. Pick a metro instead.'; return; }
+        const native = window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform();
+        if (!native && !navigator.geolocation) { err.textContent = 'Location is not available in this browser. Pick a metro instead.'; return; }
         $('#locate').disabled = true; $('#locate').textContent = 'Locating…';
-        navigator.geolocation.getCurrentPosition(p => {
+        // Inside the Capacitor app, use the native location plugin (native.js); on the web, the browser API.
+        const locate = native ? (ok, fail, o) => import('./native.js?v=202609301017').then(n => n.getPosition(ok, fail, o)) : (ok, fail, o) => navigator.geolocation.getCurrentPosition(ok, fail, o);
+        locate(p => {
           // Round to a coarse cell immediately; the coordinates are discarded here.
           const cell = encode(p.coords.latitude, p.coords.longitude, SITE.homePrecision);
           setArea(cell, areaLabel(cell));
