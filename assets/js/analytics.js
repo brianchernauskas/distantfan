@@ -1,7 +1,7 @@
 // Firebase Analytics (GA4) for pages that don't load the app's store: landing, unsubscribe and the
 // generated watch/ pages. app.html gets analytics from store.js, so it must not load this file too
 // (two inits would count each page view twice).
-import { FIREBASE_CONFIG } from './config.js?v=202609301017';
+import { FIREBASE_CONFIG } from './config.js?v=202609301136';
 
 if (FIREBASE_CONFIG) {
   const base = 'https://www.gstatic.com/firebasejs/12.19.0';

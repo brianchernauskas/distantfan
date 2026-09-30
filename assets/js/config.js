@@ -8,7 +8,7 @@ export const FIREBASE_CONFIG = {
   storageBucket: 'distantfan-e8dbd.firebasestorage.app',
   messagingSenderId: '1025815650213',
   appId: '1:1025815650213:web:6d33867eda6c0a3944d24c',
-  measurementId: 'G-15GKF9JFBF',
+  measurementId: 'G-9SX08M8C92',
 };
 
 export const SITE = {
