@@ -418,7 +418,7 @@ async function loadMap(fresh = false) {
       <div class="row" style="justify-content:space-between"><h3>Watch spots nearby</h3><button class="btn sm primary" id="addSpot">+ Add</button></div>
       <div class="list">${nearSpots.length ? nearSpots.slice(0, 12).map(s => `
         <button class="item" data-spot="${esc(s.id)}"><span class="pinicon">📍</span>
-          <span class="main"><span class="t" style="display:block">${esc(s.name)}</span><span class="s">${fmtKm(s.dist)}${s.eventAt ? ` · ${esc(s.eventTitle || 'Watch party')}, ${fmtWhen(s.eventAt)}` : s.note ? ` · ${esc(s.note)}` : ''}</span></span>
+          <span class="main"><span class="t" style="display:block">${esc(s.name)}</span><span class="s">${fmtKm(s.dist)}${s.eventAt ? ` · ${esc(s.eventTitle || 'Watch party')}, ${fmtWhen(s.eventAt, s.timeTbd)}` : s.note ? ` · ${esc(s.note)}` : ''}</span></span>
           ${s.going ? `<span class="badge">${s.going} going</span>` : s.source === 'scout' ? '<span class="badge plain">found online</span>' : ''}</button>`).join('')
         : `<p class="empty">No ${esc(t?.short)} spots within ${Math.round(NEAR_KM * .621)} miles yet. Know a bar that shows their games? Add it and other fans will find it.</p>
            ${otherSpots.length ? `<div class="sub" style="margin-top:14px">${otherSpots.length} other team${otherSpots.length === 1 ? '' : 's'} already on the map near you</div>
@@ -534,7 +534,7 @@ async function loadCity(fresh = false) {
       <div class="list">${spots.length ? spots.slice(0, 40).map(s => {
         const ot = lead(s), more = (s.teams?.length || 1) - 1;
         return `<button class="item" data-spot="${esc(s.id)}">${logo(ot, 'sm')}
-          <span class="main"><span class="t" style="display:block">${esc(s.name)}</span><span class="s">${esc(ot?.short || '')}${more > 0 ? ` +${more}` : ''} · ${fmtKm(s.dist)}${s.eventAt > now ? ` · ${esc(s.eventTitle || 'Watch party')}, ${fmtWhen(s.eventAt)}` : s.note ? ` · ${esc(s.note)}` : ''}</span></span>
+          <span class="main"><span class="t" style="display:block">${esc(s.name)}</span><span class="s">${esc(ot?.short || '')}${more > 0 ? ` +${more}` : ''} · ${fmtKm(s.dist)}${s.eventAt > now ? ` · ${esc(s.eventTitle || 'Watch party')}, ${fmtWhen(s.eventAt, s.timeTbd)}` : s.note ? ` · ${esc(s.note)}` : ''}</span></span>
           ${s.going ? `<span class="badge">${s.going} going</span>` : s.source === 'scout' ? '<span class="badge plain">found online</span>' : ''}</button>`;
       }).join('') + (spots.length > 40 ? `<p class="empty">and ${spots.length - 40} more on the map</p>` : '')
         : `<p class="empty">No watch spots within ${Math.round(R * .621)} miles yet.${wide ? '' : ' Try wider, or add one.'} Know a bar that shows games? Add it and other fans will find it.</p>`}</div>
@@ -555,7 +555,7 @@ async function loadCity(fresh = false) {
   });
 }
 
-const fmtWhen = ms => new Date(ms).toLocaleString(undefined, { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+const fmtWhen = (ms, tbd) => new Date(ms).toLocaleString(undefined, tbd ? { weekday: 'short', month: 'short', day: 'numeric' } : { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) + (tbd ? ' · time TBD' : '');
 const views = () => ['map', 'games', 'chat', ...(isAdmin() ? ['review', 'users'] : [])];
 
 const fmtKm = k => { const mi = k * .621; return mi < 1 ? 'under a mile' : `${mi < 10 ? mi.toFixed(1) : Math.round(mi)} mi`; };
@@ -567,7 +567,7 @@ function spotPopup(s, myCheckin, forTeam, browse = false) {
   const here = myCheckin?.spotId === s.id;
   el.innerHTML = `<h4>${esc(s.name)}</h4>
     ${forTeam ? `<p class="muted" style="display:flex;align-items:center;gap:6px;margin-top:-6px">${logo(forTeam, 'sm')} Home of ${esc(forTeam.name)} fans</p>` : ''}
-    ${s.eventAt ? `<p><b>${esc(s.eventTitle || 'Watch party')}</b><br>${fmtWhen(s.eventAt)}</p>` : ''}
+    ${s.eventAt ? `<p><b>${esc(s.eventTitle || 'Watch party')}</b><br>${fmtWhen(s.eventAt, s.timeTbd)}</p>` : ''}
     ${s.club ? `<p>Home of <b>${esc(s.club)}</b></p>` : ''}
     <p>${s.address ? `${esc(s.address)}<br>` : ''}${s.note ? esc(s.note) : ''}</p>
     ${forTeam && !browse ? '' : `<p><b>${s.going}</b> going to the next game${s.source === 'scout' ? '' : s.byName ? ` · added by ${esc(s.byName)}` : ''}</p>`}
@@ -875,7 +875,7 @@ async function viewReview() {
     <div class="panel" data-q="${esc(it.id)}" style="display:grid;gap:8px">
       <div class="row">${it.teams.map(id => logo(TEAM_BY_ID[id], 'sm')).join('')}<b class="grow">${esc(it.name)}</b><span class="badge plain">${esc(it.confidence || 'medium')}</span></div>
       <div class="muted" style="font-size:14px">${it.teams.map(id => esc(TEAM_BY_ID[id]?.name || id)).join(', ')}${it.club ? ` · ${esc(it.club)}` : ''}</div>
-      ${it.eventAt ? `<div><b>${esc(it.eventTitle || 'Watch party')}</b> · ${fmtWhen(it.eventAt)}</div>` : ''}
+      ${it.eventAt ? `<div><b>${esc(it.eventTitle || 'Watch party')}</b> · ${fmtWhen(it.eventAt, it.timeTbd)}</div>` : ''}
       <div style="font-size:14px">${esc(it.address)}${it.note ? `<br>${esc(it.note)}` : ''}</div>
       <div class="muted" style="font-size:13px">Why: ${esc(it.evidence || '—')}<br>Source: <a href="${esc(it.sourceUrl)}" target="_blank" rel="noopener">${esc(it.sourceName || it.sourceUrl)}</a> · <a href="https://www.google.com/maps/search/?api=1&query=${it.lat},${it.lng}" target="_blank" rel="noopener">map</a></div>
       <div class="row"><button class="btn sm primary" data-ok>Approve</button><button class="btn sm ghost" data-no>Reject</button></div>

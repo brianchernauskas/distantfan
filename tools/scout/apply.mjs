@@ -140,7 +140,7 @@ for (const c of input.candidates || []) {
     lat: geo.lat, lng: geo.lng, city, teams, by: 'scout', byName: 'Distant Fan scout',
     source: 'scout', sourceUrl: c.sourceUrl, sourceName: clean(c.sourceName, 80), club: clean(c.club, 80),
     checkedAt: now, expiresAt,
-    ...(isEvent ? { eventAt, eventTitle: clean(c.eventTitle, 100) } : {}),
+    ...(isEvent ? { eventAt, eventTitle: clean(c.eventTitle, 100), ...(c.timeTbd ? { timeTbd: true } : {}) } : {}),
   };
 
   if (existing) {
