@@ -1,9 +1,9 @@
 // Data layer. Uses Firebase (Auth + Firestore) when FIREBASE_CONFIG is set,
 // otherwise a demo store in localStorage seeded with clearly fake fans and spots.
-import { FIREBASE_CONFIG, SITE } from './config.js?v=202609301601';
-import { TEAMS, TEAM_BY_ID } from './teams.js?v=202609301601';
-import { METROS } from './metros.js?v=202609301601';
-import { encode, center } from './geo.js?v=202609301601';
+import { FIREBASE_CONFIG, SITE } from './config.js?v=202610050818';
+import { TEAMS, TEAM_BY_ID } from './teams.js?v=202610050818';
+import { METROS } from './metros.js?v=202610050818';
+import { encode, center } from './geo.js?v=202610050818';
 
 export const mode = FIREBASE_CONFIG ? 'firebase' : 'demo';
 let impl;
@@ -50,6 +50,10 @@ export const listProfiles = call('listProfiles');
 export const listSpots = call('listSpots');
 export const dismissVenueLead = call('dismissVenueLead');
 
+// Best-effort GA4 event; a no-op until Analytics has loaded (or when blocked).
+let trackImpl = null;
+export const track = (name, params) => { try { trackImpl?.(name, params); } catch {} };
+
 const clean = (s, max) => String(s || '').replace(/\s+/g, ' ').trim().slice(0, max);
 const active = c => (c.expiresAt || 0) > Date.now();
 
@@ -64,7 +68,9 @@ async function firebaseStore() {
   ]);
   const app = initializeApp(FIREBASE_CONFIG);
   // Analytics is best-effort: ad blockers or unsupported browsers must never break the app.
-  import(`${base}/firebase-analytics.js`).then(async an => { if (await an.isSupported()) an.getAnalytics(app); }).catch(() => {});
+  import(`${base}/firebase-analytics.js`).then(async an => {
+    if (await an.isSupported()) { const ga = an.getAnalytics(app); trackImpl = (n, p) => an.logEvent(ga, n, p); }
+  }).catch(() => {});
   const auth = A.getAuth(app);
   const db = F.getFirestore(app);
   let me = null;
@@ -130,7 +136,7 @@ async function firebaseStore() {
     // Inside the Capacitor app popups don't work, so use the native Google account chooser (native.js).
     signInGoogle: async () => {
       if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
-        return (await import('./native.js?v=202609301601')).signInGoogle(A, auth);
+        return (await import('./native.js?v=202610050818')).signInGoogle(A, auth);
       }
       return A.signInWithPopup(auth, new A.GoogleAuthProvider());
     },
@@ -143,7 +149,7 @@ async function firebaseStore() {
     resetPassword: email => A.sendPasswordResetEmail(auth, email),
     signInDemo: () => { throw new Error('Demo sign-in is only available in demo mode.'); },
     signOut: async () => {
-      if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) await (await import('./native.js?v=202609301601')).signOut();
+      if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) await (await import('./native.js?v=202610050818')).signOut();
       return A.signOut(auth);
     },
 
@@ -154,6 +160,9 @@ async function firebaseStore() {
     saveProfile: (uid, p) => F.setDoc(F.doc(db, 'profiles', uid), {
       name: clean(p.name, 40), teams: p.teams.slice(0, SITE.maxTeams),
       cell: p.cell.slice(0, SITE.homePrecision), area: clean(p.area, 60),
+      // How they found us: coarse first-touch source (landing path, referrer host) plus the optional
+      // self-reported answer. Written once at sign-up and carried through later profile edits.
+      ...(p.src ? { src: clean(p.src, 80) } : {}), ...(p.ref ? { ref: clean(p.ref, 60) } : {}), ...(p.how ? { how: clean(p.how, 40) } : {}),
       updatedAt: F.serverTimestamp(),
     }),
     getEmailPref: emailPrefFor,

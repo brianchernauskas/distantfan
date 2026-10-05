@@ -186,24 +186,26 @@ const itemListLd = (name, list) => ({
   itemListElement: list.map((s, i) => ({ '@type': 'ListItem', position: i + 1, item: { '@type': 'BarOrPub', name: s.name, ...(s.address ? { address: s.address } : {}), geo: { '@type': 'GeoCoordinates', latitude: +s.lat.toFixed(5), longitude: +s.lng.toFixed(5) } } })),
 });
 
-const CTA = (line) => `<section class="cta"><div><h2>${line}</h2><p>Free. Follow your teams, see the fans near you and who's going to the next game. You only share a rough area, never your address.</p></div><a class="btn lg primary" href="/app.html">Find my people</a></section>`;
+const CTA = (line, team) => `<section class="cta"><div><h2>${line}</h2><p>Free. Follow ${team ? esc(team.short) : 'your teams'}, see the fans near you and who's going to the next game${team ? `, and get a weekly game-day email with the games and the bars` : ''}. You only share a rough area, never your address.</p></div><a class="btn lg primary" href="/app.html${team ? `?follow=${encodeURIComponent(team.id)}` : ''}">${team ? `Follow ${esc(team.short)}` : 'Find my people'}</a></section>`;
+// Slim version near the top of the page, where most search visitors decide whether to stay.
+const FOLLOW = team => `<div class="followbar"><span><b>${esc(team.short)} fan?</b> Follow them for a weekly game-day email and see the fans near you.</span><a class="btn sm primary" href="/app.html?follow=${encodeURIComponent(team.id)}">Follow ${esc(team.short)}</a></div>`;
 
 // Snippet copy: lead with the wording searchers use ("<team> bars in <city>"), name the venues.
 function pageTitle(team, name, metro, n) {
-  const t = `${team.name} bars in ${metro.name}: ${n} places to watch`;
-  return t.length <= 62 ? t : `${team.short} bars in ${metro.name}: ${n} places to watch the game`;
+  const c = `${metro.name}, ${metro.st}`;
+  for (const t of [`${team.name} bars in ${c}: ${n} places to watch`, `${team.name} bars in ${metro.name}: ${n} places to watch`, `${team.short} bars in ${metro.name}: ${n} places to watch`]) if (t.length <= 62) return t;
+  return `${team.short} bars in ${metro.name}: ${n} places to watch the game`;
 }
 function pageDesc(team, metro, spots, lc) {
   const term = FAN_TERM[team.id] || `${team.short} fans`;
   const upd = ` Updated ${monthYear(lc)}.`;
   const names = spots.slice(0, 3).map(s => s.name);
-  const rest = spots.length - names.length;
   for (const k of [3, 2, 1]) {
     const n = names.slice(0, k), r = spots.length - k;
-    const d = `${term} in ${metro.name}: watch the game at ${joinList(n)}${r > 0 ? ` and ${r} more` : ''}.${upd}`;
+    const d = `Find a ${team.short} bar in ${metro.name}: ${term} watch the game at ${joinList(n)}${r > 0 ? ` and ${r} more` : ''}.${upd}`;
     if (d.length <= 158) return d;
   }
-  return `${term} in ${metro.name}: ${spots.length} bars and fan clubs.${upd}`;
+  return `Find a ${team.short} bar in ${metro.name}: ${spots.length} bars and fan clubs for ${term}.${upd}`;
 }
 function intro(team, metro, spots) {
   const term = FAN_TERM[team.id] || `${team.short} fans`;
@@ -239,6 +241,8 @@ for (const p of pairs) {
   <p class="lede">${plural(spots.length, 'bar and fan watch spot')} in the ${esc(metro.name)} area where ${esc(team.short)} fans watch the game${clubs ? `, including ${plural(clubs, 'official fan club and alumni chapter')}` : ''}. Last checked ${esc(monthYear(lc))}.</p>
 </div></header>
 
+${FOLLOW(team)}
+
 ${intro(team, metro, spots)}
 
 <div class="nextgame" id="nextgame" data-path="${esc(path_)}" data-eid="${esc(team.eid)}" data-short="${esc(team.short)}" hidden></div>
@@ -248,7 +252,7 @@ ${spots.map(spotCard).join('\n')}
 </ul>
 
 ${fans ? `<p class="fans"><b>${plural(fans, 'fan')}</b> following ${esc(team.short)} near ${esc(metro.name)} ${fans === 1 ? 'has' : 'have'} joined Distant Fan.</p>` : ''}
-${CTA(`Watching ${esc(team.short)} in ${esc(metro.name)}?`)}
+${CTA(`Watching ${esc(team.short)} in ${esc(metro.name)}?`, team)}
 
 <section class="more">
   <p>Missing a spot, or run a ${esc(team.short)} fan club here? <a href="/app.html">Add it in the app</a> or <a href="/#clubs">tell us about your club</a>. Bars can be listed for free.</p>
@@ -284,6 +288,8 @@ for (const v of venues) {
   <p class="lede">${esc(s.note)}</p>
 </div></header>
 
+${FOLLOW(lead)}
+
 <div class="nextgame" id="nextgame" data-path="${esc(ESPN_PATH[lead.lg])}" data-eid="${esc(lead.eid)}" data-short="${esc(lead.short)}" hidden></div>
 
 <section class="venue">
@@ -296,7 +302,7 @@ for (const v of venues) {
   <p class="muted">Looking for a ${esc(lead.short)} bar in ${esc(twn)}? Call ${esc(s.name)} before game day to confirm they will have your game on, since schedules and rooms change.</p>
 </section>
 
-${CTA(`Watching at ${esc(s.name)}?`)}
+${CTA(`Watching at ${esc(s.name)}?`, lead)}
 
 <section class="more">
   <p>Something out of date? <a href="/app.html">Tell us in the app</a>.</p>
@@ -325,7 +331,7 @@ for (const [tid, list] of pairsByTeam) {
   <p class="lede">${plural(total, 'watch spot')} for ${esc(team.short)} fans across ${plural(list.length, 'city', 'cities')}. Pick yours.</p>
 </div></header>
 <div class="chips big">${list.map(p => chip(`/watch/${ts}/${p.mk}/`, cityName(p.metro), p.spots.length)).join('')}</div>
-${CTA(`Not near one of these?`)}`;
+${CTA(`Not near one of these?`, team)}`;
   out.set(`watch/${ts}/index.html`, page({
     url: `/watch/${ts}/`, title: `Where to watch ${name} games: ${list.length} cities with fan bars`,
     desc: `${total} bars and fan clubs where ${team.short} fans watch games, in ${list.slice(0, 4).map(p => p.metro.name).join(', ')} and more.`,

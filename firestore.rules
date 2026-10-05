@@ -14,7 +14,10 @@ service cloud.firestore {
     match /profiles/{uid} {
       allow read: if signedIn();
       allow create, update: if signedIn() && me() == uid
-        && data().keys().hasOnly(['name', 'teams', 'cell', 'area', 'updatedAt'])
+        && data().keys().hasOnly(['name', 'teams', 'cell', 'area', 'src', 'ref', 'how', 'updatedAt'])
+        && (!('src' in data()) || str(data().src, 1, 80))
+        && (!('ref' in data()) || str(data().ref, 1, 60))
+        && (!('how' in data()) || str(data().how, 1, 40))
         && str(data().name, 1, 40)
         && data().teams is list && data().teams.size() >= 1 && data().teams.size() <= 8
         && str(data().cell, 1, 5) && data().cell.matches('^[0-9b-hjkmnp-z]+$')

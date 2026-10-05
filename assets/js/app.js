@@ -1,10 +1,11 @@
-import * as S from './store.js?v=202609301601';
-import { SITE, ADMINS } from './config.js?v=202609301601';
-import { TEAMS, TEAM_BY_ID, LEAGUES } from './teams.js?v=202609301601';
-import { METROS } from './metros.js?v=202609301601';
-import { encode, center, bounds, areaLabel, km, nearestMetro } from './geo.js?v=202609301601';
-import { nextGames } from './schedule.js?v=202609301601';
-import { shopStrip, hydrateShop, shopBanner, hydrateBanner } from './shop.js?v=202609301601';
+import * as S from './store.js?v=202610050818';
+import { SITE, ADMINS } from './config.js?v=202610050818';
+import { TEAMS, TEAM_BY_ID, LEAGUES } from './teams.js?v=202610050818';
+import { METROS } from './metros.js?v=202610050818';
+import { encode, center, bounds, areaLabel, km, nearestMetro } from './geo.js?v=202610050818';
+import { nextGames } from './schedule.js?v=202610050818';
+import { shopStrip, hydrateShop, shopBanner, hydrateBanner } from './shop.js?v=202610050818';
+import { firstTouch, followPrefill, clearFollow } from './attrib.js?v=202610050818';
 
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -43,6 +44,21 @@ const logo = (t, cls = '') => {
     ? `<span class="logo ${cls}"><img class="logo-img" src="${esc(t.logo)}" alt="" loading="lazy"><i class="sport-badge" aria-hidden="true">${icon}</i></span>`
     : `<img class="logo ${cls}" src="${esc(t.logo)}" alt="" loading="lazy">`;
 };
+
+// Invite link: tagged so GA4 shows invite-driven visits, and prefilled with the sender's team so the
+// friend lands on a sign-up that already has it selected. No sender id goes in the link.
+async function inviteFan() {
+  const tid = TEAM_BY_ID[teamId] ? teamId : profile?.teams?.[0];
+  const t = TEAM_BY_ID[tid];
+  const url = `https://distantfan.com/?utm_source=invite&utm_medium=share&utm_campaign=${encodeURIComponent(tid || 'any')}${tid ? `&follow=${encodeURIComponent(tid)}` : ''}`;
+  const text = t ? `Find ${t.short} fans and bars that show the game near you on Distant Fan` : 'Find fans of your team and bars that show the game near you on Distant Fan';
+  let method = 'copy';
+  try {
+    if (navigator.share) { method = 'share'; await navigator.share({ title: 'Distant Fan', text, url }); }
+    else { await navigator.clipboard.writeText(`${text}: ${url}`); toast('Invite link copied'); }
+    S.track('share', { method, content_type: 'invite', item_id: tid || 'any' });
+  } catch (e) { if (e?.name !== 'AbortError') toast('Could not share. Link: ' + url); }
+}
 
 function toast(msg) {
   const el = document.createElement('div');
@@ -129,6 +145,7 @@ function renderAuth() {
 }
 
 /* ------------------------------------------------------------- onboarding */
+const HOW = ['Google search', 'A friend or fan group', 'Facebook or Instagram', 'Reddit', 'ChatGPT or another AI', 'A bar or venue', 'Other'];
 function renderOnboarding(editing = false) {
   cleanupView();
   const draft = {
@@ -136,8 +153,18 @@ function renderOnboarding(editing = false) {
     cell: profile?.cell || '',
     area: profile?.area || '',
     name: profile?.name || shortName(user.name),
+    src: profile?.src, ref: profile?.ref, how: profile?.how,
   };
-  let step = 1, league = 'nfl', q = '';
+  const isNew = !editing && !profile;
+  if (isNew) {
+    // Arrived via a "Follow <team>" button or an invite link: start with that team picked.
+    const pre = followPrefill();
+    if (TEAM_BY_ID[pre]) draft.teams.push(pre);
+    // Coarse first-touch source for "how did people find us" (no ids; see attrib.js).
+    const ft = firstTouch();
+    if (ft) { draft.src = ft.path || '/'; draft.ref = ft.ref || ft.utm || 'direct'; }
+  }
+  let step = 1, league = TEAM_BY_ID[draft.teams[0]]?.lg || 'nfl', q = '';
 
   const draw = () => {
     root.innerHTML = `
@@ -186,6 +213,7 @@ function renderOnboarding(editing = false) {
       <div class="item" style="cursor:default;margin:6px -8px 0"><span class="avatar">${esc((draft.name || '?')[0].toUpperCase())}</span>
         <div class="main"><div class="t" id="pvName">${esc(draft.name)}</div><div class="s">${esc(draft.area)} · ${draft.teams.map(id => esc(TEAM_BY_ID[id]?.short)).join(', ')}</div></div></div>
     </div>
+    ${isNew ? `<label class="field">How did you hear about Distant Fan? <span class="muted">(optional)</span><select class="input" id="how"><option value="">Choose one…</option>${HOW.map(h => `<option value="${esc(h)}" ${draft.how === h ? 'selected' : ''}>${esc(h)}</option>`).join('')}</select></label>` : ''}
     ${!editing && S.mode === 'firebase' && user.email ? `<label class="row" style="gap:10px;align-items:flex-start;font-size:14px;cursor:pointer"><input type="checkbox" id="emailOpt" checked style="margin-top:3px"><span><b>Email me a weekly game-day heads-up</b><br><span class="muted">Your teams' games this week and the watch spots near you, sent to ${esc(user.email)}. Unsubscribe with one click, anytime.</span></span></label>` : ''}`;
 
   function setArea(cell, label) {
@@ -206,8 +234,13 @@ function renderOnboarding(editing = false) {
       if (!draft.name) { err.textContent = 'Add a display name.'; return; }
       $('#next').disabled = true;
       const emailOpt = $('#emailOpt')?.checked;
+      const how = $('#how')?.value; if (how) draft.how = how;
       try {
         await S.saveProfile(user.uid, draft);
+        if (isNew) {
+          clearFollow();
+          S.track('sign_up', { method: 'app', first_path: draft.src || '', first_ref: draft.ref || '', how: draft.how || '', teams: draft.teams.length });
+        }
         if (emailOpt != null) S.setEmailPref(user.uid, user.email, emailOpt).catch(console.error); // never blocks sign-up
         profile = { uid: user.uid, ...draft };
         cache = {}; cityCache = null;
@@ -236,7 +269,7 @@ function renderOnboarding(editing = false) {
         if (!native && !navigator.geolocation) { err.textContent = 'Location is not available in this browser. Pick a metro instead.'; return; }
         $('#locate').disabled = true; $('#locate').textContent = 'Locating…';
         // Inside the Capacitor app, use the native location plugin (native.js); on the web, the browser API.
-        const locate = native ? (ok, fail, o) => import('./native.js?v=202609301601').then(n => n.getPosition(ok, fail, o)) : (ok, fail, o) => navigator.geolocation.getCurrentPosition(ok, fail, o);
+        const locate = native ? (ok, fail, o) => import('./native.js?v=202610050818').then(n => n.getPosition(ok, fail, o)) : (ok, fail, o) => navigator.geolocation.getCurrentPosition(ok, fail, o);
         locate(p => {
           // Round to a coarse cell immediately; the coordinates are discarded here.
           const cell = encode(p.coords.latitude, p.coords.longitude, SITE.homePrecision);
@@ -273,6 +306,7 @@ function renderShell() {
         ${BRAND}
         <nav class="tabs" aria-label="Sections">${tabBtns}</nav>
         <span class="spacer"></span>
+        <button class="btn sm" id="inviteBtn" title="Send a friend a link to join you on Distant Fan">Invite a fan</button>
         <button class="avatar" id="meBtn" aria-label="Your profile">${esc((profile.name || '?')[0].toUpperCase())}</button>
       </div>
       ${S.mode === 'demo' ? '<div class="demo-banner" id="demoBanner"><b>Demo mode</b> · sample fans and spots. What you add stays in this browser.</div>' : ''}
@@ -285,6 +319,7 @@ function renderShell() {
   document.documentElement.style.setProperty('--banner', banner ? `${banner.offsetHeight}px` : '0px');
   $$('[data-view]').forEach(b => b.onclick = () => { view = b.dataset.view; history.replaceState(null, '', `#${view}`); renderShell(); });
   $('#meBtn').onclick = $('#meBtn2').onclick = openProfile;
+  $('#inviteBtn').onclick = inviteFan;
   drawTeambar();
   ({ map: viewMap, games: viewGames, chat: viewChat, review: viewReview, users: viewUsers })[view]();
 }
@@ -954,6 +989,7 @@ function openProfile() {
       <div class="sub muted">${esc(profile.area)}${user.email ? ` · ${esc(user.email)}` : ''}</div>
       <div class="picked">${profile.teams.map(id => `<span class="chip" style="cursor:default">${logo(TEAM_BY_ID[id], 'sm')}${esc(TEAM_BY_ID[id]?.short)}</span>`).join('')}</div>
       <button class="btn" data-a="edit">Edit teams, area and name</button>
+      <button class="btn" data-a="invite">Invite a fellow fan</button>
       ${S.mode === 'firebase' && user.email ? `<label class="row" style="gap:10px;align-items:flex-start;font-size:14px;cursor:pointer"><input type="checkbox" id="emailPref" disabled style="margin-top:3px"><span><b>Weekly game-day email</b><br><span class="muted">Your teams' games this week and the spots near you.</span></span></label>` : ''}
       <label class="field">Theme<select class="input" id="theme">${['auto', 'light', 'dark'].map(x => `<option value="${x}" ${x === theme ? 'selected' : ''}>${x[0].toUpperCase() + x.slice(1)}</option>`).join('')}</select></label>
       <div class="row"><button class="btn grow" data-a="out">Sign out</button><button class="btn ghost" data-a="close">Close</button></div>
@@ -981,6 +1017,7 @@ function openProfile() {
     const a = e.target.closest('[data-a]')?.dataset.a;
     if (a === 'close') dlg.close();
     if (a === 'edit') { dlg.close(); renderOnboarding(true); }
+    if (a === 'invite') inviteFan();
     if (a === 'out') { dlg.close(); S.signOut(); }
     if (a === 'del') {
       if (!confirm('Delete your profile? You will be removed from the fan map right away.')) return;

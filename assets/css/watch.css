@@ -57,3 +57,9 @@
 .venue dd a { color: var(--muted); text-decoration: underline; text-decoration-color: var(--line); text-underline-offset: 3px; }
 .spot h3 a { color: inherit; text-decoration: none; }
 .spot h3 a:hover { text-decoration: underline; }
+
+/* slim follow bar near the top of team and venue pages */
+.followbar { display: flex; gap: 14px; align-items: center; justify-content: space-between; flex-wrap: wrap; margin: 0 0 18px; padding: 12px 16px;
+  background: var(--surface); border: 1px solid var(--line, var(--border, rgba(128,128,128,.25))); border-radius: var(--radius-sm); }
+.followbar span { color: var(--muted); font-size: 15px; }
+.followbar b { color: var(--text, inherit); }

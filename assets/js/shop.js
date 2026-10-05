@@ -1,5 +1,5 @@
-import { AFFILIATE } from './config.js?v=202609301601';
-import { TEAM_BY_ID } from './teams.js?v=202609301601';
+import { AFFILIATE } from './config.js?v=202610050818';
+import { TEAM_BY_ID } from './teams.js?v=202610050818';
 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
