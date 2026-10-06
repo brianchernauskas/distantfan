@@ -18,8 +18,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/css/style.css?v=a5d23f3a">
-<link rel="stylesheet" href="/assets/css/watch.css?v=652fcb42">
-<script type="module" src="/assets/js/analytics.js?v=22c0a041"></script>
+<link rel="stylesheet" href="/assets/css/watch.css?v=b8a9e063">
+<script type="module" src="/assets/js/analytics.js?v=4ffc82f8"></script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://distantfan.com/"},{"@type":"ListItem","position":2,"name":"Where to watch","item":"https://distantfan.com/watch/"},{"@type":"ListItem","position":3,"name":"Portland, OR","item":"https://distantfan.com/watch/in/portland-or/"},{"@type":"ListItem","position":4,"name":"Hi-Top Tavern","item":"https://distantfan.com/watch/at/hi-top-tavern-portland-or/"}]}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BarOrPub","name":"Hi-Top Tavern","address":"5015 NE Fremont St, Portland, OR 97213","geo":{"@type":"GeoCoordinates","latitude":45.54833,"longitude":-122.61105},"description":"Official Timbers Pub Partner: shows every Timbers match."}</script>
 </head>
@@ -36,8 +36,6 @@
 
 <div class="followbar"><span><b>Portland fan?</b> Follow them for a weekly game-day email and see the fans near you.</span><a class="btn sm primary" href="/app.html?follow=mls-por">Follow Portland</a></div>
 
-<div class="nextgame" id="nextgame" data-path="soccer/usa.1" data-eid="9723" data-short="Portland" hidden></div>
-
 <section class="venue">
   <dl>
     <dt>Address</dt><dd><a href="https://www.google.com/maps/search/?api=1&amp;query=Hi-Top%20Tavern%205015%20NE%20Fremont%20St%2C%20Portland%2C%20OR%2097213" rel="nofollow noopener" target="_blank">5015 NE Fremont St, Portland, OR 97213</a></dd>
@@ -48,6 +46,8 @@
   <p class="muted">Looking for a Portland bar in Portland? Call Hi-Top Tavern before game day to confirm they will have your game on, since schedules and rooms change.</p>
 </section>
 
+
+
 <section class="cta"><div><h2>Watching at Hi-Top Tavern?</h2><p>Free. Follow Portland, see the fans near you and who's going to the next game, and get a weekly game-day email with the games and the bars. You only share a rough area, never your address.</p></div><a class="btn lg primary" href="/app.html?follow=mls-por">Follow Portland</a></section>
 
 <section class="more">
@@ -55,31 +55,7 @@
   <h2>More fan bars in Portland</h2><div class="chips"><a class="chip" href="/watch/at/10-barrel-brewing-portland-or/">10 Barrel Brewing</a><a class="chip" href="/watch/at/503-lounge-portland-or/">503 Lounge</a><a class="chip" href="/watch/at/away-days-brewing-portland-or/">Away Days Brewing</a><a class="chip" href="/watch/at/backwoods-brewing-portland-or/">Backwoods Brewing</a><a class="chip" href="/watch/at/baerlic-beer-co-portland-or/">Baerlic Beer Co</a><a class="chip" href="/watch/at/bantam-tavern-portland-or/">Bantam Tavern</a><a class="chip" href="/watch/at/beer-bunker-portland-or/">Beer Bunker</a><a class="chip" href="/watch/at/birdie-time-portland-or/">Birdie Time</a></div>
   <p><a href="/watch/portland-timbers/portland-or/">Portland Timbers in Portland</a> · <a href="/watch/in/portland-or/">All teams in Portland, OR</a></p>
 </section>
-<script>
-(function () {
-  var el = document.getElementById('nextgame');
-  if (!el || !window.fetch) return;
-  fetch('https://site.api.espn.com/apis/site/v2/sports/' + el.dataset.path + '/teams/' + el.dataset.eid + '/schedule')
-    .then(function (r) { return r.ok ? r.json() : Promise.reject(); })
-    .then(function (j) {
-      var cutoff = Date.now() - 4 * 3.6e6, g = null;
-      (j.events || []).some(function (e) {
-        var c = e.competitions && e.competitions[0]; if (!c || Date.parse(e.date) < cutoff) return false;
-        var us = c.competitors.filter(function (x) { return x.team && x.team.id === el.dataset.eid; })[0];
-        var them = c.competitors.filter(function (x) { return x.team && x.team.id !== el.dataset.eid; })[0];
-        if (!us || !them) return false;
-        g = { t: Date.parse(e.date), tbd: c.timeValid === false || e.timeValid === false, home: us.homeAway === 'home', opp: them.team.displayName,
-          tv: (c.broadcasts || []).map(function (b) { return b.media && b.media.shortName; }).filter(Boolean) };
-        return true;
-      });
-      if (!g) return;
-      var d = new Date(g.t), day = d.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' });
-      var time = g.tbd ? 'time TBA' : d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit', timeZoneName: 'short' });
-      el.innerHTML = '<b>Next game:</b> ' + el.dataset.short + (g.home ? ' vs ' : ' at ') + g.opp.replace(/</g, '&lt;') + ' · ' + day + ', ' + time + (g.tv.length ? ' · ' + g.tv.join(', ') : '') + ' <a href="/app.html">See who\'s going</a>';
-      el.hidden = false;
-    }).catch(function () {});
-})();
-</script>
+
 </main>
 <footer class="site-foot"><div class="wrap"><span>© 2026 Distant Fan</span><span>Team names and logos belong to their teams and leagues. Listings gathered from official fan-club and alumni directories, venues and fans; confirm with the venue before you go.</span></div></footer>
 </body>

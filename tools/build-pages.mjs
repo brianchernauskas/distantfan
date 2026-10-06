@@ -10,7 +10,10 @@
 //   watch/in/{city}/index.html         one city, every team, every spot
 //   watch/at/{venue}-{city}/index.html one venue: who gathers there, address, nearby spots (skips chains)
 //
-// A team x city page only exists once it has MIN_SPOTS real spots, so nothing is thin. Spots are
+// A team x city page exists once it has MIN_SPOTS real spots. Pairs with only 1-2 spots get a page too
+// (marked thin) but only when one of the spots is solid (a club listing or an independent bar with a
+// real note), and every page carries the team's upcoming games from data/schedules.json
+// (tools/fetch-schedules.mjs), so it has something worth reading beyond the spot list. Spots are
 // assigned to the nearest metro within 60 km (same list the app uses); anything further out stays
 // app-only. Output is deterministic (no build timestamps) so a rebuild with unchanged data is a
 // no-op in git. Files that no longer qualify are deleted. Run by export-spots.mjs --commit.
@@ -19,7 +22,8 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { TEAMS, TEAM_BY_ID, LEAGUES } from '../assets/js/teams.js';
-import { nearestMetro, center } from '../assets/js/geo.js';
+import { nearestMetro, center, km } from '../assets/js/geo.js';
+import { METROS } from '../assets/js/metros.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SITE = 'https://distantfan.com';
@@ -31,6 +35,9 @@ const ESPN_PATH = { nfl: 'football/nfl', cfb: 'football/college-football', nba: 
 const readJson = f => JSON.parse(fs.readFileSync(path.join(root, f), 'utf8'));
 const { spots: allSpots, generatedAt } = readJson('data/spots.json');
 const fansData = fs.existsSync(path.join(root, 'data/fans.json')) ? readJson('data/fans.json') : { teams: {} };
+
+const schedFile = path.join(root, 'data/schedules.json');
+const SCHED = fs.existsSync(schedFile) ? readJson('data/schedules.json') : { fetchedAt: new Date(0).toISOString(), teams: {} };
 
 const esc = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 const slugify = s => String(s).normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/&/g, ' and ').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
@@ -65,12 +72,22 @@ for (const s of live) {
     (byPair.get(k) || byPair.set(k, []).get(k)).push(s);
   }
 }
+const CHAIN_MIN = 5;
+const nameCount = new Map();
+for (const s of live) nameCount.set(s.name, (nameCount.get(s.name) || 0) + 1);
+// "Solid" = worth building a page around on its own: a named club/chapter, or an independent bar with a real note.
+const solid = s => !!s.club || (nameCount.get(s.name) < CHAIN_MIN && String(s.note || '').length >= 40);
 const cmpName = (a, b) => a.name.localeCompare(b.name);
 for (const list of byPair.values()) list.sort(cmpName);
 
-const pairs = [...byPair.entries()].filter(([, l]) => l.length >= MIN_SPOTS).map(([k, list]) => {
+// Thin pairs (1-2 spots) are limited so we don't mass-produce near-duplicates: 2 spots anywhere, or 1 spot in
+// one of the THIN_TOP largest metros (METROS is ordered by size). Tune with --thin-top=N (0 turns thin pages off).
+const THIN_TOP = +(process.argv.find(a => a.startsWith('--thin-top='))?.slice(11) || 20);
+const metroRank = new Map(METROS.map((m, i) => [`${m.name}|${m.st}`, i]));
+const thinOk = (mk, l) => l.some(solid) && (l.length >= 2 || metroRank.get(`${metros.get(mk).name}|${metros.get(mk).st}`) < THIN_TOP);
+const pairs = [...byPair.entries()].filter(([k, l]) => l.length >= MIN_SPOTS || (THIN_TOP > 0 && thinOk(k.split('|')[1], l))).map(([k, list]) => {
   const [id, mk] = k.split('|');
-  return { team: TEAM_BY_ID[id], mk, metro: metros.get(mk), spots: list, ts: teamSlug(TEAM_BY_ID[id]) };
+  return { team: TEAM_BY_ID[id], mk, metro: metros.get(mk), spots: list, ts: teamSlug(TEAM_BY_ID[id]), thin: list.length < MIN_SPOTS };
 });
 const slugSeen = new Map();
 for (const p of pairs) {  // guard against two teams sharing a slug
@@ -88,9 +105,6 @@ for (const l of pairsByCity.values()) l.sort((a, b) => b.spots.length - a.spots.
 
 // ---- venue pages: one per independent bar with a real note and at least one known team.
 // Chains (same name on 5+ listings) are skipped: hundreds of near-identical pages help nobody.
-const CHAIN_MIN = 5;
-const nameCount = new Map();
-for (const s of live) nameCount.set(s.name, (nameCount.get(s.name) || 0) + 1);
 const venueUrl = new Map();     // spot -> /watch/at/{slug}/
 const venues = [];
 {
@@ -169,6 +183,57 @@ const chip = (href, label, n) => `<a class="chip" href="${href}">${esc(label)}${
 const teamLogo = (t, cls = 'logo') => t.logo ? `<img class="${cls}" src="${esc(t.logo)}" alt="" width="56" height="56" loading="lazy">` : '';
 const spotUrl = (s, dest) => `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${s.name} ${s.address || ''}`.trim())}`;
 
+// ---- upcoming games: static HTML from data/schedules.json so crawlers see them. Times print in Eastern
+// (stable, deterministic); a tiny script swaps in the visitor's local time.
+const SCHED_AT = Date.parse(SCHED.fetchedAt) || 0;
+const TEAM_BY_ESPN = new Map(TEAMS.map(t => [`${t.lg}|${t.eid}`, t]));
+const sched = team => {
+  const d = SCHED.teams?.[team.id];
+  return d ? { ...d, games: (d.games || []).filter(g => Date.parse(g.t) >= SCHED_AT - 4 * 3.6e6) } : null;
+};
+const ET = { timeZone: 'America/New_York' };
+const fmtGame = g => g.tbd
+  ? `${new Date(g.t).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', ...ET })}, time TBA`
+  : new Date(g.t).toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZoneName: 'short', ...ET });
+const fmtDay = g => new Date(g.t).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', ...ET });
+const fmtShort = g => new Date(g.t).toLocaleDateString('en-US', { month: 'short', day: 'numeric', ...ET });
+const oppShort = (team, g) => TEAM_BY_ESPN.get(`${team.lg}|${g.oppId}`)?.short || g.opp.split(' ').slice(-1)[0];
+const WATCH_TIP = {
+  nfl: 'Out-of-market NFL games usually need NFL Sunday Ticket at the bar, so ask before you go. Thursday, Sunday night and Monday night games are national and show at almost any sports bar.',
+  cfb: 'Big games are on ESPN, ABC, Fox, CBS or NBC. Conference-network and ESPN+ games are the ones to ask a bar about.',
+  nba: 'National games (ESPN, ABC, TNT, NBC, Prime Video) show at most sports bars. Regional-network games are often blacked out away from the team’s home market, so ask whether the bar carries the league’s out-of-market package.',
+  nhl: 'National games (ESPN, ABC, TNT) show at most sports bars. Regional-network games are often blacked out away from the team’s home market, so ask whether the bar carries the league’s out-of-market package.',
+  mlb: 'National games (Fox, ESPN, TBS, NBC, Apple TV) show at most sports bars. Regional-network games are often blacked out away from the team’s home market, so ask whether the bar carries MLB Extra Innings.',
+  mls: 'Most MLS matches stream through Apple, so ask whether the bar will put your match on.',
+};
+const resultLine = (team, d) => {
+  const l = d.last; if (!l) return '';
+  const a = +l.us, b = +l.them, r = a > b ? 'W' : a < b ? 'L' : 'T';
+  return Number.isFinite(a) && Number.isFinite(b) ? ` Last game: ${r} ${l.us}–${l.them} ${l.home ? 'vs' : 'at'} ${esc(l.opp)}.` : '';
+};
+function scheduleBlock(team, where, limit = 6) {
+  const d = sched(team);
+  if (!d || !d.games.length) return { html: '', ld: [], next: null, changed: 0 };
+  const games = d.games.slice(0, limit);
+  const rows = games.map(g => `<li><time class="gt" datetime="${g.t}"${g.tbd ? ' data-tbd="1"' : ''}>${esc(fmtGame(g))}</time> <b>${g.home ? 'vs' : 'at'} ${esc(g.opp)}</b>${g.tv.length ? ` <span class="tv">${esc(g.tv.join(', '))}</span>` : ''}</li>`).join('\n');
+  const rec = d.rec ? `${esc(team.short)} are ${esc(d.rec)}${d.stand ? ` (${esc(d.stand)})` : ''}.` : '';
+  const html = `<section class="schedule"><h2>Upcoming ${esc(team.short)} games to watch${where ? ` in ${esc(where)}` : ''}</h2>
+<p class="muted">${rec}${resultLine(team, d)}</p>
+<ul class="games">
+${rows}
+</ul>
+${WATCH_TIP[team.lg] ? `<p class="muted tip">${esc(WATCH_TIP[team.lg])}</p>` : ''}
+</section>`;
+  const ld = games.slice(0, 3).map(g => ({
+    '@context': 'https://schema.org', '@type': 'SportsEvent', name: g.home ? `${g.opp} at ${team.name}` : `${team.name} at ${g.opp}`, startDate: g.t,
+    homeTeam: { '@type': 'SportsTeam', name: g.home ? team.name : g.opp }, awayTeam: { '@type': 'SportsTeam', name: g.home ? g.opp : team.name },
+    ...(g.venue ? { location: { '@type': 'Place', name: g.venue.split(',')[0], address: g.venue } } : {}),
+  }));
+  return { html, ld, next: games[0], changed: Date.parse(d.changed) || 0 };
+}
+const nextLine = (team, g) => g ? ` Next game: ${esc(team.short)} ${g.home ? 'vs' : 'at'} ${esc(oppShort(team, g))}, ${esc(fmtDay(g))}${g.tv.length ? ` on ${esc(g.tv[0])}` : ''}.` : '';
+const TIME_JS = `<script>(function(){if(!window.Intl)return;[].forEach.call(document.querySelectorAll('time.gt'),function(el){if(el.getAttribute('data-tbd'))return;try{el.textContent=new Date(el.getAttribute('datetime')).toLocaleString(undefined,{weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit',timeZoneName:'short'});}catch(e){}});})();</script>`;
+
 function spotCard(s) {
   const src = s.sourceUrl && /^https?:\/\//.test(s.sourceUrl) ? `<a href="${esc(s.sourceUrl)}" rel="nofollow noopener" target="_blank">${esc(s.sourceName || 'source')}</a>` : esc(s.sourceName || '');
   return `<li class="spot">
@@ -192,9 +257,9 @@ const FOLLOW = team => `<div class="followbar"><span><b>${esc(team.short)} fan?<
 
 // Snippet copy: lead with the wording searchers use ("<team> bars in <city>"), name the venues.
 function pageTitle(team, name, metro, n) {
-  const c = `${metro.name}, ${metro.st}`;
-  for (const t of [`${team.name} bars in ${c}: ${n} places to watch`, `${team.name} bars in ${metro.name}: ${n} places to watch`, `${team.short} bars in ${metro.name}: ${n} places to watch`]) if (t.length <= 62) return t;
-  return `${team.short} bars in ${metro.name}: ${n} places to watch the game`;
+  const c = `${metro.name}, ${metro.st}`, k = n === 1 ? '1 place to watch' : `${n} places to watch`;
+  for (const t of [`${team.name} bars in ${c}: ${k}`, `${team.name} bars in ${metro.name}: ${k}`, `${team.short} bars in ${metro.name}: ${k}`]) if (t.length <= 62) return t;
+  return `${team.short} bars in ${metro.name}: ${k} the game`;
 }
 function pageDesc(team, metro, spots, lc) {
   const term = FAN_TERM[team.id] || `${team.short} fans`;
@@ -233,23 +298,25 @@ for (const p of pairs) {
   const clubs = spots.filter(s => s.club).length;
   const otherCities = (pairsByTeam.get(team.id) || []).filter(q => q.mk !== mk).slice(0, 12);
   const otherTeams = (pairsByCity.get(mk) || []).filter(q => q.team.id !== team.id).slice(0, 12);
-  const path_ = ESPN_PATH[team.lg];
+  const sb = scheduleBlock(team, metro.name);
+  const nearest = p.thin ? (pairsByTeam.get(team.id) || []).filter(q => q.mk !== mk).map(q => ({ q, d: km(metro, q.metro) })).sort((a, b) => a.d - b.d).slice(0, 6) : [];
   const body = `
 <header class="watch-hero">${teamLogo(team, 'logo lg')}<div>
   <span class="eyebrow">${esc(LEAGUES[team.lg] || '')} · ${esc(city)}</span>
   <h1>Where to watch ${esc(name)} games in ${esc(metro.name)}</h1>
-  <p class="lede">${plural(spots.length, 'bar and fan watch spot')} in the ${esc(metro.name)} area where ${esc(team.short)} fans watch the game${clubs ? `, including ${plural(clubs, 'official fan club and alumni chapter')}` : ''}. Last checked ${esc(monthYear(lc))}.</p>
+  <p class="lede">${plural(spots.length, 'bar and fan watch spot')} in the ${esc(metro.name)} area where ${esc(team.short)} fans watch the game${clubs ? `, including ${plural(clubs, 'official fan club and alumni chapter')}` : ''}. Last checked ${esc(monthYear(lc))}.${nextLine(team, sb.next)}</p>
 </div></header>
 
 ${FOLLOW(team)}
 
 ${intro(team, metro, spots)}
 
-<div class="nextgame" id="nextgame" data-path="${esc(path_)}" data-eid="${esc(team.eid)}" data-short="${esc(team.short)}" hidden></div>
-
 <ul class="spots">
 ${spots.map(spotCard).join('\n')}
 </ul>
+
+${sb.html}
+${nearest.length ? `<section class="more"><h2>Nearest ${esc(team.short)} watch spots in other cities</h2><div class="chips">${nearest.map(x => chip(`/watch/${x.q.ts}/${x.q.mk}/`, `${cityName(x.q.metro)} · ${Math.round(x.d * 0.621)} mi`, x.q.spots.length)).join('')}</div></section>` : ''}
 
 ${fans ? `<p class="fans"><b>${plural(fans, 'fan')}</b> following ${esc(team.short)} near ${esc(metro.name)} ${fans === 1 ? 'has' : 'have'} joined Distant Fan.</p>` : ''}
 ${CTA(`Watching ${esc(team.short)} in ${esc(metro.name)}?`, team)}
@@ -260,14 +327,15 @@ ${CTA(`Watching ${esc(team.short)} in ${esc(metro.name)}?`, team)}
   ${otherTeams.length ? `<h2>More fan bars in ${esc(metro.name)}</h2><div class="chips">${otherTeams.map(q => chip(`/watch/${q.ts}/${q.mk}/`, disp(q.team), q.spots.length)).join('')}</div>` : ''}
   <p><a href="/watch/in/${mk}/">All teams in ${esc(city)}</a> · <a href="/watch/${ts}/">${esc(name)} in every city</a></p>
 </section>
-${nextGameScript()}`;
+${sb.html ? TIME_JS : ''}`;
+  const desc0 = pageDesc(team, metro, spots, lc), nx = sb.next ? ` Next game: ${fmtShort(sb.next)} ${sb.next.home ? 'vs' : 'at'} ${oppShort(team, sb.next)}.` : '';
   out.set(`watch/${ts}/${mk}/index.html`, page({
     url, title: pageTitle(team, name, metro, spots.length),
-    desc: pageDesc(team, metro, spots, lc),
+    desc: desc0.length + nx.length <= 158 ? desc0 + nx : desc0,
     body, crumbs: [['Home', '/'], ['Where to watch', '/watch/'], [name, `/watch/${ts}/`], [metro.name, url]],
-    ld: [itemListLd(`${name} watch spots in ${city}`, spots)],
+    ld: [itemListLd(`${name} watch spots in ${city}`, spots), ...sb.ld],
   }));
-  urls.push({ loc: url, lastmod: isoDay(lc) });
+  urls.push({ loc: url, lastmod: isoDay(Math.max(lc, sb.changed)) });
 }
 
 // venues
@@ -281,6 +349,7 @@ for (const v of venues) {
   const pairLinks = teams.map(t => pairs.find(p => p.team.id === t.id && p.mk === mk)).filter(Boolean);
   const src = s.sourceUrl && /^https?:\/\//.test(s.sourceUrl) ? `<a href="${esc(s.sourceUrl)}" rel="nofollow noopener" target="_blank">${esc(s.sourceName || 'source')}</a>` : esc(s.sourceName || '');
   const lc = s.checkedAt || s.createdAt || 0;
+  const sb = scheduleBlock(lead, twn, 4);
   const body = `
 <header class="watch-hero">${teamLogo(lead, 'logo lg')}<div>
   <span class="eyebrow">${esc(twn)}, ${esc(metro.st)} · ${esc(joinList(tnames.slice(0, 3)))} fans</span>
@@ -289,8 +358,6 @@ for (const v of venues) {
 </div></header>
 
 ${FOLLOW(lead)}
-
-<div class="nextgame" id="nextgame" data-path="${esc(ESPN_PATH[lead.lg])}" data-eid="${esc(lead.eid)}" data-short="${esc(lead.short)}" hidden></div>
 
 <section class="venue">
   <dl>
@@ -302,6 +369,8 @@ ${FOLLOW(lead)}
   <p class="muted">Looking for a ${esc(lead.short)} bar in ${esc(twn)}? Call ${esc(s.name)} before game day to confirm they will have your game on, since schedules and rooms change.</p>
 </section>
 
+${sb.html}
+
 ${CTA(`Watching at ${esc(s.name)}?`, lead)}
 
 <section class="more">
@@ -309,14 +378,14 @@ ${CTA(`Watching at ${esc(s.name)}?`, lead)}
   ${nearby.length ? `<h2>More fan bars in ${esc(metro.name)}</h2><div class="chips">${nearby.map(x => chip(venueUrl.get(x.o), x.o.name)).join('')}</div>` : ''}
   <p>${pairLinks.map(p => `<a href="/watch/${p.ts}/${p.mk}/">${esc(disp(p.team))} in ${esc(metro.name)}</a>`).join(' · ')}${pairLinks.length ? ' · ' : ''}<a href="/watch/in/${mk}/">All teams in ${esc(city)}</a></p>
 </section>
-${nextGameScript()}`;
+${sb.html ? TIME_JS : ''}`;
   out.set(`watch/at/${slug}/index.html`, page({
     url, title: `${s.name}, ${twn} ${metro.st}: ${joinList(tnames.slice(0, 2))} fan bar`,
     desc: `${s.name} at ${s.address || city}: where ${joinList(tnames.slice(0, 3))} fans watch games in ${twn}. ${s.club ? s.club + '. ' : ''}Updated ${monthYear(lc || generatedAt)}.`.slice(0, 200),
     body, crumbs: [['Home', '/'], ['Where to watch', '/watch/'], [city, `/watch/in/${mk}/`], [s.name, url]],
-    ld: [{ '@context': 'https://schema.org', '@type': 'BarOrPub', name: s.name, ...(s.address ? { address: s.address } : {}), geo: { '@type': 'GeoCoordinates', latitude: +s.lat.toFixed(5), longitude: +s.lng.toFixed(5) }, description: s.note }],
+    ld: [{ '@context': 'https://schema.org', '@type': 'BarOrPub', name: s.name, ...(s.address ? { address: s.address } : {}), geo: { '@type': 'GeoCoordinates', latitude: +s.lat.toFixed(5), longitude: +s.lng.toFixed(5) }, description: s.note }, ...sb.ld],
   }));
-  urls.push({ loc: url, lastmod: isoDay(lc || generatedAt) });
+  urls.push({ loc: url, lastmod: isoDay(Math.max(lc || generatedAt, sb.changed)) });
 }
 
 // team hubs
@@ -394,34 +463,6 @@ ${CTA('Your team, wherever you are.')}`;
   urls.push({ loc: '/watch/', lastmod: isoDay(lastChecked(live)) });
 }
 
-function nextGameScript() {
-  return `<script>
-(function () {
-  var el = document.getElementById('nextgame');
-  if (!el || !window.fetch) return;
-  fetch('https://site.api.espn.com/apis/site/v2/sports/' + el.dataset.path + '/teams/' + el.dataset.eid + '/schedule')
-    .then(function (r) { return r.ok ? r.json() : Promise.reject(); })
-    .then(function (j) {
-      var cutoff = Date.now() - 4 * 3.6e6, g = null;
-      (j.events || []).some(function (e) {
-        var c = e.competitions && e.competitions[0]; if (!c || Date.parse(e.date) < cutoff) return false;
-        var us = c.competitors.filter(function (x) { return x.team && x.team.id === el.dataset.eid; })[0];
-        var them = c.competitors.filter(function (x) { return x.team && x.team.id !== el.dataset.eid; })[0];
-        if (!us || !them) return false;
-        g = { t: Date.parse(e.date), tbd: c.timeValid === false || e.timeValid === false, home: us.homeAway === 'home', opp: them.team.displayName,
-          tv: (c.broadcasts || []).map(function (b) { return b.media && b.media.shortName; }).filter(Boolean) };
-        return true;
-      });
-      if (!g) return;
-      var d = new Date(g.t), day = d.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' });
-      var time = g.tbd ? 'time TBA' : d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit', timeZoneName: 'short' });
-      el.innerHTML = '<b>Next game:</b> ' + el.dataset.short + (g.home ? ' vs ' : ' at ') + g.opp.replace(/</g, '&lt;') + ' · ' + day + ', ' + time + (g.tv.length ? ' · ' + g.tv.join(', ') : '') + ' <a href="/app.html">See who\\'s going</a>';
-      el.hidden = false;
-    }).catch(function () {});
-})();
-</script>`;
-}
-
 // home page in the sitemap
 urls.unshift({ loc: '/', lastmod: isoDay(generatedAt) });
 const sitemap = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map(u => `  <url><loc>${SITE}${u.loc}</loc><lastmod>${u.lastmod}</lastmod></url>`).join('\n')}\n</urlset>\n`;
@@ -453,4 +494,4 @@ for (const p of stale) { fs.unlinkSync(p); removed++; }
   try { if (!fs.readdirSync(d).length) fs.rmdirSync(d); } catch {}
 })(path.join(root, 'watch'));
 
-console.error(`pages: ${pairs.length} team x city, ${pairsByTeam.size} team hubs, ${cityPages.length} city hubs, 1 hub, ${venues.length} venues; wrote ${wrote}, removed ${removed} (min ${MIN_SPOTS} spots/pair)`);
+console.error(`pages: ${pairs.length} team x city (${pairs.filter(p => p.thin).length} thin), ${pairsByTeam.size} team hubs, ${cityPages.length} city hubs, 1 hub, ${venues.length} venues; wrote ${wrote}, removed ${removed} (min ${MIN_SPOTS} spots/pair)`);

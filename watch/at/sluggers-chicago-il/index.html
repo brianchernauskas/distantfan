@@ -18,8 +18,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/css/style.css?v=a5d23f3a">
-<link rel="stylesheet" href="/assets/css/watch.css?v=652fcb42">
-<script type="module" src="/assets/js/analytics.js?v=22c0a041"></script>
+<link rel="stylesheet" href="/assets/css/watch.css?v=b8a9e063">
+<script type="module" src="/assets/js/analytics.js?v=4ffc82f8"></script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://distantfan.com/"},{"@type":"ListItem","position":2,"name":"Where to watch","item":"https://distantfan.com/watch/"},{"@type":"ListItem","position":3,"name":"Chicago, IL","item":"https://distantfan.com/watch/in/chicago-il/"},{"@type":"ListItem","position":4,"name":"Sluggers","item":"https://distantfan.com/watch/at/sluggers-chicago-il/"}]}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BarOrPub","name":"Sluggers","address":"3540 N. Clark St, Chicago, IL 60657","geo":{"@type":"GeoCoordinates","latitude":41.94651,"longitude":-87.65605},"description":"Official Cubs Bar Network bar in the Chicago area."}</script>
 </head>
@@ -36,8 +36,6 @@
 
 <div class="followbar"><span><b>Cubs fan?</b> Follow them for a weekly game-day email and see the fans near you.</span><a class="btn sm primary" href="/app.html?follow=mlb-chc">Follow Cubs</a></div>
 
-<div class="nextgame" id="nextgame" data-path="baseball/mlb" data-eid="16" data-short="Cubs" hidden></div>
-
 <section class="venue">
   <dl>
     <dt>Address</dt><dd><a href="https://www.google.com/maps/search/?api=1&amp;query=Sluggers%203540%20N.%20Clark%20St%2C%20Chicago%2C%20IL%2060657" rel="nofollow noopener" target="_blank">3540 N. Clark St, Chicago, IL 60657</a></dd>
@@ -48,6 +46,8 @@
   <p class="muted">Looking for a Cubs bar in Chicago? Call Sluggers before game day to confirm they will have your game on, since schedules and rooms change.</p>
 </section>
 
+
+
 <section class="cta"><div><h2>Watching at Sluggers?</h2><p>Free. Follow Cubs, see the fans near you and who's going to the next game, and get a weekly game-day email with the games and the bars. You only share a rough area, never your address.</p></div><a class="btn lg primary" href="/app.html?follow=mlb-chc">Follow Cubs</a></section>
 
 <section class="more">
@@ -55,31 +55,7 @@
   <h2>More fan bars in Chicago</h2><div class="chips"><a class="chip" href="/watch/at/bat-17-evanston-il/">Bat 17</a><a class="chip" href="/watch/at/beacon-tap-des-plaines-il/">Beacon Tap</a><a class="chip" href="/watch/at/bernies-chicago-il/">Bernies</a><a class="chip" href="/watch/at/birdsnest-chicago-il/">Birdsnest</a><a class="chip" href="/watch/at/brickhouse-chicago-il/">Brickhouse</a><a class="chip" href="/watch/at/cubby-bear-chicago-il/">Cubby Bear</a><a class="chip" href="/watch/at/deuces-chicago-il/">Deuces</a><a class="chip" href="/watch/at/dugout-chicago-il/">Dugout</a></div>
   <p><a href="/watch/chicago-cubs/chicago-il/">Chicago Cubs in Chicago</a> · <a href="/watch/in/chicago-il/">All teams in Chicago, IL</a></p>
 </section>
-<script>
-(function () {
-  var el = document.getElementById('nextgame');
-  if (!el || !window.fetch) return;
-  fetch('https://site.api.espn.com/apis/site/v2/sports/' + el.dataset.path + '/teams/' + el.dataset.eid + '/schedule')
-    .then(function (r) { return r.ok ? r.json() : Promise.reject(); })
-    .then(function (j) {
-      var cutoff = Date.now() - 4 * 3.6e6, g = null;
-      (j.events || []).some(function (e) {
-        var c = e.competitions && e.competitions[0]; if (!c || Date.parse(e.date) < cutoff) return false;
-        var us = c.competitors.filter(function (x) { return x.team && x.team.id === el.dataset.eid; })[0];
-        var them = c.competitors.filter(function (x) { return x.team && x.team.id !== el.dataset.eid; })[0];
-        if (!us || !them) return false;
-        g = { t: Date.parse(e.date), tbd: c.timeValid === false || e.timeValid === false, home: us.homeAway === 'home', opp: them.team.displayName,
-          tv: (c.broadcasts || []).map(function (b) { return b.media && b.media.shortName; }).filter(Boolean) };
-        return true;
-      });
-      if (!g) return;
-      var d = new Date(g.t), day = d.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' });
-      var time = g.tbd ? 'time TBA' : d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit', timeZoneName: 'short' });
-      el.innerHTML = '<b>Next game:</b> ' + el.dataset.short + (g.home ? ' vs ' : ' at ') + g.opp.replace(/</g, '&lt;') + ' · ' + day + ', ' + time + (g.tv.length ? ' · ' + g.tv.join(', ') : '') + ' <a href="/app.html">See who\'s going</a>';
-      el.hidden = false;
-    }).catch(function () {});
-})();
-</script>
+
 </main>
 <footer class="site-foot"><div class="wrap"><span>© 2026 Distant Fan</span><span>Team names and logos belong to their teams and leagues. Listings gathered from official fan-club and alumni directories, venues and fans; confirm with the venue before you go.</span></div></footer>
 </body>

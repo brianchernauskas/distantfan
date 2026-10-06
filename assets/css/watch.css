@@ -63,3 +63,11 @@
   background: var(--surface); border: 1px solid var(--line, var(--border, rgba(128,128,128,.25))); border-radius: var(--radius-sm); }
 .followbar span { color: var(--muted); font-size: 15px; }
 .followbar b { color: var(--text, inherit); }
+
+.schedule { margin: 0 0 26px; }
+.schedule h2 { font-size: 26px; margin: 0 0 8px; }
+.games { list-style: none; margin: 12px 0; padding: 0; display: grid; gap: 8px; }
+.games li { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; padding: 10px 14px; border: 1px solid var(--line, rgba(127,127,127,.25)); border-radius: var(--radius-sm); }
+.games time { color: var(--muted); font-size: 14px; min-width: 11.5em; }
+.games .tv { margin-left: auto; font-size: 13px; color: var(--accent); font-weight: 600; }
+.schedule .tip { font-size: 14px; }
