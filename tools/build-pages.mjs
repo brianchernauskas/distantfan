@@ -150,8 +150,11 @@ function page({ url, title, desc, body, crumbs, ld = [], image }) {
 <meta property="og:description" content="${esc(desc)}">
 <meta property="og:type" content="website">
 <meta property="og:url" content="${SITE}${url}">
-<meta property="og:image" content="${SITE}/assets/img/og.png">
+<meta property="og:image" content="${SITE}${image || '/assets/img/og.png'}">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="${SITE}${image || '/assets/img/og.png'}">
 <meta name="theme-color" content="#0b1016">
 <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -255,6 +258,28 @@ const CTA = (line, team) => `<section class="cta"><div><h2>${line}</h2><p>Free. 
 // Slim version near the top of the page, where most search visitors decide whether to stay.
 const FOLLOW = team => `<div class="followbar"><span><b>${esc(team.short)} fan?</b> Follow them for a weekly game-day email and see the fans near you.</span><a class="btn sm primary" href="/app.html?follow=${encodeURIComponent(team.id)}">Follow ${esc(team.short)}</a></div>`;
 
+// Share card per team (tools/build-og.py). Falls back to the site card when a team has none yet.
+const ogFor = team => { const p = `/assets/og/${teamSlug(team)}.png`; return fs.existsSync(path.join(root, p)) ? p : undefined; };
+
+// Share row: a visitor who likes the page can send it to a friend who moved, or post it to Reddit. The
+// shared link carries utm tags so the recipient's signup is attributable (attrib.js stores them), and
+// the click fires a GA4 `share` event through window.dfTrack (analytics.js).
+const shareUrl = (url, source, medium, campaign) => `${SITE}${url}?utm_source=${source}&utm_medium=${medium}&utm_campaign=${encodeURIComponent(campaign)}`;
+function SHARE(url, title, campaign, line) {
+  const reddit = `https://www.reddit.com/submit?url=${encodeURIComponent(shareUrl(url, 'reddit', 'share', campaign))}&title=${encodeURIComponent(title)}`;
+  return `<aside class="sharebar" data-url="${esc(shareUrl(url, 'share', 'link', campaign))}" data-title="${esc(title)}" data-id="${esc(campaign)}">
+  <span>${line}</span>
+  <div class="sharebtns"><button class="btn sm" type="button" data-share="native" hidden>Share</button><a class="btn sm" href="${esc(reddit)}" target="_blank" rel="noopener" data-share="reddit">Post to Reddit</a><button class="btn sm" type="button" data-share="copy">Copy link</button></div>
+</aside>`;
+}
+const SHARE_JS = `<script>(function(){var b=document.querySelector('.sharebar');if(!b)return;
+function t(m){try{(window.dfTrack||function(){})('share',{method:m,content_type:'watch_page',item_id:b.dataset.id})}catch(e){}}
+var n=b.querySelector('[data-share=native]');if(navigator.share){n.hidden=false;n.onclick=function(){navigator.share({title:b.dataset.title,url:b.dataset.url}).then(function(){t('native')}).catch(function(){})}}
+b.querySelector('[data-share=reddit]').onclick=function(){t('reddit')};
+var c=b.querySelector('[data-share=copy]');c.onclick=function(){var u=b.dataset.url,d=function(){c.textContent='Copied';t('copy');setTimeout(function(){c.textContent='Copy link'},2000)};
+var f=function(){t('copy');prompt('Copy this link',u)};
+if(navigator.clipboard)navigator.clipboard.writeText(u).then(d,f);else f()}})()</script>`;
+
 // Snippet copy: lead with the wording searchers use ("<team> bars in <city>"), name the venues.
 function pageTitle(team, name, metro, n) {
   const c = `${metro.name}, ${metro.st}`, k = n === 1 ? '1 place to watch' : `${n} places to watch`;
@@ -315,6 +340,8 @@ ${intro(team, metro, spots)}
 ${spots.map(spotCard).join('\n')}
 </ul>
 
+${SHARE(url, `${name} bars in ${city}`, `${ts}-${mk}`, `Know a ${esc(team.short)} fan in ${esc(metro.name)}? Send them this page.`)}
+
 ${sb.html}
 ${nearest.length ? `<section class="more"><h2>Nearest ${esc(team.short)} watch spots in other cities</h2><div class="chips">${nearest.map(x => chip(`/watch/${x.q.ts}/${x.q.mk}/`, `${cityName(x.q.metro)} · ${Math.round(x.d * 0.621)} mi`, x.q.spots.length)).join('')}</div></section>` : ''}
 
@@ -327,12 +354,14 @@ ${CTA(`Watching ${esc(team.short)} in ${esc(metro.name)}?`, team)}
   ${otherTeams.length ? `<h2>More fan bars in ${esc(metro.name)}</h2><div class="chips">${otherTeams.map(q => chip(`/watch/${q.ts}/${q.mk}/`, disp(q.team), q.spots.length)).join('')}</div>` : ''}
   <p><a href="/watch/in/${mk}/">All teams in ${esc(city)}</a> · <a href="/watch/${ts}/">${esc(name)} in every city</a></p>
 </section>
-${sb.html ? TIME_JS : ''}`;
+${sb.html ? TIME_JS : ''}
+${SHARE_JS}`;
   const desc0 = pageDesc(team, metro, spots, lc), nx = sb.next ? ` Next game: ${fmtShort(sb.next)} ${sb.next.home ? 'vs' : 'at'} ${oppShort(team, sb.next)}.` : '';
   out.set(`watch/${ts}/${mk}/index.html`, page({
     url, title: pageTitle(team, name, metro, spots.length),
     desc: desc0.length + nx.length <= 158 ? desc0 + nx : desc0,
     body, crumbs: [['Home', '/'], ['Where to watch', '/watch/'], [name, `/watch/${ts}/`], [metro.name, url]],
+    image: ogFor(team),
     ld: [itemListLd(`${name} watch spots in ${city}`, spots), ...sb.ld],
   }));
   urls.push({ loc: url, lastmod: isoDay(Math.max(lc, sb.changed)) });
@@ -383,6 +412,7 @@ ${sb.html ? TIME_JS : ''}`;
     url, title: `${s.name}, ${twn} ${metro.st}: ${joinList(tnames.slice(0, 2))} fan bar`,
     desc: `${s.name} at ${s.address || city}: where ${joinList(tnames.slice(0, 3))} fans watch games in ${twn}. ${s.club ? s.club + '. ' : ''}Updated ${monthYear(lc || generatedAt)}.`.slice(0, 200),
     body, crumbs: [['Home', '/'], ['Where to watch', '/watch/'], [city, `/watch/in/${mk}/`], [s.name, url]],
+    image: ogFor(lead),
     ld: [{ '@context': 'https://schema.org', '@type': 'BarOrPub', name: s.name, ...(s.address ? { address: s.address } : {}), geo: { '@type': 'GeoCoordinates', latitude: +s.lat.toFixed(5), longitude: +s.lng.toFixed(5) }, description: s.note }, ...sb.ld],
   }));
   urls.push({ loc: url, lastmod: isoDay(Math.max(lc || generatedAt, sb.changed)) });
@@ -400,11 +430,14 @@ for (const [tid, list] of pairsByTeam) {
   <p class="lede">${plural(total, 'watch spot')} for ${esc(team.short)} fans across ${plural(list.length, 'city', 'cities')}. Pick yours.</p>
 </div></header>
 <div class="chips big">${list.map(p => chip(`/watch/${ts}/${p.mk}/`, cityName(p.metro), p.spots.length)).join('')}</div>
-${CTA(`Not near one of these?`, team)}`;
+${SHARE(`/watch/${ts}/`, `Where to watch ${name} games away from home`, ts, `Know ${esc(team.short)} fans who moved away? Send them this list.`)}
+${CTA(`Not near one of these?`, team)}
+${SHARE_JS}`;
   out.set(`watch/${ts}/index.html`, page({
     url: `/watch/${ts}/`, title: `Where to watch ${name} games: ${list.length} cities with fan bars`,
     desc: `${total} bars and fan clubs where ${team.short} fans watch games, in ${list.slice(0, 4).map(p => p.metro.name).join(', ')} and more.`,
     body, crumbs: [['Home', '/'], ['Where to watch', '/watch/'], [name, `/watch/${ts}/`]],
+    image: ogFor(team),
   }));
   urls.push({ loc: `/watch/${ts}/`, lastmod: isoDay(lc) });
 }

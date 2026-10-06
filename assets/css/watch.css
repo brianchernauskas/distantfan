@@ -71,3 +71,10 @@
 .games time { color: var(--muted); font-size: 14px; min-width: 11.5em; }
 .games .tv { margin-left: auto; font-size: 13px; color: var(--accent); font-weight: 600; }
 .schedule .tip { font-size: 14px; }
+
+/* share row on team and team x city pages */
+.sharebar { display: flex; gap: 12px 16px; align-items: center; justify-content: space-between; flex-wrap: wrap; margin: 6px 0 26px; padding: 12px 16px;
+  border: 1px dashed var(--line); border-radius: var(--radius-sm); }
+.sharebar > span { color: var(--muted); font-size: 15px; }
+.sharebtns { display: flex; gap: 8px; flex-wrap: wrap; }
+.sharebtns [hidden] { display: none; }
