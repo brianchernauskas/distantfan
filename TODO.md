@@ -1,10 +1,10 @@
-# Distant Fan — Backlog
+# Distant Fan, Backlog
 
 Working list of changes, roughly ordered so the earlier items unblock or de-risk the later
 ones. Check items off as they land; add new ones at the bottom of whichever phase fits.
 When picking up this file cold, work top to bottom unless told otherwise.
 
-## Phase 1 — Foundation (touches core data model / privacy)
+## Phase 1, Foundation (touches core data model / privacy)
 
 - [x] **Tighten viewer radius to 10 miles (from 25) and re-document why anonymity matters.**
       Done: stored geohash precision went from 4→5 chars (~25mi cell → ~3mi cell, the closest
@@ -12,18 +12,18 @@ When picking up this file cold, work top to bottom unless told otherwise.
       `app.js`) went from ~50mi to 10mi. README's "Privacy model" section now explains the
       anonymity tradeoff, not just the mechanism. Note: this is a real reduction in location
       anonymity (3mi cells can point at a specific neighborhood), accepted deliberately after
-      discussion — see the README note if it ever needs revisiting. Also required updating
+      discussion, see the README note if it ever needs revisiting. Also required updating
       `firestore.rules` (the enforced storage-precision ceiling) alongside `config.js`.
 - [x] **Reopen the app to local (non-away) teams.** Turned out to be a positioning problem, not a
       code one: nothing in `store.js`/`app.js`/`firestore.rules` ever restricted team selection to
-      out-of-market fans — anyone could already follow their local team. The landing page copy
+      out-of-market fans, anyone could already follow their local team. The landing page copy
       (`index.html`) was the only thing saying otherwise ("For out-of-market fans," "You moved
       away"). Broadened the eyebrow tag, meta description, and added an explicit line for locals
       ("find a bar for the away games, or for when you just don't feel like fighting stadium
       traffic"). Also fixed two stale "25 miles" / "40 miles" copy references left over from item 1's
       3-mile/10-mile change.
 
-## Phase 2 — Content & coverage
+## Phase 2, Content & coverage
 
 - [x] Research Arizona Wildcats football, KC Chiefs, and Kansas Jayhawks football venues/bars for
       the greater Phoenix area. Found: **Dirtbag's Phoenix** (Wildcats, official PhoenixCats/Arizona
@@ -79,9 +79,9 @@ When picking up this file cold, work top to bottom unless told otherwise.
       before touching anything live.
 - [ ] Create an Instagram account for the site and give listed bars/restaurants a shout-out post
       (tag the venue, mention what teams show there). Cheap relationship-builder with venues and
-      light social proof — see MARKETING.md Phase B for the framing.
+      light social proof, see MARKETING.md Phase B for the framing.
 
-## Phase 3 — Design & monetization
+## Phase 3, Design & monetization
 
 - [x] Graphical/UI polish pass to make the site more visually appealing. The existing design
       system was already solid (typography, color tokens, dark mode) so this was a refinement,
@@ -95,15 +95,15 @@ When picking up this file cold, work top to bottom unless told otherwise.
 - [ ] Brainstorm additional monetization paths beyond the Fanatics affiliate (sponsorships from
       listed bars, premium features, etc.).
 - [ ] Consider a betting-odds angle for a game (probably most relevant for a Vegas venue during
-      March Madness) — needs a look at legal/compliance angle for odds display before building.
+      March Madness), needs a look at legal/compliance angle for odds display before building.
 
-## Phase 4 — Engagement & growth features
+## Phase 4, Engagement & growth features
 
 - [ ] Email/text alert when a new venue is listed for a team the user follows (text = SMS costs
       via a provider like Twilio; decide email-only vs. email+SMS before building).
 - [ ] "Traveling" mode: see watch parties/restaurants in a city other than home, for fans on the road.
 - [x] Marketing plan to get the site in front of more people. Drafted ahead of the rest of Phase 3
-      by request — see [MARKETING.md](MARKETING.md) for the full plan. Phase A of that plan
+      by request, see [MARKETING.md](MARKETING.md) for the full plan. Phase A of that plan
       (seeding fan-club communities) can start any time; Phases C–E assume more polish/content is
       in place first, so those still line up with finishing Phase 2/3 here.
 
@@ -119,7 +119,7 @@ When picking up this file cold, work top to bottom unless told otherwise.
       `distantfan-gameday-digest`. Shipped 2026-09-25; sends via the pick'em site's EmailJS Gmail
       service (200/month free). Move to Resend if the list outgrows that.
 
-## Phase 5 — Future platforms
+## Phase 5, Future platforms
 
 - [ ] Whiteboard what it'd take to turn this into an iOS + Android app (native vs. wrapped PWA,
       push notifications, app store accounts, etc.).
@@ -127,9 +127,9 @@ When picking up this file cold, work top to bottom unless told otherwise.
 ## Other ideas worth considering (not yet ordered)
 
 - **Analytics** (e.g. Plausible or GA4) before the marketing push, so you can tell what's working.
-- **SEO basics** — meta tags, sitemap.xml, per-city landing pages — to support organic growth
+- **SEO basics**, meta tags, sitemap.xml, per-city landing pages, to support organic growth
   alongside the venue push in Phase 2.
-- **Privacy policy / Terms of Service** page — you'll want one once there's an affiliate link and
+- **Privacy policy / Terms of Service** page, you'll want one once there's an affiliate link and
   user location data in play (FTC requires affiliate-link disclosure too).
 - **Abuse prevention** on the new bar-contact form and any future "suggest a venue" flow (basic
   rate limiting / spam checks).

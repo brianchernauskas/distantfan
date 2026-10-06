@@ -39,7 +39,9 @@ const fansData = fs.existsSync(path.join(root, 'data/fans.json')) ? readJson('da
 const schedFile = path.join(root, 'data/schedules.json');
 const SCHED = fs.existsSync(schedFile) ? readJson('data/schedules.json') : { fetchedAt: new Date(0).toISOString(), teams: {} };
 
-const esc = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+// Scraped club and venue names sometimes carry an em dash; normalize it so none reaches a public page.
+const noDash = s => String(s ?? '').replace(/\s*\u2014\s*/g, ' - ');
+const esc = s => noDash(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 const slugify = s => String(s).normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/&/g, ' and ').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 const plural = (n, a, b = a + 's') => `${n} ${n === 1 ? a : b}`;
 const monthYear = ms => new Date(ms).toLocaleDateString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' });
@@ -163,7 +165,7 @@ function page({ url, title, desc, body, crumbs, ld = [], image }) {
 <link rel="stylesheet" href="/assets/css/style.css?v=${V.style}">
 <link rel="stylesheet" href="/assets/css/watch.css?v=${V.watch}">
 <script type="module" src="/assets/js/analytics.js?v=${V.analytics}"></script>
-${[crumbLd, ...ld].map(o => `<script type="application/ld+json">${JSON.stringify(o).replace(/</g, '\\u003c')}</script>`).join('\n')}
+${[crumbLd, ...ld].map(o => `<script type="application/ld+json">${noDash(JSON.stringify(o)).replace(/</g, '\\u003c')}</script>`).join('\n')}
 </head>
 <body>
 <header class="site-head"><div class="wrap">${BRAND}<nav><a href="/watch/">Where to watch</a><a class="btn sm primary" href="/app.html">Open the app</a></nav></div></header>

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Distant Fan: your team, wherever you are</title>
-<meta name="description" content="Distant Fan connects sports fans: find fellow fans of your team nearby, the bars that put your game on, and a game-day chat full of people who get it — whether you moved away or your team's just on the road.">
+<meta name="description" content="Distant Fan connects sports fans: find fellow fans of your team nearby, the bars that put your game on, and a game-day chat full of people who get it, whether you moved away or your team's just on the road.">
 <meta property="og:title" content="Distant Fan: your team, wherever you are">
 <meta property="og:description" content="Find fellow fans of your team near you, the bar that shows your game, and a room full of people who get it.">
 <meta property="og:type" content="website">
@@ -24,8 +24,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/css/style.css?v=202610061559">
-<script type="module" src="assets/js/analytics.js?v=202610061559"></script>
+<link rel="stylesheet" href="assets/css/style.css?v=202610061617">
+<script type="module" src="assets/js/analytics.js?v=202610061617"></script>
 </head>
 <body>
 
@@ -55,7 +55,7 @@
         <a class="btn lg ghost" href="#how">How it works</a>
       </div>
       <p class="fine">Free. NFL, college football, college basketball, NBA, MLB, NHL and MLS.</p>
-      <p class="fine">Never left town? It works for you too — find a bar for the away games, or for when you just don't feel like fighting stadium traffic.</p>
+      <p class="fine">Never left town? It works for you too. Find a bar for the away games, or for when you just don't feel like fighting stadium traffic.</p>
     </div>
 
     <div class="mock" aria-label="Preview of the app" role="img">
@@ -168,7 +168,7 @@
         <div class="lead-pitch">
           <span class="eyebrow">Bar &amp; restaurant owners</span>
           <h2 style="font-size:40px;margin-top:10px">Want your bar on the map?</h2>
-          <p class="muted" style="margin-top:10px">Show the away-game crowd where to go. Leave a few details and I'll reach out — no account needed.</p>
+          <p class="muted" style="margin-top:10px">Show the away-game crowd where to go. Leave a few details and I'll reach out. No account needed.</p>
           <ul class="lead-perks">
             <li>Free listing, no strings attached</li>
             <li>More foot traffic on game day</li>
@@ -205,8 +205,8 @@
 </footer>
 
 <script type="module">
-  import { TEAMS } from './assets/js/teams.js?v=202610061559';
-  import { FIREBASE_CONFIG } from './assets/js/config.js?v=202610061559';
+  import { TEAMS } from './assets/js/teams.js?v=202610061617';
+  import { FIREBASE_CONFIG } from './assets/js/config.js?v=202610061617';
   document.getElementById('yr').textContent = new Date().getFullYear();
 
   // Logo marquee: a shuffled mix of pro teams, doubled so the loop is seamless.
@@ -256,7 +256,7 @@
       });
       if (!res.ok) throw new Error();
       leadForm.hidden = true;
-      leadForm.insertAdjacentHTML('afterend', '<p class="muted">Thanks — I\'ll be in touch.</p>');
+      leadForm.insertAdjacentHTML('afterend', '<p class="muted">Thanks, I\'ll be in touch.</p>');
     } catch {
       msg.textContent = "That didn't go through. Mind trying again in a minute?";
       btn.disabled = false;

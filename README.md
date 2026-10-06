@@ -39,8 +39,8 @@ the location a fan sets is deliberately much coarser than what their device actu
 - Watch spots are public places and do keep exact coordinates.
 - The 3-mile grain was chosen over a coarser one (previously ~25 miles) to make the "near you"
   surfacing more locally useful, especially in sprawling metros. That's a real tradeoff against
-  anonymity — a 3-mile cell can point at a specific neighborhood rather than just "the Phoenix
-  area" — accepted deliberately rather than by default. If that tradeoff ever needs revisiting,
+  anonymity, a 3-mile cell can point at a specific neighborhood rather than just "the Phoenix
+  area", accepted deliberately rather than by default. If that tradeoff ever needs revisiting,
   it's `homePrecision` in `assets/js/config.js` (plus the matching limit in `firestore.rules`).
 
 ## Going live with Firebase
@@ -76,7 +76,7 @@ node build-teams.mjs
 ```
 
 `fbs-ids.json` holds the FBS team IDs (ESPN group 80) and is committed. `cbb-ids.json` holds the
-~68 Power 4 school IDs college basketball is filtered to (D-I is 362 teams — too many to pick
+~68 Power 4 school IDs college basketball is filtered to (D-I is 362 teams, too many to pick
 from usefully); it reuses `tools/scout/p4-ids.json`'s football conference ids since ESPN team ids
 are shared across a school's sports. Team IDs are stable. Changing a team's id orphans it from
 existing profiles.

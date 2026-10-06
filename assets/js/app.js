@@ -1,11 +1,11 @@
-import * as S from './store.js?v=202610061559';
-import { SITE, ADMINS } from './config.js?v=202610061559';
-import { TEAMS, TEAM_BY_ID, LEAGUES } from './teams.js?v=202610061559';
-import { METROS } from './metros.js?v=202610061559';
-import { encode, center, bounds, areaLabel, km, nearestMetro } from './geo.js?v=202610061559';
-import { nextGames } from './schedule.js?v=202610061559';
-import { shopStrip, hydrateShop, shopBanner, hydrateBanner } from './shop.js?v=202610061559';
-import { firstTouch, followPrefill, clearFollow } from './attrib.js?v=202610061559';
+import * as S from './store.js?v=202610061617';
+import { SITE, ADMINS } from './config.js?v=202610061617';
+import { TEAMS, TEAM_BY_ID, LEAGUES } from './teams.js?v=202610061617';
+import { METROS } from './metros.js?v=202610061617';
+import { encode, center, bounds, areaLabel, km, nearestMetro } from './geo.js?v=202610061617';
+import { nextGames } from './schedule.js?v=202610061617';
+import { shopStrip, hydrateShop, shopBanner, hydrateBanner } from './shop.js?v=202610061617';
+import { firstTouch, followPrefill, clearFollow } from './attrib.js?v=202610061617';
 
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -269,7 +269,7 @@ function renderOnboarding(editing = false) {
         if (!native && !navigator.geolocation) { err.textContent = 'Location is not available in this browser. Pick a metro instead.'; return; }
         $('#locate').disabled = true; $('#locate').textContent = 'Locating…';
         // Inside the Capacitor app, use the native location plugin (native.js); on the web, the browser API.
-        const locate = native ? (ok, fail, o) => import('./native.js?v=202610061559').then(n => n.getPosition(ok, fail, o)) : (ok, fail, o) => navigator.geolocation.getCurrentPosition(ok, fail, o);
+        const locate = native ? (ok, fail, o) => import('./native.js?v=202610061617').then(n => n.getPosition(ok, fail, o)) : (ok, fail, o) => navigator.geolocation.getCurrentPosition(ok, fail, o);
         locate(p => {
           // Round to a coarse cell immediately; the coordinates are discarded here.
           const cell = encode(p.coords.latitude, p.coords.longitude, SITE.homePrecision);
@@ -912,7 +912,7 @@ async function viewReview() {
       <div class="muted" style="font-size:14px">${it.teams.map(id => esc(TEAM_BY_ID[id]?.name || id)).join(', ')}${it.club ? ` · ${esc(it.club)}` : ''}</div>
       ${it.eventAt ? `<div><b>${esc(it.eventTitle || 'Watch party')}</b> · ${fmtWhen(it.eventAt, it.timeTbd)}</div>` : ''}
       <div style="font-size:14px">${esc(it.address)}${it.note ? `<br>${esc(it.note)}` : ''}</div>
-      <div class="muted" style="font-size:13px">Why: ${esc(it.evidence || '—')}<br>Source: <a href="${esc(it.sourceUrl)}" target="_blank" rel="noopener">${esc(it.sourceName || it.sourceUrl)}</a> · <a href="https://www.google.com/maps/search/?api=1&query=${it.lat},${it.lng}" target="_blank" rel="noopener">map</a></div>
+      <div class="muted" style="font-size:13px">Why: ${esc(it.evidence || 'none')}<br>Source: <a href="${esc(it.sourceUrl)}" target="_blank" rel="noopener">${esc(it.sourceName || it.sourceUrl)}</a> · <a href="https://www.google.com/maps/search/?api=1&query=${it.lat},${it.lng}" target="_blank" rel="noopener">map</a></div>
       <div class="row"><button class="btn sm primary" data-ok>Approve</button><button class="btn sm ghost" data-no>Reject</button></div>
     </div>`).join('');
   $$('[data-q]', q).forEach(card => {

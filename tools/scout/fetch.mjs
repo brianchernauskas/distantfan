@@ -61,7 +61,7 @@ function htmlToText(html) {
     .replace(/&amp;/gi, '&')
     .replace(/&#39;|&rsquo;|&lsquo;/gi, "'")
     .replace(/&quot;|&rdquo;|&ldquo;/gi, '"')
-    .replace(/&mdash;/gi, '—')
+    .replace(/\s*&mdash;\s*/gi, ' - ')
     .replace(/&ndash;/gi, '–')
     .replace(/&hellip;/gi, '…')
     .replace(/&[a-z]+;/gi, ' ');
