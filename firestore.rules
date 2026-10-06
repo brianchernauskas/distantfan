@@ -7,7 +7,7 @@ service cloud.firestore {
     function str(v, min, max) { return v is string && v.size() >= min && v.size() <= max; }
     function data() { return request.resource.data; }
     // Must match ADMINS in assets/js/config.js.
-    function isAdmin() { return signedIn() && request.auth.uid in ['euJIvUd4sig4pGT4fE7SPSpE6lA3']; }
+    function isAdmin() { return signedIn() && request.auth.uid in ['euJIvUd4sig4pGT4fE7SPSpE6lA3', 'RjIHnrdYD5gMvF9Y3YBcq2uiU872']; }
 
     // Public fan profile. Home is a geohash of at most 5 characters (~4.9 × 4.9 km, ~3 mi);
     // anything more precise is rejected, so a street-level location can never be stored.

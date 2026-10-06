@@ -23,7 +23,7 @@ export const SITE = {
 };
 
 // Firebase uids that see the Review tab for the scout's queued finds. Must match isAdmin() in firestore.rules.
-export const ADMINS = ['euJIvUd4sig4pGT4fE7SPSpE6lA3'];
+export const ADMINS = ['euJIvUd4sig4pGT4fE7SPSpE6lA3', 'RjIHnrdYD5gMvF9Y3YBcq2uiU872'];
 
 // Fanatics affiliate strip on the Games tab. Stays hidden until `enabled` is true; add ?shop=1 to the
 // app URL to preview it while off. After the affiliate program approves the site, paste the network's
