@@ -1,4 +1,4 @@
-# Distant Fan — Reddit playbook
+# Distant Fan: Reddit playbook
 
 Drafts and ground rules for Reddit. Numbers come from `data/spots.json` and the live `/watch/`
 hub pages as of 2026-10-06; re-check a hub's count before posting, since the scout changes them
