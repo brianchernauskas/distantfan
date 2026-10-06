@@ -498,6 +498,16 @@ ${CTA('Your team, wherever you are.')}`;
   urls.push({ loc: '/watch/', lastmod: isoDay(lastChecked(live)) });
 }
 
+// Compact team -> city index for the landing-page picker (index.html): per city [metro key, name, state,
+// spot count, fans on Distant Fan, first three venue names], biggest city first. Fetched lazily.
+{
+  const teamsIdx = {};
+  for (const [tid, list] of pairsByTeam) {
+    teamsIdx[tid] = { ts: teamSlug(TEAM_BY_ID[tid]), cities: list.map(p => [p.mk, p.metro.name, p.metro.st, p.spots.length, fansIn.get(`${tid}|${p.mk}`) || 0, p.spots.slice(0, 3).map(s => noDash(s.name))]) };
+  }
+  out.set('data/watch-index.json', JSON.stringify({ v: 1, teams: teamsIdx }) + '\n');
+}
+
 // home page in the sitemap
 urls.unshift({ loc: '/', lastmod: isoDay(generatedAt) });
 const sitemap = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map(u => `  <url><loc>${SITE}${u.loc}</loc><lastmod>${u.lastmod}</lastmod></url>`).join('\n')}\n</urlset>\n`;

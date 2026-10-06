@@ -24,8 +24,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/css/style.css?v=202610061617">
-<script type="module" src="assets/js/analytics.js?v=202610061617"></script>
+<link rel="stylesheet" href="assets/css/style.css?v=202610061630">
+<script type="module" src="assets/js/analytics.js?v=202610061630"></script>
 </head>
 <body>
 
@@ -84,6 +84,21 @@
 </section>
 
 <div class="marquee" aria-hidden="true"><div class="track" id="marquee"></div></div>
+
+<section class="block" id="picker" style="padding-bottom:0" hidden>
+  <div class="wrap picker">
+    <div class="sec-head">
+      <span class="eyebrow">Try it</span>
+      <h2>Where does your team watch in your city?</h2>
+      <p>Pick your team and your city to see the bars and fan clubs we've found. No account needed to look.</p>
+    </div>
+    <div class="picker-controls">
+      <label class="field"><span>Your team</span><select class="input" id="pickTeam"></select></label>
+      <label class="field"><span>Your city</span><select class="input" id="pickCity" disabled></select></label>
+    </div>
+    <div class="pcard" id="pickCard" hidden aria-live="polite"></div>
+  </div>
+</section>
 
 <section class="block" id="how">
   <div class="wrap">
@@ -205,8 +220,8 @@
 </footer>
 
 <script type="module">
-  import { TEAMS } from './assets/js/teams.js?v=202610061617';
-  import { FIREBASE_CONFIG } from './assets/js/config.js?v=202610061617';
+  import { TEAMS, TEAM_BY_ID, LEAGUES } from './assets/js/teams.js?v=202610061630';
+  import { FIREBASE_CONFIG } from './assets/js/config.js?v=202610061630';
   document.getElementById('yr').textContent = new Date().getFullYear();
 
   // Logo marquee: a shuffled mix of pro teams, doubled so the loop is seamless.
@@ -227,6 +242,69 @@
     ${[26, 52, 80].map(rr => `<circle cx="${W / 2}" cy="${H / 2}" r="${rr}" fill="none" stroke="currentColor" stroke-opacity=".12" stroke-dasharray="3 4"/>`).join('')}
     ${pts.join('')}
     <circle cx="${W / 2}" cy="${H / 2}" r="12" fill="var(--accent)" opacity=".25"/><circle cx="${W / 2}" cy="${H / 2}" r="6" fill="var(--accent)" stroke="#fff" stroke-width="2"/></svg>`;
+
+  // Team + city picker: previews the static watch/ page data (data/watch-index.json, built by
+  // tools/build-pages.mjs). The full list stays public on /watch/; signing up adds who's going, the fan
+  // map near you, chat and the weekly game-day email.
+  (() => {
+    const sec = document.getElementById('picker');
+    const selT = document.getElementById('pickTeam'), selC = document.getElementById('pickCity'), card = document.getElementById('pickCard');
+    const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    const track = (n, p) => { try { window.dfTrack && window.dfTrack(n, p); } catch {} };
+    let idx = null, started = false;
+
+    function showCard() {
+      const t = TEAM_BY_ID[selT.value], d = idx.teams[selT.value];
+      const c = d && d.cities.find(x => x[0] === selC.value);
+      if (!t || !c) { card.hidden = true; return; }
+      const [mk, city, st, n, fans, names] = c;
+      const more = n - names.length;
+      card.innerHTML = `${t.logo ? `<img src="${esc(t.logo)}" alt="" width="72" height="72">` : '<span></span>'}
+        <div>
+          <h3>${esc(t.short)} fans in ${esc(city)}, ${esc(st)}</h3>
+          <p class="pcount"><b>${n}</b> ${n === 1 ? 'bar or fan club' : 'bars and fan clubs'} where ${esc(t.short)} fans watch${fans ? `, and <b>${fans}</b> ${fans === 1 ? 'fan has' : 'fans have'} joined Distant Fan here` : ''}.</p>
+          <ul>${names.map(x => `<li>${esc(x)}</li>`).join('')}${more > 0 ? `<li class="more">and ${more} more</li>` : ''}</ul>
+          <div class="pcta">
+            <a class="btn primary" id="pickFollow" href="app.html?follow=${encodeURIComponent(t.id)}">Follow ${esc(t.short)} free</a>
+            <a class="btn ghost" id="pickList" href="/watch/${d.ts}/${mk}/">See the full list</a>
+          </div>
+          <p class="fine">Signing up adds who's going to the next game, the fans near you, game-day chat and a weekly email with the games and the bars.</p>
+        </div>`;
+      card.hidden = false;
+      card.querySelector('#pickFollow').onclick = () => track('picker_click', { target: 'follow', item_id: `${d.ts}-${mk}` });
+      card.querySelector('#pickList').onclick = () => track('picker_click', { target: 'list', item_id: `${d.ts}-${mk}` });
+    }
+
+    function fillCities(keep) {
+      const d = idx.teams[selT.value];
+      selC.innerHTML = d ? d.cities.map(c => `<option value="${esc(c[0])}">${esc(c[1])}, ${esc(c[2])} (${c[3]})</option>`).join('') : '';
+      selC.disabled = !d;
+      if (d && keep && d.cities.some(c => c[0] === keep)) selC.value = keep;
+    }
+
+    async function start() {
+      if (started) return; started = true;
+      try { idx = await (await fetch('data/watch-index.json')).json(); } catch { return; }
+      const byLg = {};
+      for (const id of Object.keys(idx.teams)) { const t = TEAM_BY_ID[id]; if (t) (byLg[t.lg] ||= []).push(t); }
+      selT.innerHTML = '<option value="">Choose a team</option>' + Object.keys(LEAGUES).filter(l => byLg[l]).map(l =>
+        `<optgroup label="${esc(LEAGUES[l])}">${byLg[l].sort((a, b) => a.name.localeCompare(b.name)).map(t => `<option value="${esc(t.id)}">${esc(t.name)}</option>`).join('')}</optgroup>`).join('');
+      sec.hidden = false;
+      // Arrived from a "Follow <team>" link or an earlier visit: start on that team.
+      let pre = new URLSearchParams(location.search).get('follow');
+      try { pre = pre || localStorage.getItem('df_follow'); } catch {}
+      if (pre && idx.teams[pre]) { selT.value = pre; fillCities(); showCard(); }
+      selT.onchange = () => {
+        fillCities();
+        showCard();
+        if (selT.value) track('picker_select', { item_id: selT.value, content_type: 'team' });
+      };
+      selC.onchange = () => { showCard(); track('picker_select', { item_id: `${selT.value}-${selC.value}`, content_type: 'city' }); };
+    }
+
+    // Small file (about 80 KB, 20 KB gzipped): fetch it once the page is idle so it never competes with first paint.
+    if ('requestIdleCallback' in window) requestIdleCallback(start, { timeout: 2500 }); else setTimeout(start, 800);
+  })();
 
   // Bar-owner lead form: writes straight to Firestore via the REST API (no auth, no SDK
   // needed for one small write) so this stays a plain landing-page form.
