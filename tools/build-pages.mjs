@@ -283,8 +283,22 @@ var f=function(){t('copy');prompt('Copy this link',u)};
 if(navigator.clipboard)navigator.clipboard.writeText(u).then(d,f);else f()}})()</script>`;
 
 // Snippet copy: lead with the wording searchers use ("<team> bars in <city>"), name the venues.
+// Title test (started 2026-10-06, see SEO.md): team x city pages with 40+ impressions and 0 or 1 clicks
+// in Search Console (Sep 25 - Oct 4) get a title in the shape people actually search ("bears bar nashville":
+// short team name, singular "bar"). Everything else keeps the original title as the control group.
+const TITLE_TEST = new Set(['chicago-bears/nashville-tn', 'chicago-bears/denver-co', 'cleveland-browns/phoenix-az', 'denver-broncos/las-vegas-nv',
+  'nebraska-cornhuskers-football/phoenix-az', 'nebraska-cornhuskers-football/kansas-city-mo', 'new-england-patriots/nashville-tn',
+  'ohio-state-buckeyes-football/tampa-fl', 'ohio-state-buckeyes-football/nashville-tn', 'cleveland-browns/chicago-il', 'ohio-state-buckeyes-football/charlotte-nc',
+  'san-francisco-49ers/dallas-fort-worth-tx', 'cleveland-browns/nashville-tn', 'chicago-bears/phoenix-az', 'san-francisco-49ers/portland-or',
+  'cleveland-browns/cleveland-oh', 'san-francisco-49ers/sacramento-ca', 'kansas-city-chiefs/las-vegas-nv', 'pittsburgh-steelers/los-angeles-ca',
+  'philadelphia-eagles/las-vegas-nv', 'philadelphia-eagles/washington-dc']);
+function testTitle(team, metro, n) {
+  const label = team.lg === 'cfb' || team.lg === 'cbb' ? team.loc : team.short;
+  for (const t of [`${label} bar in ${metro.name}: ${n} spots to watch ${disp(team)}`, `${label} bar in ${metro.name}: ${n} places to watch the game`, `${label} bar in ${metro.name}, ${metro.st}: ${n} places`]) if (t.length <= 62) return t;
+  return `${label} bar in ${metro.name}: ${n} places`;
+}
 function pageTitle(team, name, metro, n) {
-  const c = `${metro.name}, ${metro.st}`, k = n === 1 ? '1 place to watch' : `${n} places to watch`;
+  const c =`${metro.name}, ${metro.st}`, k = n === 1 ? '1 place to watch' : `${n} places to watch`;
   for (const t of [`${team.name} bars in ${c}: ${k}`, `${team.name} bars in ${metro.name}: ${k}`, `${team.short} bars in ${metro.name}: ${k}`]) if (t.length <= 62) return t;
   return `${team.short} bars in ${metro.name}: ${k} the game`;
 }
@@ -360,7 +374,7 @@ ${sb.html ? TIME_JS : ''}
 ${SHARE_JS}`;
   const desc0 = pageDesc(team, metro, spots, lc), nx = sb.next ? ` Next game: ${fmtShort(sb.next)} ${sb.next.home ? 'vs' : 'at'} ${oppShort(team, sb.next)}.` : '';
   out.set(`watch/${ts}/${mk}/index.html`, page({
-    url, title: pageTitle(team, name, metro, spots.length),
+    url, title: TITLE_TEST.has(`${ts}/${mk}`) ? testTitle(team, metro, spots.length) : pageTitle(team, name, metro, spots.length),
     desc: desc0.length + nx.length <= 158 ? desc0 + nx : desc0,
     body, crumbs: [['Home', '/'], ['Where to watch', '/watch/'], [name, `/watch/${ts}/`], [metro.name, url]],
     image: ogFor(team),
