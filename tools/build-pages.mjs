@@ -498,6 +498,27 @@ ${CTA('Your team, wherever you are.')}`;
   urls.push({ loc: '/watch/', lastmod: isoDay(lastChecked(live)) });
 }
 
+// Crawlable links on the landing page: the biggest team and city hubs, as plain anchors, so the home page
+// passes link weight to them (the picker is script-drawn and gives crawlers nothing). index.html is
+// hand-written; only the block between the watch-links markers is rewritten.
+{
+  const f = path.join(root, 'index.html');
+  const h = fs.readFileSync(f, 'utf8');
+  const teamTop = [...pairsByTeam.entries()].map(([tid, l]) => ({ team: TEAM_BY_ID[tid], n: l.reduce((a, p) => a + p.spots.length, 0) }))
+    .sort((a, b) => b.n - a.n || disp(a.team).localeCompare(disp(b.team))).slice(0, 18);
+  const cityTop = cityPages.slice(0, 12);
+  const a = (href, label, n) => `<a class="wlink" href="${href}">${esc(label)} <b>${n}</b></a>`;
+  const block = `<!-- watch-links:start -->
+    <h3 class="wl-h">Popular teams</h3>
+    <div class="wlinks">${teamTop.map(r => a(`/watch/${teamSlug(r.team)}/`, disp(r.team), r.n)).join('')}</div>
+    <h3 class="wl-h">Popular cities</h3>
+    <div class="wlinks">${cityTop.map(([mk, set]) => a(`/watch/in/${mk}/`, cityName(metros.get(mk)), set.size)).join('')}</div>
+    <p class="fine"><a href="/watch/">See every team and city</a></p>
+    <!-- watch-links:end -->`;
+  const next = h.replace(/<!-- watch-links:start -->[\s\S]*?<!-- watch-links:end -->/, () => block);
+  if (next !== h) fs.writeFileSync(f, next);
+}
+
 // Compact team -> city index for the landing-page picker (index.html): per city [metro key, name, state,
 // spot count, fans on Distant Fan, first three venue names], biggest city first. Fetched lazily.
 {

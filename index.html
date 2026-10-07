@@ -24,8 +24,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/css/style.css?v=202610061630">
-<script type="module" src="assets/js/analytics.js?v=202610061630"></script>
+<link rel="stylesheet" href="assets/css/style.css?v=202610061705">
+<script type="module" src="assets/js/analytics.js?v=202610061705"></script>
 </head>
 <body>
 
@@ -204,6 +204,23 @@
   </div>
 </section>
 
+<section class="block" id="watch-links" style="padding-bottom:0">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="eyebrow">Browse</span>
+      <h2>Where to watch, by team and city</h2>
+      <p>The bars, fan clubs and alumni chapters we've found, with the game schedule. Open one to see the full list.</p>
+    </div>
+    <!-- watch-links:start -->
+    <h3 class="wl-h">Popular teams</h3>
+    <div class="wlinks"><a class="wlink" href="/watch/buffalo-bills/">Buffalo Bills <b>260</b></a><a class="wlink" href="/watch/cleveland-browns/">Cleveland Browns <b>152</b></a><a class="wlink" href="/watch/san-francisco-49ers/">San Francisco 49ers <b>119</b></a><a class="wlink" href="/watch/philadelphia-eagles/">Philadelphia Eagles <b>93</b></a><a class="wlink" href="/watch/ohio-state-buckeyes-football/">Ohio State Buckeyes football <b>85</b></a><a class="wlink" href="/watch/new-york-giants/">New York Giants <b>73</b></a><a class="wlink" href="/watch/new-england-patriots/">New England Patriots <b>69</b></a><a class="wlink" href="/watch/new-york-jets/">New York Jets <b>68</b></a><a class="wlink" href="/watch/portland-timbers/">Portland Timbers <b>59</b></a><a class="wlink" href="/watch/iowa-hawkeyes-football/">Iowa Hawkeyes football <b>55</b></a><a class="wlink" href="/watch/pittsburgh-steelers/">Pittsburgh Steelers <b>48</b></a><a class="wlink" href="/watch/chicago-cubs/">Chicago Cubs <b>43</b></a><a class="wlink" href="/watch/baltimore-ravens/">Baltimore Ravens <b>41</b></a><a class="wlink" href="/watch/florida-state-seminoles-football/">Florida State Seminoles football <b>40</b></a><a class="wlink" href="/watch/chicago-bears/">Chicago Bears <b>39</b></a><a class="wlink" href="/watch/green-bay-packers/">Green Bay Packers <b>38</b></a><a class="wlink" href="/watch/los-angeles-chargers/">Los Angeles Chargers <b>38</b></a><a class="wlink" href="/watch/miami-dolphins/">Miami Dolphins <b>38</b></a></div>
+    <h3 class="wl-h">Popular cities</h3>
+    <div class="wlinks"><a class="wlink" href="/watch/in/new-york-ny/">New York, NY <b>239</b></a><a class="wlink" href="/watch/in/los-angeles-ca/">Los Angeles, CA <b>127</b></a><a class="wlink" href="/watch/in/phoenix-az/">Phoenix, AZ <b>118</b></a><a class="wlink" href="/watch/in/chicago-il/">Chicago, IL <b>117</b></a><a class="wlink" href="/watch/in/dallas-fort-worth-tx/">Dallas–Fort Worth, TX <b>99</b></a><a class="wlink" href="/watch/in/portland-or/">Portland, OR <b>91</b></a><a class="wlink" href="/watch/in/atlanta-ga/">Atlanta, GA <b>84</b></a><a class="wlink" href="/watch/in/washington-dc/">Washington, DC <b>79</b></a><a class="wlink" href="/watch/in/denver-co/">Denver, CO <b>79</b></a><a class="wlink" href="/watch/in/tampa-fl/">Tampa, FL <b>69</b></a><a class="wlink" href="/watch/in/cleveland-oh/">Cleveland, OH <b>66</b></a><a class="wlink" href="/watch/in/san-diego-ca/">San Diego, CA <b>63</b></a></div>
+    <p class="fine"><a href="/watch/">See every team and city</a></p>
+    <!-- watch-links:end -->
+  </div>
+</section>
+
 <section class="cta-band">
   <div class="wrap">
     <h2>Stop watching alone</h2>
@@ -220,8 +237,8 @@
 </footer>
 
 <script type="module">
-  import { TEAMS, TEAM_BY_ID, LEAGUES } from './assets/js/teams.js?v=202610061630';
-  import { FIREBASE_CONFIG } from './assets/js/config.js?v=202610061630';
+  import { TEAMS, TEAM_BY_ID, LEAGUES } from './assets/js/teams.js?v=202610061705';
+  import { FIREBASE_CONFIG } from './assets/js/config.js?v=202610061705';
   document.getElementById('yr').textContent = new Date().getFullYear();
 
   // Logo marquee: a shuffled mix of pro teams, doubled so the loop is seamless.

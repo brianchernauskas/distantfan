@@ -375,3 +375,13 @@ dialog form { display: grid; gap: 14px; }
   .pcard { grid-template-columns: 1fr; padding: 20px; }
   .pcard h3 { font-size: 28px; }
 }
+
+/* landing page: crawlable team and city links (block between the watch-links markers is generated) */
+.wl-h { font-size: 24px; margin: 22px 0 12px; }
+.wlinks { display: flex; flex-wrap: wrap; gap: 10px; }
+.wlink { display: inline-flex; gap: 8px; align-items: center; padding: 7px 14px; border: 1px solid var(--line); border-radius: 999px;
+  background: var(--surface); text-decoration: none; font-size: 14px; font-weight: 500; }
+.wlink b { color: var(--accent); font-weight: 700; }
+.wlink:hover { border-color: var(--accent); }
+#watch-links .fine { margin-top: 18px; }
+#watch-links .fine a { color: var(--accent); }
