@@ -233,6 +233,7 @@ ${rows}
 ${WATCH_TIP[team.lg] ? `<p class="muted tip">${esc(WATCH_TIP[team.lg])}</p>` : ''}
 </section>`;
   const LEAGUE = { nfl: 'NFL', cfb: 'NCAA Football', nba: 'NBA', nhl: 'NHL', mlb: 'MLB', mls: 'MLS' };
+  const LEAGUE_URL = { nfl: 'https://www.nfl.com/', cfb: 'https://www.ncaa.com/sports/football', nba: 'https://www.nba.com/', nhl: 'https://www.nhl.com/', mlb: 'https://www.mlb.com/', mls: 'https://www.mlssoccer.com/' };
   const ld = games.slice(0, 3).map(g => {
     const homeName = g.home ? team.name : g.opp, awayName = g.home ? g.opp : team.name;
     const league = LEAGUE[team.lg];
@@ -240,9 +241,10 @@ ${WATCH_TIP[team.lg] ? `<p class="muted tip">${esc(WATCH_TIP[team.lg])}</p>` : '
       '@context': 'https://schema.org', '@type': 'SportsEvent', name: `${awayName} at ${homeName}`, startDate: g.t,
       description: `${awayName} at ${homeName}${league ? ` (${league})` : ''}${g.tv.length ? `, broadcast on ${g.tv.join(', ')}` : ''}. Find bars showing the game${where ? ` in ${where}` : ''} on Distant Fan.`,
       eventStatus: 'https://schema.org/EventScheduled',
+      ...(team.logo ? { image: team.logo } : {}),
       homeTeam: { '@type': 'SportsTeam', name: homeName }, awayTeam: { '@type': 'SportsTeam', name: awayName },
       performer: [{ '@type': 'SportsTeam', name: homeName }, { '@type': 'SportsTeam', name: awayName }],
-      ...(league ? { organizer: { '@type': 'SportsOrganization', name: league } } : {}),
+      ...(league ? { organizer: { '@type': 'SportsOrganization', name: league, url: LEAGUE_URL[team.lg] } } : {}),
       ...(g.venue ? { location: { '@type': 'Place', name: g.venue.split(',')[0], address: g.venue } } : {}),
     };
   });
