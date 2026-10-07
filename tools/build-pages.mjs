@@ -41,6 +41,9 @@ const SCHED = fs.existsSync(schedFile) ? readJson('data/schedules.json') : { fet
 
 // Scraped club and venue names sometimes carry an em dash; normalize it so none reaches a public page.
 const noDash = s => String(s ?? '').replace(/\s*\u2014\s*/g, ' - ');
+// "a" or "an" by sound: vowel letters take "an" (U is usually "yoo": a Utes, a UCF), and initialisms
+// starting with F H L M N R S X are spoken as vowels (an LSU, an SMU, an NC State).
+const an = w => { const f = String(w).trim().split(/\s/)[0]; return /^[AEIOaeio]/.test(f) || (/^[A-Z]{2,}$/.test(f) && /^[FHLMNRSX]/.test(f)) ? 'an' : 'a'; };
 const esc = s => noDash(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 const slugify = s => String(s).normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/&/g, ' and ').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 const plural = (n, a, b = a + 's') => `${n} ${n === 1 ? a : b}`;
@@ -173,7 +176,7 @@ ${[crumbLd, ...ld].map(o => `<script type="application/ld+json">${noDash(JSON.st
 <nav class="crumbs" aria-label="Breadcrumb">${crumbs.map((c, i) => i === crumbs.length - 1 ? `<span>${esc(c[0])}</span>` : `<a href="${c[1]}">${esc(c[0])}</a>`).join(' <i>/</i> ')}</nav>
 ${body}
 </main>
-<footer class="site-foot"><div class="wrap"><span>© ${new Date(generatedAt).getUTCFullYear()} Distant Fan</span><span>Team names and logos belong to their teams and leagues. Listings gathered from official fan-club and alumni directories, venues and fans; confirm with the venue before you go.</span></div></footer>
+<footer class="site-foot"><div class="wrap"><span>© ${new Date(generatedAt).getUTCFullYear()} Distant Fan · <a href="/about.html">About</a> · <a href="/privacy.html">Privacy</a></span><span>Team names and logos belong to their teams and leagues. Listings gathered from official fan-club and alumni directories, venues and fans; confirm with the venue before you go.</span></div></footer>
 </body>
 </html>
 `;
@@ -308,10 +311,10 @@ function pageDesc(team, metro, spots, lc) {
   const names = spots.slice(0, 3).map(s => s.name);
   for (const k of [3, 2, 1]) {
     const n = names.slice(0, k), r = spots.length - k;
-    const d = `Find a ${team.short} bar in ${metro.name}: ${term} watch the game at ${joinList(n)}${r > 0 ? ` and ${r} more` : ''}.${upd}`;
+    const d = `Find ${an(team.short)} ${team.short} bar in ${metro.name}: ${term} watch the game at ${joinList(n)}${r > 0 ? ` and ${r} more` : ''}.${upd}`;
     if (d.length <= 158) return d;
   }
-  return `Find a ${team.short} bar in ${metro.name}: ${spots.length} bars and fan clubs for ${term}.${upd}`;
+  return `Find ${an(team.short)} ${team.short} bar in ${metro.name}: ${spots.length} bars and fan clubs for ${term}.${upd}`;
 }
 function intro(team, metro, spots) {
   const term = FAN_TERM[team.id] || `${team.short} fans`;
@@ -321,7 +324,7 @@ function intro(team, metro, spots) {
   const more = spots.length - top.length;
   const mine = c => [team.short, team.loc, team.abbr, team.name].some(w => w && c.toLowerCase().includes(w.toLowerCase()));
   const clubs = [...new Set(spots.map(s => s.club).filter(c => c && mine(c)))].slice(0, 3);
-  const art = /^[aeiou]/i.test(team.short) ? 'an' : 'a';
+  const art = an(team.short);
   return `<p class="intro">Looking for ${art} ${esc(team.short)} bar in ${esc(metro.name)}? ${esc(term)} in the area${towns.length > 1 ? `, from ${esc(joinList(towns.slice(0, 4)))},` : ''} watch games at ${joinList(top)}${more > 0 ? `, plus ${more} more below` : ''}.${clubs.length ? ` Listed groups include ${esc(joinList(clubs))}.` : ''} Call ahead on game days to make sure the bar will have your game on.</p>`;
 }
 
@@ -356,7 +359,7 @@ ${intro(team, metro, spots)}
 ${spots.map(spotCard).join('\n')}
 </ul>
 
-${SHARE(url, `${name} bars in ${city}`, `${ts}-${mk}`, `Know a ${esc(team.short)} fan in ${esc(metro.name)}? Send them this page.`)}
+${SHARE(url, `${name} bars in ${city}`, `${ts}-${mk}`, `Know ${an(team.short)} ${esc(team.short)} fan in ${esc(metro.name)}? Send them this page.`)}
 
 ${sb.html}
 ${nearest.length ? `<section class="more"><h2>Nearest ${esc(team.short)} watch spots in other cities</h2><div class="chips">${nearest.map(x => chip(`/watch/${x.q.ts}/${x.q.mk}/`, `${cityName(x.q.metro)} · ${Math.round(x.d * 0.621)} mi`, x.q.spots.length)).join('')}</div></section>` : ''}
@@ -365,7 +368,7 @@ ${fans ? `<p class="fans"><b>${plural(fans, 'fan')}</b> following ${esc(team.sho
 ${CTA(`Watching ${esc(team.short)} in ${esc(metro.name)}?`, team)}
 
 <section class="more">
-  <p>Missing a spot, or run a ${esc(team.short)} fan club here? <a href="/app.html">Add it in the app</a> or <a href="/#clubs">tell us about your club</a>. Bars can be listed for free.</p>
+  <p>Missing a spot, or run ${an(team.short)} ${esc(team.short)} fan club here? <a href="/app.html">Add it in the app</a> or <a href="/#clubs">tell us about your club</a>. Bars can be listed for free.</p>
   ${otherCities.length ? `<h2>${esc(name)} in other cities</h2><div class="chips">${otherCities.map(q => chip(`/watch/${q.ts}/${q.mk}/`, cityName(q.metro), q.spots.length)).join('')}</div>` : ''}
   ${otherTeams.length ? `<h2>More fan bars in ${esc(metro.name)}</h2><div class="chips">${otherTeams.map(q => chip(`/watch/${q.ts}/${q.mk}/`, disp(q.team), q.spots.length)).join('')}</div>` : ''}
   <p><a href="/watch/in/${mk}/">All teams in ${esc(city)}</a> · <a href="/watch/${ts}/">${esc(name)} in every city</a></p>
@@ -411,7 +414,7 @@ ${FOLLOW(lead)}
     ${s.club ? `<dt>Group</dt><dd>${esc(s.club)}</dd>` : ''}
     ${lc ? `<dt>Last checked</dt><dd>${esc(monthYear(lc))}${src ? ` · Source: ${src}` : ''}</dd>` : ''}
   </dl>
-  <p class="muted">Looking for a ${esc(lead.short)} bar in ${esc(twn)}? Call ${esc(s.name)} before game day to confirm they will have your game on, since schedules and rooms change.</p>
+  <p class="muted">Looking for ${an(lead.short)} ${esc(lead.short)} bar in ${esc(twn)}? Call ${esc(s.name)} before game day to confirm they will have your game on, since schedules and rooms change.</p>
 </section>
 
 ${sb.html}
@@ -541,6 +544,55 @@ ${CTA('Your team, wherever you are.')}`;
     teamsIdx[tid] = { ts: teamSlug(TEAM_BY_ID[tid]), cities: list.map(p => [p.mk, p.metro.name, p.metro.st, p.spots.length, fansIn.get(`${tid}|${p.mk}`) || 0, p.spots.slice(0, 3).map(s => noDash(s.name))]) };
   }
   out.set('data/watch-index.json', JSON.stringify({ v: 1, teams: teamsIdx }) + '\n');
+}
+
+// ---- About and Privacy: plain trust pages (who runs this, where listings come from, what is stored)
+{
+  const nTeams = TEAMS.length;
+  const about = `<div class="static"><h1>About Distant Fan</h1>
+<p class="intro">Distant Fan helps sports fans who live away from their team find each other. For any team and city it shows the bars, official fan clubs and alumni chapters where that team's fans watch the game, and it adds a way to see which fans live nearby and chat on game day.</p>
+<h2 class="sec">Who it's for</h2>
+<p>Fans who moved away from their team's home market, fans whose team is on the road, and anyone who wants a room full of people who care about the same team. It covers ${nTeams} teams across the NFL, college football, college basketball, the NBA, MLB, the NHL and MLS. It is free to use.</p>
+<h2 class="sec">Where the listings come from</h2>
+<p>Every watch spot on this site comes from a named source and is dated. The main sources are official team and league fan-club maps (for example the Eagles Landings and Browns Backers directories), alumni association watch-party pages, the venues themselves, and fans who add or correct a place. Each listing shows when it was last checked and where it came from. Game schedules and TV channels come from ESPN's public schedule feed.</p>
+<p>Bars change their rooms and sound policies, and out-of-market games usually need a package such as NFL Sunday Ticket, so confirm with the venue before you go. If a listing is wrong or missing, tell us and we will fix it.</p>
+<h2 class="sec">Independent, and how it is paid for</h2>
+<p>Distant Fan is an independent project and is not affiliated with any team, league or broadcaster. Team names and logos belong to their owners. Some gear links in the app go to Fanatics; if you buy through one, Distant Fan earns a commission at no extra cost to you. Bars are listed for free and listings are never sold or ranked by payment.</p>
+<h2 class="sec">Get in touch</h2>
+<p>Email <a href="mailto:brian@distantfan.com">brian@distantfan.com</a> with questions, corrections or press requests.</p>
+<p>Run a bar, a fan club or an alumni chapter? <a href="/#own-a-bar">Ask to be listed</a> or <a href="/#clubs">tell us about your club</a>. Found a mistake? Use the add-a-spot form in <a href="/app.html">the app</a>. Read how we handle your data on the <a href="/privacy.html">privacy page</a>.</p>
+</div>
+${CTA('Your team, wherever you are.')}`;
+  out.set('about.html', page({
+    url: '/about.html', title: 'About Distant Fan: where out-of-market fans watch',
+    desc: 'Distant Fan is a free, independent fan network that lists the bars, fan clubs and alumni chapters where your team plays on TV, with sources and check dates.',
+    body: about, crumbs: [['Home', '/'], ['About', '/about.html']],
+    ld: [{ '@context': 'https://schema.org', '@type': 'AboutPage', url: SITE + '/about.html', name: 'About Distant Fan', about: { '@id': SITE + '/#org' } }],
+  }));
+  urls.push({ loc: '/about.html', lastmod: isoDay(generatedAt) });
+
+  const priv = `<div class="static"><h1>Privacy</h1>
+<p class="intro">Distant Fan only works if fans feel safe on it, so the design goal is simple: nobody, including us, can see where you live.</p>
+<h2 class="sec">What other fans can see</h2>
+<ul>
+<li><b>Area, not address.</b> Your home location is rounded to a grid square about 3 miles wide on your own device. Your exact position is never sent or stored, and the database rejects anything more precise.</li>
+<li><b>A name and your teams.</b> Other fans see the first name and initial you choose, and the teams you follow. The map draws a circle for an area, never a pin for a person.</li>
+<li><b>Delete anytime.</b> Removing your profile takes you off the map immediately.</li>
+</ul>
+<h2 class="sec">What we store</h2>
+<p>You can browse every watch page without an account. If you sign up (with Google or an email and password), we store your sign-in details, the name and teams you choose, your rough area, your chat messages, and an email address for the weekly game-day email, which you can stop at any time with the unsubscribe link in each message. Accounts and data are held in Google Firebase.</p>
+<h2 class="sec">Analytics and cookies</h2>
+<p>We use Google Analytics through Firebase to count page views and which features get used. Separately, your browser remembers how you first reached the site (the referring site and any campaign tag) in local storage, and we copy that coarse source onto your profile if you sign up. No advertising cookies are set by Distant Fan.</p>
+<h2 class="sec">Affiliate links</h2>
+<p>Some gear links in the app go to Fanatics. If you buy through one, Distant Fan earns a commission at no extra cost to you. Clicking one shares nothing about you with us, and the shop sets its own cookies once you land there.</p>
+<h2 class="sec">Questions or removal requests</h2>
+<p>You can edit or delete your profile in <a href="/app.html">the app</a>. To ask us anything else about your data, or to have your data removed, email <a href="mailto:brian@distantfan.com">brian@distantfan.com</a>.</p></div>`;
+  out.set('privacy.html', page({
+    url: '/privacy.html', title: 'Privacy: how Distant Fan protects your location',
+    desc: 'Your home location is rounded to a roughly 3 mile grid square on your device and never stored precisely. What other fans see, what we store, and how to delete it.',
+    body: priv, crumbs: [['Home', '/'], ['Privacy', '/privacy.html']],
+  }));
+  urls.push({ loc: '/privacy.html', lastmod: isoDay(generatedAt) });
 }
 
 // home page in the sitemap

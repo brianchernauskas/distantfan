@@ -78,3 +78,10 @@
 .sharebar > span { color: var(--muted); font-size: 15px; }
 .sharebtns { display: flex; gap: 8px; flex-wrap: wrap; }
 .sharebtns [hidden] { display: none; }
+
+/* about + privacy pages */
+.static { max-width: 760px; }
+.static p, .static ul { margin: 0 0 16px; line-height: 1.65; }
+.static ul { padding-left: 22px; }
+.static li { margin-bottom: 10px; }
+.static h2.sec { margin-top: 32px; }
