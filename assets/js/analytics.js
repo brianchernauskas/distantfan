@@ -1,8 +1,8 @@
 // Firebase Analytics (GA4) for pages that don't load the app's store: landing, unsubscribe and the
 // generated watch/ pages. app.html gets analytics from store.js, so it must not load this file too
 // (two inits would count each page view twice).
-import { FIREBASE_CONFIG } from './config.js?v=202610090956';
-import { firstTouch } from './attrib.js?v=202610090956'; // side effect: records first-touch source + ?follow=
+import { FIREBASE_CONFIG } from './config.js?v=202610091023';
+import { firstTouch } from './attrib.js?v=202610091023'; // side effect: records first-touch source + ?follow=
 firstTouch();
 
 // window.dfTrack(name, params): lets the small inline scripts on the generated pages (share buttons)

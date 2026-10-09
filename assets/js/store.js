@@ -1,9 +1,9 @@
 // Data layer. Uses Firebase (Auth + Firestore) when FIREBASE_CONFIG is set,
 // otherwise a demo store in localStorage seeded with clearly fake fans and spots.
-import { FIREBASE_CONFIG, SITE } from './config.js?v=202610090956';
-import { TEAMS, TEAM_BY_ID } from './teams.js?v=202610090956';
-import { METROS } from './metros.js?v=202610090956';
-import { encode, center } from './geo.js?v=202610090956';
+import { FIREBASE_CONFIG, SITE } from './config.js?v=202610091023';
+import { TEAMS, TEAM_BY_ID } from './teams.js?v=202610091023';
+import { METROS } from './metros.js?v=202610091023';
+import { encode, center } from './geo.js?v=202610091023';
 
 export const mode = FIREBASE_CONFIG ? 'firebase' : 'demo';
 let impl;
@@ -52,6 +52,11 @@ export const dismissVenueLead = call('dismissVenueLead');
 export const updateSpot = call('updateSpot');
 export const removeListing = call('removeListing');
 export const getAnalytics = call('getAnalytics');
+export const suggestSpot = call('suggestSpot');
+export const listSuggestions = call('listSuggestions');
+export const approveSuggestion = call('approveSuggestion');
+export const rejectSuggestion = call('rejectSuggestion');
+export const applyReportedTeam = call('applyReportedTeam');
 export const syncAnalytics = call('syncAnalytics');
 
 // Best-effort GA4 event; a no-op until Analytics has loaded (or when blocked).
@@ -140,7 +145,7 @@ async function firebaseStore() {
     // Inside the Capacitor app popups don't work, so use the native Google account chooser (native.js).
     signInGoogle: async () => {
       if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
-        return (await import('./native.js?v=202610090956')).signInGoogle(A, auth);
+        return (await import('./native.js?v=202610091023')).signInGoogle(A, auth);
       }
       return A.signInWithPopup(auth, new A.GoogleAuthProvider());
     },
@@ -153,7 +158,7 @@ async function firebaseStore() {
     resetPassword: email => A.sendPasswordResetEmail(auth, email),
     signInDemo: () => { throw new Error('Demo sign-in is only available in demo mode.'); },
     signOut: async () => {
-      if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) await (await import('./native.js?v=202610090956')).signOut();
+      if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) await (await import('./native.js?v=202610091023')).signOut();
       return A.signOut(auth);
     },
 
@@ -253,7 +258,7 @@ async function firebaseStore() {
     // Fan reports on a listing. One per fan per spot; only the admin can read them.
     reportSpot: r => F.setDoc(F.doc(db, 'spotReports', `${r.spotId}_${me.uid}`), {
       spotId: r.spotId, spotName: clean(r.spotName, 80), uid: me.uid, name: clean(r.name, 40),
-      reason: clean(r.reason, 40), note: clean(r.note, 300), createdAt: F.serverTimestamp(),
+      reason: clean(r.reason, 40), note: clean(r.note, 300), addTeam: clean(r.addTeam, 30), createdAt: F.serverTimestamp(),
     }),
     // Admin Users tab. Profiles are already readable by any signed-in fan, so no rules change is needed.
     listProfiles: () => list(F.query(F.collection(db, 'profiles'), F.limit(5000)))
@@ -277,6 +282,30 @@ async function firebaseStore() {
     // REST API directly from index.html). Admin only, enforced by firestore.rules.
     listVenueLeads: () => list(F.query(F.collection(db, 'venueLeads'), F.limit(200))),
     dismissVenueLead: id => F.deleteDoc(F.doc(db, 'venueLeads', id)),
+    // Fan-suggested spots wait here for the admin (Review tab) instead of going straight onto the map.
+    suggestSpot: s => F.addDoc(F.collection(db, 'spotSuggestions'), {
+      name: clean(s.name, 80), address: clean(s.address, 120), club: clean(s.club, 80), note: clean(s.note, 200),
+      lat: +s.lat, lng: +s.lng, teams: s.teams.slice(0, 6), uid: me.uid, byName: clean(s.byName, 40), createdAt: F.serverTimestamp(),
+    }),
+    listSuggestions: () => list(F.query(F.collection(db, 'spotSuggestions'), F.limit(200))),
+    async approveSuggestion(s) {
+      const { id, uid, createdAt, ...spot } = s;
+      const b = F.writeBatch(db);
+      b.set(F.doc(db, 'spots', id), { ...spot, by: uid, createdAt: F.serverTimestamp() });
+      b.delete(F.doc(db, 'spotSuggestions', id));
+      await b.commit();
+      spotsDirty = true;
+    },
+    rejectSuggestion: s => F.deleteDoc(F.doc(db, 'spotSuggestions', s.id)),
+    // A fan said a team is missing from a listing; add it and clear that spot's reports.
+    async applyReportedTeam(r) {
+      const all = await list(F.query(F.collection(db, 'spotReports'), F.where('spotId', '==', r.spotId)));
+      const b = F.writeBatch(db);
+      b.update(F.doc(db, 'spots', r.spotId), { teams: F.arrayUnion(r.addTeam), createdAt: F.serverTimestamp() });
+      all.filter(x => x.id === r.id).forEach(x => b.delete(F.doc(db, 'spotReports', x.id)));
+      await b.commit();
+      spotsDirty = true;
+    },
     // GA4 snapshot written by tools/scout/analytics-sync.mjs. Admin only; null until the first sync.
     // Runs the admin-only Cloud Function that re-pulls GA4 into adminStats/analytics, then returns the fresh doc.
     async syncAnalytics() {
@@ -415,6 +444,11 @@ function demoStore() {
     async updateSpot() {},
     async removeListing() {},
     async getAnalytics() { return null; },
+    async suggestSpot() {},
+    async listSuggestions() { return []; },
+    async approveSuggestion() {},
+    async rejectSuggestion() {},
+    async applyReportedTeam() {},
     async syncAnalytics() { return null; },
     async approveQueued() {},
     async rejectQueued() {},

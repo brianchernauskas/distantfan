@@ -71,11 +71,27 @@ service cloud.firestore {
     match /spotReports/{id} {
       allow create, update: if signedIn()
         && data().uid == me() && id == data().spotId + '_' + me()
-        && data().keys().hasOnly(['spotId', 'spotName', 'uid', 'name', 'reason', 'note', 'createdAt'])
+        && data().keys().hasOnly(['spotId', 'spotName', 'uid', 'name', 'reason', 'note', 'addTeam', 'createdAt'])
+        && str(data().get('addTeam', ''), 0, 30)
         && str(data().spotId, 1, 80) && str(data().spotName, 0, 80) && str(data().name, 1, 40)
         && str(data().reason, 1, 40) && str(data().note, 0, 300)
         && data().createdAt == request.time;
       allow read, delete: if isAdmin();
+    }
+
+    // New spots suggested by signed-in fans. Not public: the admin approves them in the Review tab,
+    // which creates the real spots/{id} doc.
+    match /spotSuggestions/{id} {
+      allow create: if signedIn()
+        && data().keys().hasOnly(['name', 'address', 'club', 'note', 'lat', 'lng', 'teams', 'uid', 'byName', 'createdAt'])
+        && data().uid == me()
+        && str(data().name, 1, 80) && str(data().address, 0, 120) && str(data().note, 0, 200) && str(data().byName, 0, 40)
+        && str(data().get('club', ''), 0, 80)
+        && data().lat is number && data().lat >= -90 && data().lat <= 90
+        && data().lng is number && data().lng >= -180 && data().lng <= 180
+        && data().teams is list && data().teams.size() >= 1 && data().teams.size() <= 6
+        && data().createdAt == request.time;
+      allow read, update, delete: if isAdmin();
     }
 
     // Bar/venue owners asking to be added, from the public landing page (no account, so no

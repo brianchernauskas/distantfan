@@ -1,11 +1,11 @@
-import * as S from './store.js?v=202610090956';
-import { SITE, ADMINS } from './config.js?v=202610090956';
-import { TEAMS, TEAM_BY_ID, LEAGUES } from './teams.js?v=202610090956';
-import { METROS } from './metros.js?v=202610090956';
-import { encode, center, bounds, areaLabel, km, nearestMetro } from './geo.js?v=202610090956';
-import { nextGames } from './schedule.js?v=202610090956';
-import { shopStrip, hydrateShop, shopBanner, hydrateBanner } from './shop.js?v=202610090956';
-import { firstTouch, followPrefill, clearFollow } from './attrib.js?v=202610090956';
+import * as S from './store.js?v=202610091023';
+import { SITE, ADMINS } from './config.js?v=202610091023';
+import { TEAMS, TEAM_BY_ID, LEAGUES } from './teams.js?v=202610091023';
+import { METROS } from './metros.js?v=202610091023';
+import { encode, center, bounds, areaLabel, km, nearestMetro } from './geo.js?v=202610091023';
+import { nextGames } from './schedule.js?v=202610091023';
+import { shopStrip, hydrateShop, shopBanner, hydrateBanner } from './shop.js?v=202610091023';
+import { firstTouch, followPrefill, clearFollow } from './attrib.js?v=202610091023';
 
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -202,7 +202,7 @@ function renderOnboarding(editing = false) {
     <div class="panel" style="display:grid;gap:14px">
       <button class="btn primary" id="locate">📍 Use my location</button>
       <div class="divider">or pick the nearest metro</div>
-      <select class="input" id="metro"><option value="">Choose a metro…</option>${[...METROS].sort((a, b) => a.name.localeCompare(b.name)).map(m => `<option value="${esc(m.name)}">${esc(m.name)}, ${m.st}</option>`).join('')}</select>
+      <select class="input" id="metro"><option value="">Choose a metro…</option>${[...METROS].sort((a, b) => a.name.localeCompare(b.name)).map(m => `<option value="${esc(m.name)}|${m.st}">${esc(m.name)}, ${m.st}</option>`).join('')}</select>
     </div>
     <p id="areaOut" class="${draft.cell ? 'ok' : 'muted'}">${draft.cell ? `✓ Home base: <b>${esc(draft.area)}</b>` : 'No area set yet.'}</p>`;
 
@@ -269,7 +269,7 @@ function renderOnboarding(editing = false) {
         if (!native && !navigator.geolocation) { err.textContent = 'Location is not available in this browser. Pick a metro instead.'; return; }
         $('#locate').disabled = true; $('#locate').textContent = 'Locating…';
         // Inside the Capacitor app, use the native location plugin (native.js); on the web, the browser API.
-        const locate = native ? (ok, fail, o) => import('./native.js?v=202610090956').then(n => n.getPosition(ok, fail, o)) : (ok, fail, o) => navigator.geolocation.getCurrentPosition(ok, fail, o);
+        const locate = native ? (ok, fail, o) => import('./native.js?v=202610091023').then(n => n.getPosition(ok, fail, o)) : (ok, fail, o) => navigator.geolocation.getCurrentPosition(ok, fail, o);
         locate(p => {
           // Round to a coarse cell immediately; the coordinates are discarded here.
           const cell = encode(p.coords.latitude, p.coords.longitude, SITE.homePrecision);
@@ -281,7 +281,7 @@ function renderOnboarding(editing = false) {
         }, { enableHighAccuracy: false, timeout: 12000, maximumAge: 6e5 });
       };
       $('#metro').onchange = e => {
-        const m = METROS.find(x => x.name === e.target.value);
+        const m = METROS.find(x => `${x.name}|${x.st}` === e.target.value);
         if (m) setArea(encode(m.lat, m.lng, SITE.homePrecision), `${m.name} area`);
       };
     }
@@ -517,7 +517,7 @@ async function loadCity(fresh = false) {
   const side = $('#side');
   if (!map || !side) return;
   const token = ++cityToken;
-  const scope = mapMetro?.name || 'me'; // one fetch per center, sized for the wider radius so the 10/25 mile toggle is free
+  const scope = mapMetro ? `${mapMetro.name}|${mapMetro.st}` : 'me'; // one fetch per center, sized for the wider radius so the 10/25 mile toggle is free
   if (fresh || !cityCache || cityCache.scope !== scope) {
     try {
       const c0 = mapMetro || home();
@@ -559,7 +559,7 @@ async function loadCity(fresh = false) {
         <div class="stat"><div class="n">${goingTotal}</div><div class="l">going soon</div></div>
       </div>
       <div class="row" style="margin-top:12px;gap:8px;flex-wrap:wrap">
-        <select class="input" id="cityMetro" aria-label="City" style="flex:1;min-width:0"><option value="">My area</option>${[...METROS].sort((a, b) => a.name.localeCompare(b.name)).map(m => `<option value="${esc(m.name)}" ${mapMetro?.name === m.name ? 'selected' : ''}>${esc(m.name)}, ${m.st}</option>`).join('')}</select>
+        <select class="input" id="cityMetro" aria-label="City" style="flex:1;min-width:0"><option value="">My area</option>${[...METROS].sort((a, b) => a.name.localeCompare(b.name)).map(m => `<option value="${esc(m.name)}|${m.st}" ${mapMetro === m ? 'selected' : ''}>${esc(m.name)}, ${m.st}</option>`).join('')}</select>
         <button class="chip" id="wideBtn" aria-pressed="${wide}" style="padding:8px 14px">${wide ? '25 miles · closer' : '10 miles · wider'}</button>
       </div>
     </div>
@@ -581,7 +581,7 @@ async function loadCity(fresh = false) {
   $('#clubLink').onclick = openClubDialog;
   if (location.hash === '#club') { history.replaceState(null, '', '#map'); openClubDialog(); }
   $('#wideBtn').onclick = () => { wide = !wide; loadCity(); };
-  $('#cityMetro').onchange = e => { mapMetro = METROS.find(m => m.name === e.target.value) || null; loadCity(); };
+  $('#cityMetro').onchange = e => { mapMetro = METROS.find(m => `${m.name}|${m.st}` === e.target.value) || null; loadCity(); };
   $$('[data-spot]', side).forEach(b => b.onclick = () => {
     const s = spots.find(x => x.id === b.dataset.spot);
     map.setView([s.lat, s.lng], 14);
@@ -659,7 +659,7 @@ function openSpotDialog(latlng, forClub = false) {
       <div class="field">Shows games for
         <div class="picked">${profile.teams.map(id => `<label class="chip"><input type="checkbox" name="teams" value="${id}" ${id === teamId ? 'checked' : ''}>${logo(TEAM_BY_ID[id], 'sm')}${esc(TEAM_BY_ID[id]?.short)}</label>`).join('')}</div>
       </div>
-      <p class="muted" style="font-size:13px">Public places only, please. Never add someone's home.</p>
+      <p class="muted" style="font-size:13px">Public places only, please. Never add someone's home.${isAdmin() ? '' : ' New spots are checked before they appear on the map.'}</p>
       <p class="err" id="spotErr"></p>
       <div class="row" style="justify-content:flex-end"><button class="btn ghost" value="cancel" formnovalidate>Cancel</button><button class="btn primary" value="save">Add spot</button></div>
     </form>`;
@@ -671,33 +671,62 @@ function openSpotDialog(latlng, forClub = false) {
     const f = new FormData(e.target), teams = f.getAll('teams');
     if (!teams.length) { $('#spotErr', dlg).textContent = 'Pick at least one team.'; return; }
     try {
-      await S.addSpot({ name: f.get('name'), address: f.get('address'), club: f.get('club'), note: f.get('note'), lat: latlng.lat, lng: latlng.lng, teams, byName: profile.name });
-      dlg.close(); toast('Spot added. Thanks!');
+      const spot = { name: f.get('name'), address: f.get('address'), club: f.get('club'), note: f.get('note'), lat: latlng.lat, lng: latlng.lng, teams, byName: profile.name };
+      if (isAdmin()) await S.addSpot(spot); else await S.suggestSpot(spot);
+      dlg.close(); toast(isAdmin() ? 'Spot added. Thanks!' : 'Thanks! It will show on the map once we have checked it.');
       teams.forEach(t => delete cache[t]); cityCache = null; loadMap(true);
     } catch (x) { $('#spotErr', dlg).textContent = errMsg(x); }
   };
 }
 
+const MISSING_TEAM = 'A team is missing here';
+
+// Team search + chip picker. `root` holds #tpSel (chosen chips), #tpQ (search box) and #tpHits (results).
+// `picked` is mutated in place; max 1 replaces the choice. `skip()` lists team ids to hide from results.
+function mountTeamPicker(root, picked, max = 6, skip = () => []) {
+  const drawSel = () => {
+    $('#tpSel', root).innerHTML = picked.map(id => `<button type="button" class="chip" data-tprm="${esc(id)}">${logo(TEAM_BY_ID[id], 'sm')}${esc(TEAM_BY_ID[id]?.short)} ✕</button>`).join('');
+    $$('[data-tprm]', root).forEach(b => b.onclick = () => { picked.splice(picked.indexOf(b.dataset.tprm), 1); drawSel(); drawHits(); });
+  };
+  const drawHits = () => {
+    const toks = $('#tpQ', root).value.toLowerCase().split(/\s+/).filter(Boolean), hide = skip();
+    const hits = toks.length ? TEAMS.filter(t => !picked.includes(t.id) && !hide.includes(t.id) && toks.every(k => `${t.name} ${t.abbr} ${LEAGUES[t.lg]}`.toLowerCase().includes(k))).slice(0, 8) : [];
+    $('#tpHits', root).innerHTML = hits.map(t => `<button type="button" class="chip" data-tpadd="${esc(t.id)}">${logo(t, 'sm')}${esc(t.name)} <span class="muted">${esc(t.lg.toUpperCase())}</span></button>`).join('');
+    $$('[data-tpadd]', root).forEach(b => b.onclick = () => {
+      if (max === 1) picked.length = 0;
+      if (picked.length < max) { picked.push(b.dataset.tpadd); $('#tpQ', root).value = ''; drawSel(); drawHits(); }
+    });
+  };
+  $('#tpQ', root).oninput = drawHits;
+  $('#tpQ', root).onkeydown = e => { if (e.key === 'Enter') e.preventDefault(); };
+  drawSel();
+}
+
 function openReportDialog(s) {
   const reasons = s.eventAt
     ? ['Event cancelled or moved', 'Wrong place or time', 'Something else']
-    : ['Closed, or no longer shows the games', 'Wrong location or address', 'Wrong team', 'Something else'];
+    : ['Closed, or no longer shows the games', 'Wrong location or address', 'Wrong team', MISSING_TEAM, 'Something else'];
   const dlg = document.createElement('dialog');
   dlg.innerHTML = `<h3>What's wrong?</h3>
     <form method="dialog">
       <p class="muted" style="margin-top:-6px">${esc(s.name)}</p>
       <div style="display:grid;gap:8px">${reasons.map((r, i) => `<label class="row" style="gap:10px;font-weight:500"><input type="radio" name="reason" value="${esc(r)}" ${i ? '' : 'checked'}>${esc(r)}</label>`).join('')}</div>
+      <div class="field" id="repTeam" style="display:none">Which team? <div class="picked" id="tpSel"></div><input class="input" id="tpQ" placeholder="Search teams, e.g. Chiefs" autocomplete="off"><div class="picked" id="tpHits"></div></div>
       <label class="field">Details <span class="hint">optional</span><textarea class="input" name="note" maxlength="300" rows="3" placeholder="e.g. They moved to the bar down the street"></textarea></label>
       <p class="err" id="repErr"></p>
       <div class="row" style="justify-content:flex-end"><button class="btn ghost" value="cancel" formnovalidate>Cancel</button><button class="btn primary" value="send">Send</button></div>
     </form>`;
   document.body.append(dlg); dlg.showModal();
   dlg.addEventListener('close', () => dlg.remove());
+  const picked = [];
+  mountTeamPicker(dlg, picked, 1, () => s.teams || []);
+  $$('[name=reason]', dlg).forEach(r => r.onchange = () => { $('#repTeam', dlg).style.display = r.value === MISSING_TEAM ? '' : 'none'; });
   dlg.querySelector('form').onsubmit = async e => {
     if (e.submitter?.value !== 'send') return;
     e.preventDefault();
-    const f = new FormData(e.target);
-    try { await S.reportSpot({ spotId: s.id, spotName: s.name, name: profile.name, reason: f.get('reason'), note: f.get('note') }); dlg.close(); toast("Thanks, we'll check it"); }
+    const f = new FormData(e.target), missing = f.get('reason') === MISSING_TEAM;
+    if (missing && !picked.length) { $('#repErr', dlg).textContent = 'Pick the team that shows games here.'; return; }
+    try { await S.reportSpot({ spotId: s.id, spotName: s.name, name: profile.name, reason: f.get('reason'), note: f.get('note'), addTeam: missing ? picked[0] : '' }); dlg.close(); toast("Thanks, we'll check it"); }
     catch (x) { $('#repErr', dlg).textContent = errMsg(x); }
   };
 }
@@ -935,11 +964,12 @@ async function viewUsers() {
 /* ----------------------------------------------------------------- review */
 async function viewReview() {
   const v = $('#view');
-  v.innerHTML = `<div class="page"><h2>Review</h2><div id="leads" style="display:grid;gap:14px"></div><div id="reports" style="display:grid;gap:14px"></div><h3 style="font-size:26px;margin-top:10px">Scout finds</h3><p class="muted">Finds the weekly scout wasn't sure enough about to publish on its own. Approve puts them on the map; reject stops the scout suggesting them again.</p><div id="queue" style="display:grid;gap:14px"><div class="loading" style="min-height:160px">Loading…</div></div></div>`;
-  let items, reports, leads;
-  try { [items, reports, leads] = await Promise.all([S.listQueue(), S.listReports(), S.listVenueLeads()]); } catch (e) { $('#queue').innerHTML = `<div class="panel"><p class="err">${esc(errMsg(e))}</p></div>`; return; }
+  v.innerHTML = `<div class="page"><h2>Review</h2><div id="leads" style="display:grid;gap:14px"></div><div id="sugg" style="display:grid;gap:14px"></div><div id="reports" style="display:grid;gap:14px"></div><h3 style="font-size:26px;margin-top:10px">Scout finds</h3><p class="muted">Finds the weekly scout wasn't sure enough about to publish on its own. Approve puts them on the map; reject stops the scout suggesting them again.</p><div id="queue" style="display:grid;gap:14px"><div class="loading" style="min-height:160px">Loading…</div></div></div>`;
+  let items, reports, leads, suggs;
+  try { [items, reports, leads, suggs] = await Promise.all([S.listQueue(), S.listReports(), S.listVenueLeads(), S.listSuggestions()]); } catch (e) { $('#queue').innerHTML = `<div class="panel"><p class="err">${esc(errMsg(e))}</p></div>`; return; }
   if (view !== 'review') return;
   drawLeads(leads);
+  drawSuggestions(suggs);
   drawReports(reports);
   items.sort((a, b) => (a.queuedAt || 0) - (b.queuedAt || 0));
   const q = $('#queue');
@@ -1098,14 +1128,17 @@ async function openFixDialog(lead, removing = false) {
         <div class="field">Shows games for <span class="hint">untick a team to remove it</span>
           <div class="picked">${(s.teams || []).map(id => `<label class="chip"><input type="checkbox" name="teams" value="${esc(id)}" checked>${logo(TEAM_BY_ID[id], 'sm')}${esc(teamName(id))}</label>`).join('')}</div>
         </div>
+        <div class="field">Add a team <span class="hint">search, then tap to add</span><div class="picked" id="tpSel"></div><input class="input" id="tpQ" placeholder="Search teams, e.g. Chiefs" autocomplete="off"><div class="picked" id="tpHits"></div></div>
         <label class="row" style="gap:8px"><input type="checkbox" name="dismiss" checked>Dismiss this lead when saved</label>
         <p class="muted" style="font-size:13px">If you change the address it is looked up again to move the pin. The static /watch/ pages update at the next export.</p>
         <p class="err" id="fixErr"></p>
         <div class="row" style="justify-content:flex-end"><button class="btn ghost" value="back" formnovalidate>Back</button><button class="btn primary" value="save">Save</button></div>
       </form>`;
+    const extra = [];
+    mountTeamPicker(dlg, extra, 6, () => s.teams || []);
     $('form', dlg).onsubmit = async e => {
       e.preventDefault();
-      const err = $('#fixErr', dlg), f = new FormData(e.target), teams = f.getAll('teams');
+      const err = $('#fixErr', dlg), f = new FormData(e.target), teams = [...f.getAll('teams'), ...extra].slice(0, 6);
       if (e.submitter?.value === 'back') { pickView(); return; }
       if (!teams.length) { err.textContent = 'Keep at least one team (or remove the listing from the map instead).'; return; }
       const btns = $$('button', dlg); btns.forEach(b => b.disabled = true);
@@ -1128,6 +1161,31 @@ async function openFixDialog(lead, removing = false) {
   dlg.showModal();
 }
 
+function drawSuggestions(suggs) {
+  const box = $('#sugg');
+  if (!box) return;
+  if (!suggs.length) { box.innerHTML = ''; return; }
+  suggs.sort((a, b) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0));
+  box.innerHTML = `<h3 style="font-size:26px">Spots suggested by fans (${suggs.length})</h3><p class="muted">Approve puts it on the map for the teams listed.</p>` + suggs.map(s => `
+    <div class="panel" data-s="${esc(s.id)}" style="display:grid;gap:6px">
+      <div class="row">${(s.teams || []).map(id => logo(TEAM_BY_ID[id], 'sm')).join('')}<b class="grow">${esc(s.name)}</b></div>
+      <div class="muted" style="font-size:14px">${(s.teams || []).map(id => esc(TEAM_BY_ID[id]?.name || id)).join(', ')}${s.club ? ` · ${esc(s.club)}` : ''}</div>
+      <div style="font-size:14px">${esc(s.address || '')}${s.note ? `<br>“${esc(s.note)}”` : ''}</div>
+      <div class="muted" style="font-size:13px">From ${esc(s.byName)}${s.createdAt?.toMillis ? ` · ${timeAgo(s.createdAt.toMillis())}` : ''} · <a href="https://www.google.com/maps/search/?api=1&query=${s.lat},${s.lng}" target="_blank" rel="noopener">map</a></div>
+      <div class="row"><button class="btn sm primary" data-ok>Approve</button><button class="btn sm ghost" data-no>Reject</button></div>
+    </div>`).join('');
+  $$('[data-s]', box).forEach(card => {
+    const s = suggs.find(x => x.id === card.dataset.s);
+    const act = async (fn, msg) => {
+      $$('button', card).forEach(b => b.disabled = true);
+      try { await fn(s); cache = {}; cityCache = null; toast(msg); viewReview(); }
+      catch (e) { toast(errMsg(e)); $$('button', card).forEach(b => b.disabled = false); }
+    };
+    $('[data-ok]', card).onclick = () => act(S.approveSuggestion, `${s.name} is on the map`);
+    $('[data-no]', card).onclick = () => act(S.rejectSuggestion, 'Rejected');
+  });
+}
+
 function drawReports(reports) {
   const box = $('#reports');
   if (!box) return;
@@ -1136,9 +1194,10 @@ function drawReports(reports) {
   box.innerHTML = `<h3 style="font-size:26px">Reports from fans (${reports.length})</h3>` + reports.map(r => `
     <div class="panel" data-r="${esc(r.id)}" style="display:grid;gap:6px">
       <div class="row"><b class="grow">${esc(r.spotName || r.spotId)}</b><span class="badge">${esc(r.reason)}</span></div>
+      ${r.addTeam ? `<div style="font-size:14px">Says it shows <b>${esc(TEAM_BY_ID[r.addTeam]?.name || r.addTeam)}</b> games</div>` : ''}
       ${r.note ? `<div style="font-size:14px">“${esc(r.note)}”</div>` : ''}
       <div class="muted" style="font-size:13px">From ${esc(r.name)}${r.createdAt?.toMillis ? ` · ${timeAgo(r.createdAt.toMillis())}` : ''}</div>
-      <div class="row"><button class="btn sm primary" data-rm>Remove listing</button><button class="btn sm ghost" data-ok>Dismiss</button></div>
+      <div class="row">${r.addTeam ? `<button class="btn sm primary" data-addteam>Add ${esc(TEAM_BY_ID[r.addTeam]?.short || 'team')}</button>` : ''}<button class="btn sm ${r.addTeam ? 'ghost' : 'primary'}" data-rm>Remove listing</button><button class="btn sm ghost" data-ok>Dismiss</button></div>
     </div>`).join('');
   $$('[data-r]', box).forEach(card => {
     const r = reports.find(x => x.id === card.dataset.r);
@@ -1147,6 +1206,7 @@ function drawReports(reports) {
       try { await fn(r); cache = {}; toast(msg); viewReview(); }
       catch (e) { toast(errMsg(e)); $$('button', card).forEach(b => b.disabled = false); }
     };
+    $('[data-addteam]', card)?.addEventListener('click', () => act(S.applyReportedTeam, `${TEAM_BY_ID[r.addTeam]?.short || 'Team'} added`));
     $('[data-rm]', card).onclick = () => confirm(`Remove ${r.spotName} from the map?`) && act(S.removeReportedSpot, 'Listing removed');
     $('[data-ok]', card).onclick = () => act(x => S.dismissReport(x.id), 'Dismissed');
   });
