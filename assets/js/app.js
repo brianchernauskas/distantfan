@@ -1,11 +1,11 @@
-import * as S from './store.js?v=202610090814';
-import { SITE, ADMINS } from './config.js?v=202610090814';
-import { TEAMS, TEAM_BY_ID, LEAGUES } from './teams.js?v=202610090814';
-import { METROS } from './metros.js?v=202610090814';
-import { encode, center, bounds, areaLabel, km, nearestMetro } from './geo.js?v=202610090814';
-import { nextGames } from './schedule.js?v=202610090814';
-import { shopStrip, hydrateShop, shopBanner, hydrateBanner } from './shop.js?v=202610090814';
-import { firstTouch, followPrefill, clearFollow } from './attrib.js?v=202610090814';
+import * as S from './store.js?v=202610090815';
+import { SITE, ADMINS } from './config.js?v=202610090815';
+import { TEAMS, TEAM_BY_ID, LEAGUES } from './teams.js?v=202610090815';
+import { METROS } from './metros.js?v=202610090815';
+import { encode, center, bounds, areaLabel, km, nearestMetro } from './geo.js?v=202610090815';
+import { nextGames } from './schedule.js?v=202610090815';
+import { shopStrip, hydrateShop, shopBanner, hydrateBanner } from './shop.js?v=202610090815';
+import { firstTouch, followPrefill, clearFollow } from './attrib.js?v=202610090815';
 
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -269,7 +269,7 @@ function renderOnboarding(editing = false) {
         if (!native && !navigator.geolocation) { err.textContent = 'Location is not available in this browser. Pick a metro instead.'; return; }
         $('#locate').disabled = true; $('#locate').textContent = 'Locating…';
         // Inside the Capacitor app, use the native location plugin (native.js); on the web, the browser API.
-        const locate = native ? (ok, fail, o) => import('./native.js?v=202610090814').then(n => n.getPosition(ok, fail, o)) : (ok, fail, o) => navigator.geolocation.getCurrentPosition(ok, fail, o);
+        const locate = native ? (ok, fail, o) => import('./native.js?v=202610090815').then(n => n.getPosition(ok, fail, o)) : (ok, fail, o) => navigator.geolocation.getCurrentPosition(ok, fail, o);
         locate(p => {
           // Round to a coarse cell immediately; the coordinates are discarded here.
           const cell = encode(p.coords.latitude, p.coords.longitude, SITE.homePrecision);
@@ -939,17 +939,68 @@ function drawLeads(leads) {
       <div style="font-size:14px">Contact: ${esc(l.contact)}</div>
       ${l.note ? `<div style="font-size:14px">“${esc(l.note)}”</div>` : ''}
       <div class="muted" style="font-size:13px">${Date.parse(l.createdAt) ? timeAgo(Date.parse(l.createdAt)) : ''}</div>
-      <div class="row"><button class="btn sm primary" data-fix>Update a listing</button><button class="btn sm ghost" data-ok>Dismiss</button></div>
+      <div class="row"><button class="btn sm primary" data-fix>Update a listing</button><button class="btn sm primary" data-new>Add as new spot</button><button class="btn sm ghost" data-ok>Dismiss</button></div>
     </div>`).join('');
   $$('[data-l]', box).forEach(card => {
     const l = leads.find(x => x.id === card.dataset.l);
     $('[data-fix]', card).onclick = () => openFixDialog(l);
+    $('[data-new]', card).onclick = () => openNewFromLead(l);
     $('[data-ok]', card).onclick = async () => {
       $$('button', card).forEach(b => b.disabled = true);
       try { await S.dismissVenueLead(l.id); toast('Dismissed'); viewReview(); }
       catch (e) { toast(errMsg(e)); $$('button', card).forEach(b => b.disabled = false); }
     };
   });
+}
+
+// Add a lead's bar as a new listing: prefilled from the lead, team picker with search, address geocoded
+// (Nominatim allows browser calls). Optionally dismisses the lead.
+function openNewFromLead(lead) {
+  const dlg = document.createElement('dialog');
+  dlg.innerHTML = `<h3>Add as new spot</h3>
+    <form method="dialog" id="newForm">
+      <label class="field">Name<input class="input" name="name" required maxlength="80" value="${esc(lead.venue)}"></label>
+      <label class="field">Address<input class="input" name="address" required maxlength="120" value="${esc(lead.address || '')}"></label>
+      <label class="field">Fan club or chapter <span class="hint">optional</span><input class="input" name="club" maxlength="80"></label>
+      <label class="field">Note <span class="hint">optional</span><input class="input" name="note" maxlength="200" value="${esc((lead.note || '').slice(0, 200))}"></label>
+      <div class="field">Shows games for <span class="hint">up to 6</span>
+        <div class="picked" id="nSel"></div>
+        <input class="input" id="nQ" placeholder="Search teams, e.g. Hawkeyes" autocomplete="off">
+        <div class="picked" id="nHits"></div>
+      </div>
+      <label class="row" style="gap:8px"><input type="checkbox" name="dismiss" checked>Dismiss this lead when saved</label>
+      <p class="err" id="newErr"></p>
+      <div class="row" style="justify-content:flex-end"><button class="btn ghost" value="cancel" formnovalidate>Cancel</button><button class="btn primary" value="save">Add spot</button></div>
+    </form>`;
+  document.body.append(dlg); dlg.showModal();
+  dlg.addEventListener('close', () => dlg.remove());
+  const picked = [];
+  const drawSel = () => {
+    $('#nSel', dlg).innerHTML = picked.map(id => `<button type="button" class="chip" data-rm="${esc(id)}">${logo(TEAM_BY_ID[id], 'sm')}${esc(TEAM_BY_ID[id]?.short)} ✕</button>`).join('');
+    $$('[data-rm]', dlg).forEach(b => b.onclick = () => { picked.splice(picked.indexOf(b.dataset.rm), 1); drawSel(); drawHits(); });
+  };
+  const drawHits = () => {
+    const toks = $('#nQ', dlg).value.toLowerCase().split(/\s+/).filter(Boolean);
+    const hits = toks.length ? TEAMS.filter(t => !picked.includes(t.id) && toks.every(k => `${t.name} ${t.abbr} ${LEAGUES[t.lg]}`.toLowerCase().includes(k))).slice(0, 8) : [];
+    $('#nHits', dlg).innerHTML = hits.map(t => `<button type="button" class="chip" data-add="${esc(t.id)}">${logo(t, 'sm')}${esc(t.name)} <span class="muted">${esc(t.lg.toUpperCase())}</span></button>`).join('');
+    $$('[data-add]', dlg).forEach(b => b.onclick = () => { if (picked.length < 6) { picked.push(b.dataset.add); drawSel(); drawHits(); } });
+  };
+  $('#nQ', dlg).oninput = drawHits;
+  $('form', dlg).onsubmit = async e => {
+    if (e.submitter?.value !== 'save') return;
+    e.preventDefault();
+    const err = $('#newErr', dlg), f = new FormData(e.target);
+    if (!picked.length) { err.textContent = 'Pick at least one team.'; return; }
+    const btns = $$('button', dlg); btns.forEach(b => b.disabled = true);
+    try {
+      const r = await (await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=us&q=${encodeURIComponent(f.get('address'))}`)).json();
+      if (!r[0]) { err.textContent = 'Could not find that address. Check it and try again.'; btns.forEach(b => b.disabled = false); return; }
+      await S.addSpot({ name: f.get('name'), address: f.get('address'), club: f.get('club'), note: f.get('note'), lat: +r[0].lat, lng: +r[0].lon, teams: picked, byName: profile.name });
+      if (f.get('dismiss')) await S.dismissVenueLead(lead.id);
+      cache = {}; cityCache = null;
+      dlg.close(); toast('Spot added'); viewReview();
+    } catch (x) { err.textContent = errMsg(x); btns.forEach(b => b.disabled = false); }
+  };
 }
 
 // Fix an existing listing from a bar lead: find it, edit name / address / club / note / teams, and
