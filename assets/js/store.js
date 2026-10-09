@@ -1,9 +1,9 @@
 // Data layer. Uses Firebase (Auth + Firestore) when FIREBASE_CONFIG is set,
 // otherwise a demo store in localStorage seeded with clearly fake fans and spots.
-import { FIREBASE_CONFIG, SITE } from './config.js?v=202610090940';
-import { TEAMS, TEAM_BY_ID } from './teams.js?v=202610090940';
-import { METROS } from './metros.js?v=202610090940';
-import { encode, center } from './geo.js?v=202610090940';
+import { FIREBASE_CONFIG, SITE } from './config.js?v=202610090945';
+import { TEAMS, TEAM_BY_ID } from './teams.js?v=202610090945';
+import { METROS } from './metros.js?v=202610090945';
+import { encode, center } from './geo.js?v=202610090945';
 
 export const mode = FIREBASE_CONFIG ? 'firebase' : 'demo';
 let impl;
@@ -51,6 +51,7 @@ export const listSpots = call('listSpots');
 export const dismissVenueLead = call('dismissVenueLead');
 export const updateSpot = call('updateSpot');
 export const removeListing = call('removeListing');
+export const getAnalytics = call('getAnalytics');
 
 // Best-effort GA4 event; a no-op until Analytics has loaded (or when blocked).
 let trackImpl = null;
@@ -138,7 +139,7 @@ async function firebaseStore() {
     // Inside the Capacitor app popups don't work, so use the native Google account chooser (native.js).
     signInGoogle: async () => {
       if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
-        return (await import('./native.js?v=202610090940')).signInGoogle(A, auth);
+        return (await import('./native.js?v=202610090945')).signInGoogle(A, auth);
       }
       return A.signInWithPopup(auth, new A.GoogleAuthProvider());
     },
@@ -151,7 +152,7 @@ async function firebaseStore() {
     resetPassword: email => A.sendPasswordResetEmail(auth, email),
     signInDemo: () => { throw new Error('Demo sign-in is only available in demo mode.'); },
     signOut: async () => {
-      if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) await (await import('./native.js?v=202610090940')).signOut();
+      if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) await (await import('./native.js?v=202610090945')).signOut();
       return A.signOut(auth);
     },
 
@@ -275,6 +276,8 @@ async function firebaseStore() {
     // REST API directly from index.html). Admin only, enforced by firestore.rules.
     listVenueLeads: () => list(F.query(F.collection(db, 'venueLeads'), F.limit(200))),
     dismissVenueLead: id => F.deleteDoc(F.doc(db, 'venueLeads', id)),
+    // GA4 snapshot written by tools/scout/analytics-sync.mjs. Admin only; null until the first sync.
+    async getAnalytics() { const d = await F.getDoc(F.doc(db, 'adminStats', 'analytics')); return d.exists() ? d.data() : null; },
     // Admin removal of a listing from a lead. Scout-made spots are also rejected so the scout won't re-add them.
     async removeListing(s) {
       const b = F.writeBatch(db);
@@ -404,6 +407,7 @@ function demoStore() {
     async dismissVenueLead() {},
     async updateSpot() {},
     async removeListing() {},
+    async getAnalytics() { return null; },
     async approveQueued() {},
     async rejectQueued() {},
     async deleteMessage(id, mid) { state.rooms[id] = (state.rooms[id] || []).filter(m => m.id !== mid); save(); emitRoom(id); },

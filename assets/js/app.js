@@ -1,11 +1,11 @@
-import * as S from './store.js?v=202610090940';
-import { SITE, ADMINS } from './config.js?v=202610090940';
-import { TEAMS, TEAM_BY_ID, LEAGUES } from './teams.js?v=202610090940';
-import { METROS } from './metros.js?v=202610090940';
-import { encode, center, bounds, areaLabel, km, nearestMetro } from './geo.js?v=202610090940';
-import { nextGames } from './schedule.js?v=202610090940';
-import { shopStrip, hydrateShop, shopBanner, hydrateBanner } from './shop.js?v=202610090940';
-import { firstTouch, followPrefill, clearFollow } from './attrib.js?v=202610090940';
+import * as S from './store.js?v=202610090945';
+import { SITE, ADMINS } from './config.js?v=202610090945';
+import { TEAMS, TEAM_BY_ID, LEAGUES } from './teams.js?v=202610090945';
+import { METROS } from './metros.js?v=202610090945';
+import { encode, center, bounds, areaLabel, km, nearestMetro } from './geo.js?v=202610090945';
+import { nextGames } from './schedule.js?v=202610090945';
+import { shopStrip, hydrateShop, shopBanner, hydrateBanner } from './shop.js?v=202610090945';
+import { firstTouch, followPrefill, clearFollow } from './attrib.js?v=202610090945';
 
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -269,7 +269,7 @@ function renderOnboarding(editing = false) {
         if (!native && !navigator.geolocation) { err.textContent = 'Location is not available in this browser. Pick a metro instead.'; return; }
         $('#locate').disabled = true; $('#locate').textContent = 'Locating…';
         // Inside the Capacitor app, use the native location plugin (native.js); on the web, the browser API.
-        const locate = native ? (ok, fail, o) => import('./native.js?v=202610090940').then(n => n.getPosition(ok, fail, o)) : (ok, fail, o) => navigator.geolocation.getCurrentPosition(ok, fail, o);
+        const locate = native ? (ok, fail, o) => import('./native.js?v=202610090945').then(n => n.getPosition(ok, fail, o)) : (ok, fail, o) => navigator.geolocation.getCurrentPosition(ok, fail, o);
         locate(p => {
           // Round to a coarse cell immediately; the coordinates are discarded here.
           const cell = encode(p.coords.latitude, p.coords.longitude, SITE.homePrecision);
@@ -863,12 +863,44 @@ async function viewUsers() {
       sort: (a, b) => a.name.localeCompare(b.name),
     },
   };
-  let set = 'spots', group = 'city', showAll = false, browse = false;
+  let set = 'spots', group = 'city', showAll = false, browse = false, ga;
+
+  const drawTraffic = () => {
+    const n = x => Math.round(x || 0).toLocaleString();
+    const delta = (c, p) => !p ? '' : `<span class="muted" style="font-size:12px">${c >= p ? '+' : ''}${Math.round((c - p) / p * 100)}% vs prior 28d</span>`;
+    let body;
+    if (ga === undefined) body = '<div class="panel"><p class="muted">Loading…</p></div>';
+    else if (!ga) body = '<div class="panel"><p class="muted">No analytics yet. Run <code>node tools/scout/analytics-sync.mjs</code> (needs the one-time GA4 access setup described at the top of that file).</p></div>';
+    else {
+      const t = ga.totals, p = ga.prior, ev = name => ga.events.find(e => e.name === name)?.count || 0;
+      const max = Math.max(1, ...ga.daily.map(d => d.users)), W = 560, H = 80, bw = W / Math.max(1, ga.daily.length);
+      const bars = ga.daily.map((d, i) => { const h = Math.max(1, d.users / max * (H - 6)); return `<rect x="${(i * bw + 1).toFixed(1)}" y="${(H - h).toFixed(1)}" width="${Math.max(1, bw - 2).toFixed(1)}" height="${h.toFixed(1)}" rx="2" fill="currentColor" opacity=".55"><title>${esc(d.d.slice(4, 6) + '/' + d.d.slice(6))}: ${d.users} users, ${d.sessions} sessions</title></rect>`; }).join('');
+      const tile = (label, val, pv) => `<div class="panel" style="display:grid;gap:2px;padding:12px"><span class="muted" style="font-size:12px">${label}</span><b style="font-size:26px;line-height:1.1">${n(val)}</b>${pv === undefined ? '' : delta(val, pv)}</div>`;
+      const table = (title, rows, a, b, label) => `<div><b>${title}</b><div style="display:grid;gap:6px;margin-top:8px">${rows.length ? rows.map(r => `<div class="row"><span class="grow" style="word-break:break-all">${esc(label(r))}</span><b>${n(r[a])}</b>${b ? `<span class="muted" style="font-size:12px;width:56px;text-align:right">${r[a] ? Math.round(r[b] / r[a] * 100) : 0}% eng.</span>` : ''}</div>`).join('') : '<span class="muted">No data</span>'}</div></div>`;
+      body = `
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px">${tile('Users (28d)', t.users, p.users)}${tile('New users', t.newUsers, p.newUsers)}${tile('Sessions', t.sessions, p.sessions)}${tile('Page views', t.views, p.views)}${tile('Sign-ups', ev('sign_up'))}${tile('Shares', ev('share'))}</div>
+        <div class="panel" style="display:grid;gap:6px"><b>Daily users</b><svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}" role="img" aria-label="Daily active users, last 28 days" preserveAspectRatio="none">${bars}</svg><span class="muted" style="font-size:12px">Last 28 days. Hover a bar for the day.</span></div>
+        <div class="panel" style="display:grid;gap:16px">
+          ${table('Where visits come from', ga.channels, 'sessions', 'engaged', r => r.name)}
+          ${table('Top sources', ga.sources, 'sessions', null, r => r.name)}
+          ${table('Landing pages', ga.pages, 'sessions', 'engaged', r => r.path)}
+          ${table('Top cities', ga.cities, 'users', null, r => r.name)}
+          ${table('Events', ga.events, 'count', null, r => r.name)}
+        </div>
+        <p class="muted" style="font-size:12px">Google Analytics 4 · updated ${esc(timeAgo(ga.updatedAt))} · refreshed by <code>analytics-sync.mjs</code>; new sign-ups can take a day to show.</p>`;
+    }
+    v.innerHTML = shell(`<div class="row" style="gap:6px;margin-bottom:12px">${seg('data-set', set, [['spots', `Watch spots · ${spots.length}`], ['fans', `Fans · ${people.length}`], ['traffic', 'Traffic']])}</div><div style="display:grid;gap:14px">${body}</div>`);
+    $$('[data-set]').forEach(b => b.onclick = () => { set = b.dataset.set; draw(); });
+  };
 
   const tally = (items, keys) => { const m = {}; items.forEach(i => keys(i).forEach(k => (m[k] ||= []).push(i))); return Object.entries(m).sort((a, b) => b[1].length - a[1].length || a[0].localeCompare(b[0])); };
   const seg = (attr, cur, opts) => opts.map(([k, n]) => `<button class="chip" ${attr}="${k}" aria-pressed="${k === cur}">${n}</button>`).join('');
 
   const draw = () => {
+    if (set === 'traffic') {
+      if (ga === undefined) S.getAnalytics().then(r => { ga = r; if (view === 'users' && set === 'traffic') drawTraffic(); }).catch(e => { ga = null; console.warn(e); if (view === 'users' && set === 'traffic') drawTraffic(); });
+      return drawTraffic();
+    }
     const D = SETS[set], n = D.items.length;
     const cities = tally(D.items, D.city), teams = tally(D.items, D.teams);
     const top = list => showAll ? list : list.slice(0, 10);
@@ -877,7 +909,7 @@ async function viewUsers() {
     const by = group === 'team' ? teams : cities;
     const groups = group === 'recent' ? [['All, most recent first', D.items]] : by.map(([k, ps]) => [group === 'team' ? teamName(k) : k, [...ps].sort(D.sort)]);
     v.innerHTML = shell(`
-      <div class="row" style="gap:6px;margin-bottom:12px">${seg('data-set', set, [['spots', `Watch spots · ${spots.length}`], ['fans', `Fans · ${people.length}`]])}</div>
+      <div class="row" style="gap:6px;margin-bottom:12px">${seg('data-set', set, [['spots', `Watch spots · ${spots.length}`], ['fans', `Fans · ${people.length}`], ['traffic', 'Traffic']])}</div>
       <div class="panel" style="display:grid;gap:12px">
         <div class="row"><b style="font-size:36px;line-height:1">${n}</b><span class="muted grow">${D.noun[n === 1 ? 0 : 1]} nationwide, all teams</span></div>
         <div class="muted" style="font-size:13px">${D.note}</div>

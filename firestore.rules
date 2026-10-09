@@ -64,6 +64,8 @@ service cloud.firestore {
     // Watch-party scout (tools/scout). Its admin key bypasses these rules; the admin reviews in the app.
     match /scoutQueue/{id} { allow read, write: if isAdmin(); }
     match /scoutRejects/{id} { allow read, write: if isAdmin(); }
+    // Private stats written by tools/scout/analytics-sync.mjs (admin SDK bypasses rules); admin reads only.
+    match /adminStats/{id} { allow read: if isAdmin(); allow write: if false; }
 
     // "Still accurate?" reports from fans. One per fan per spot; only the admin reads them.
     match /spotReports/{id} {
