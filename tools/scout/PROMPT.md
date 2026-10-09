@@ -36,6 +36,67 @@ of Dallas"). Then open the chapter's own page or the bar's site to confirm the v
 - Budget: about 3–4 fetches per team. Many teams have no directory. Skip them quickly.
 - Include venues already in `onMap` that you re-confirm, so their expiry refreshes.
 
+### Team bar networks (directory mode, separate file)
+
+Many pro teams, especially NHL and NBA, run an official **bar network**: a page on the team's own
+site listing dozens of local bars that show every game, with full addresses. These are the best
+source there is for hockey and basketball, where away-fan clubs rarely name a bar. They list bars
+in the team's **own** market, so they're home-team finds: put them in a **second** candidates file,
+`runs/candidates-network-YYYY-MM-DD.json` with `"mode": "network"`, and apply it separately
+(`node apply.mjs runs/candidates-network-YYYY-MM-DD.json`). `apply.mjs` keeps home-team finds from
+any mode except `directory`, so they'd be stripped if they went in the directory file. A bar
+network's out-of-state entries (a team's official bar in another city) can go in either file.
+
+For each pro team in this week's bucket, check for a bar-network page (1–2 fetches, then move on).
+Known pages, re-check these whenever their team is in the bucket:
+
+| Team | Page |
+| --- | --- |
+| Seattle Kraken | https://www.nhl.com/kraken/fans/watch-parties (Anchor Alliance + Affiliate Bars) |
+| St. Louis Blues | https://www.nhl.com/blues/fans/bars |
+| New York Rangers | https://www.nhl.com/rangers/fans/bar-network |
+| Nashville Predators | https://www.nhl.com/predators/fans/preds-approved |
+| Philadelphia Flyers | https://nhl.com/flyers/fans/bar-network |
+| New Jersey Devils | https://www.nhl.com/devils/fans/bar-network (also lists dated viewing parties) |
+| Detroit Red Wings | https://www.nhl.com/redwings/fans/on-tap |
+| Buffalo Sabres | Sabrehood Bar Network, posted as a news article on nhl.com/sabres each season |
+| Carolina Hurricanes | https://www.nhl.com/hurricanes/fans/canes-bars (most entries lack street addresses; get them from the bar's own site) |
+| Chicago Blackhawks | https://www.nhl.com/blackhawks/fans/blackhawks-bars (said "check back soon" in Oct 2026) |
+| Washington Commanders | https://www.commanders.com/fans/rally/commanders-connect (city only; get addresses from each bar's "More Info" link) |
+| Oklahoma City Thunder | https://www.nba.com/thunder/barnetwork (JS-only, see below) |
+| Milwaukee Bucks | https://www.nba.com/bucks/bars (JS-only, see below) |
+| Boston Celtics | https://www.nba.com/celtics/promotions/corona/bar-network (JS-only, see below) |
+| Portland Trail Blazers | https://www.nba.com/blazers/barnetwork (JS-only, see below) |
+
+For teams not in the table, try the usual URL shapes: `nhl.com/<team>/fans/bar-network`,
+`/fans/bars`, `/fans/watch-parties`, `/fans/watch-party`; `nba.com/<team>/barnetwork` or `/bars`;
+or a search for `"<team>" "bar network" OR "official bars"`. When you find a new one, add it to the
+table above in your summary so Brian can add it here.
+
+Team-site bar lists are the team itself naming the venue, so they're **high** confidence when the
+page is current and gives a street address. Skip entries without one rather than guessing it.
+Many nba.com bar pages load the list with JavaScript, so WebFetch and `fetch.mjs` see nothing. For
+those, use the matching Watch Party Radar team page (next section) instead, as **medium**.
+
+### Watch Party Radar
+
+Watch Party Radar (`watchpartyradar.com`, also served from `worldcup.dashmote.com`) is a
+third-party directory of bars by sport, team and city, with an evidence link on every venue. Its
+team pages copy official bar lists that are otherwise JS-only, including the NBA bar networks above
+and the Packers Everywhere finder. URL shapes:
+
+- `https://watchpartyradar.com/<sport>/<team-slug>/<city-slug>/`, e.g. `/nba/milwaukee-bucks/milwaukee/`,
+  `/nfl/green-bay-packers/dallas/`
+- `https://watchpartyradar.com/<sport>/<city-slug>/` lists every venue for that sport in a city
+
+`watchpartyradar.com` fetched more reliably than `worldcup.dashmote.com` in testing. If one fails,
+try the other once, then skip. Listings are **medium** (they go to Brian's review queue): set
+`sourceName` to e.g. "Watch Party Radar (citing the Bucks Bar Network)" and `sourceUrl` to the Watch
+Party Radar page. If you open the official source it cites, and that page names the venue with an
+address, list it as **high** with the official page as the source instead. Ignore Tom's Watch Bar
+"Best <team> Bar in <city>" pages: they're the chain's own SEO pages for every team at every location,
+not real team affiliations.
+
 ## City mode: one city at a time, all teams at once
 
 ```
@@ -52,6 +113,10 @@ home-team finds from city mode; it only strips them out of directory-mode result
 - Local news and city guides ("where to watch <team> in Dallas", "out-of-town fan bars Houston",
   "best bars to watch the Cowboys in Dallas")
 - Bars' own event pages
+- Watch Party Radar (see above): open `watchpartyradar.com/<sport>/<city-slug>/` for the sports in
+  season and pull the venues tied to a specific team. Spend 2–3 fetches per city on it, ahead of
+  general searches, since one page often lists 20+ venues with addresses.
+- The city's home teams' bar-network pages, if they have one (table above)
 - Budget: about 12–15 searches per city. Favour the biggest traveling fan bases first (for example
   Steelers, Packers, Bills, Eagles, Cowboys, Chiefs, Buckeyes, Michigan, Notre Dame, Alabama, the big
   SEC and Big Ten schools, Red Sox, Yankees, Cubs), then spend a couple of searches on that city's
