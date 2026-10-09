@@ -1,9 +1,9 @@
 // Data layer. Uses Firebase (Auth + Firestore) when FIREBASE_CONFIG is set,
 // otherwise a demo store in localStorage seeded with clearly fake fans and spots.
-import { FIREBASE_CONFIG, SITE } from './config.js?v=202610061705';
-import { TEAMS, TEAM_BY_ID } from './teams.js?v=202610061705';
-import { METROS } from './metros.js?v=202610061705';
-import { encode, center } from './geo.js?v=202610061705';
+import { FIREBASE_CONFIG, SITE } from './config.js?v=202610090814';
+import { TEAMS, TEAM_BY_ID } from './teams.js?v=202610090814';
+import { METROS } from './metros.js?v=202610090814';
+import { encode, center } from './geo.js?v=202610090814';
 
 export const mode = FIREBASE_CONFIG ? 'firebase' : 'demo';
 let impl;
@@ -49,6 +49,7 @@ export const listVenueLeads = call('listVenueLeads');
 export const listProfiles = call('listProfiles');
 export const listSpots = call('listSpots');
 export const dismissVenueLead = call('dismissVenueLead');
+export const updateSpot = call('updateSpot');
 
 // Best-effort GA4 event; a no-op until Analytics has loaded (or when blocked).
 let trackImpl = null;
@@ -136,7 +137,7 @@ async function firebaseStore() {
     // Inside the Capacitor app popups don't work, so use the native Google account chooser (native.js).
     signInGoogle: async () => {
       if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
-        return (await import('./native.js?v=202610061705')).signInGoogle(A, auth);
+        return (await import('./native.js?v=202610090814')).signInGoogle(A, auth);
       }
       return A.signInWithPopup(auth, new A.GoogleAuthProvider());
     },
@@ -149,7 +150,7 @@ async function firebaseStore() {
     resetPassword: email => A.sendPasswordResetEmail(auth, email),
     signInDemo: () => { throw new Error('Demo sign-in is only available in demo mode.'); },
     signOut: async () => {
-      if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) await (await import('./native.js?v=202610061705')).signOut();
+      if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) await (await import('./native.js?v=202610090814')).signOut();
       return A.signOut(auth);
     },
 
@@ -273,6 +274,14 @@ async function firebaseStore() {
     // REST API directly from index.html). Admin only, enforced by firestore.rules.
     listVenueLeads: () => list(F.query(F.collection(db, 'venueLeads'), F.limit(200))),
     dismissVenueLead: id => F.deleteDoc(F.doc(db, 'venueLeads', id)),
+    // Admin fix to an existing listing (rules: isAdmin() may update any spot). createdAt is bumped so the
+    // snapshot-plus-delta read picks the change up before the next export-spots run.
+    async updateSpot(id, p) {
+      const patch = { name: clean(p.name, 80), address: clean(p.address, 120), club: clean(p.club, 80), note: clean(p.note, 200), teams: p.teams.slice(0, 6), createdAt: F.serverTimestamp() };
+      if (p.lat != null) { patch.lat = +p.lat; patch.lng = +p.lng; }
+      await F.updateDoc(F.doc(db, 'spots', id), patch);
+      spotsDirty = true;
+    },
   };
 }
 
@@ -384,6 +393,7 @@ function demoStore() {
     async dismissReport() {},
     async listVenueLeads() { return []; },
     async dismissVenueLead() {},
+    async updateSpot() {},
     async approveQueued() {},
     async rejectQueued() {},
     async deleteMessage(id, mid) { state.rooms[id] = (state.rooms[id] || []).filter(m => m.id !== mid); save(); emitRoom(id); },

@@ -1,11 +1,11 @@
-import * as S from './store.js?v=202610061705';
-import { SITE, ADMINS } from './config.js?v=202610061705';
-import { TEAMS, TEAM_BY_ID, LEAGUES } from './teams.js?v=202610061705';
-import { METROS } from './metros.js?v=202610061705';
-import { encode, center, bounds, areaLabel, km, nearestMetro } from './geo.js?v=202610061705';
-import { nextGames } from './schedule.js?v=202610061705';
-import { shopStrip, hydrateShop, shopBanner, hydrateBanner } from './shop.js?v=202610061705';
-import { firstTouch, followPrefill, clearFollow } from './attrib.js?v=202610061705';
+import * as S from './store.js?v=202610090814';
+import { SITE, ADMINS } from './config.js?v=202610090814';
+import { TEAMS, TEAM_BY_ID, LEAGUES } from './teams.js?v=202610090814';
+import { METROS } from './metros.js?v=202610090814';
+import { encode, center, bounds, areaLabel, km, nearestMetro } from './geo.js?v=202610090814';
+import { nextGames } from './schedule.js?v=202610090814';
+import { shopStrip, hydrateShop, shopBanner, hydrateBanner } from './shop.js?v=202610090814';
+import { firstTouch, followPrefill, clearFollow } from './attrib.js?v=202610090814';
 
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -269,7 +269,7 @@ function renderOnboarding(editing = false) {
         if (!native && !navigator.geolocation) { err.textContent = 'Location is not available in this browser. Pick a metro instead.'; return; }
         $('#locate').disabled = true; $('#locate').textContent = 'Locating…';
         // Inside the Capacitor app, use the native location plugin (native.js); on the web, the browser API.
-        const locate = native ? (ok, fail, o) => import('./native.js?v=202610061705').then(n => n.getPosition(ok, fail, o)) : (ok, fail, o) => navigator.geolocation.getCurrentPosition(ok, fail, o);
+        const locate = native ? (ok, fail, o) => import('./native.js?v=202610090814').then(n => n.getPosition(ok, fail, o)) : (ok, fail, o) => navigator.geolocation.getCurrentPosition(ok, fail, o);
         locate(p => {
           // Round to a coarse cell immediately; the coordinates are discarded here.
           const cell = encode(p.coords.latitude, p.coords.longitude, SITE.homePrecision);
@@ -939,16 +939,82 @@ function drawLeads(leads) {
       <div style="font-size:14px">Contact: ${esc(l.contact)}</div>
       ${l.note ? `<div style="font-size:14px">“${esc(l.note)}”</div>` : ''}
       <div class="muted" style="font-size:13px">${Date.parse(l.createdAt) ? timeAgo(Date.parse(l.createdAt)) : ''}</div>
-      <div class="row"><button class="btn sm ghost" data-ok>Dismiss</button></div>
+      <div class="row"><button class="btn sm primary" data-fix>Update a listing</button><button class="btn sm ghost" data-ok>Dismiss</button></div>
     </div>`).join('');
   $$('[data-l]', box).forEach(card => {
     const l = leads.find(x => x.id === card.dataset.l);
+    $('[data-fix]', card).onclick = () => openFixDialog(l);
     $('[data-ok]', card).onclick = async () => {
       $$('button', card).forEach(b => b.disabled = true);
       try { await S.dismissVenueLead(l.id); toast('Dismissed'); viewReview(); }
       catch (e) { toast(errMsg(e)); $$('button', card).forEach(b => b.disabled = false); }
     };
   });
+}
+
+// Fix an existing listing from a bar lead: find it, edit name / address / club / note / teams, and
+// optionally dismiss the lead. A changed address is re-geocoded (Nominatim allows browser calls).
+async function openFixDialog(lead) {
+  let spots;
+  try { spots = await S.listSpots(); } catch (e) { toast(errMsg(e)); return; }
+  const dlg = document.createElement('dialog');
+  document.body.append(dlg);
+  dlg.addEventListener('close', () => dlg.remove());
+  const cityOf = a => (String(a || '').match(/,\s*([^,]+),\s*[A-Z]{2}\b/) || [])[1] || '';
+  const teamName = id => TEAM_BY_ID[id]?.short || id;
+  const search = q => {
+    const toks = q.toLowerCase().split(/\s+/).filter(Boolean);
+    return spots.filter(s => { const hay = `${s.name} ${s.address} ${s.city || ''} ${s.club || ''}`.toLowerCase(); return toks.every(t => hay.includes(t)); }).slice(0, 12);
+  };
+  const pickView = (q = cityOf(lead.address)) => {
+    const hits = search(q);
+    dlg.innerHTML = `<h3>Which listing is wrong?</h3>
+      <p class="muted" style="font-size:13px">Lead: <b>${esc(lead.venue)}</b>${lead.address ? `, ${esc(lead.address)}` : ''}${lead.note ? `<br>“${esc(lead.note)}”` : ''}</p>
+      <label class="field">Search listings<input class="input" id="fixQ" value="${esc(q)}" placeholder="name, city or club"></label>
+      <div class="list" style="margin:0 -8px 10px;max-height:40vh;overflow:auto">${hits.map(s => `<button class="item" data-id="${esc(s.id)}"><span class="pinicon">📍</span><span class="main"><span class="t" style="display:block">${esc(s.name)}</span><span class="s">${esc(s.address || s.city || '')} · ${esc((s.teams || []).map(teamName).join(', '))}</span></span></button>`).join('') || '<p class="muted" style="padding:8px">No listings match.</p>'}</div>
+      <div class="row" style="justify-content:flex-end"><button class="btn ghost" data-x>Cancel</button></div>`;
+    $('[data-x]', dlg).onclick = () => dlg.close();
+    const qi = $('#fixQ', dlg); qi.oninput = () => { clearTimeout(qi._t); qi._t = setTimeout(() => { pickView(qi.value); $('#fixQ', dlg).focus(); const e = $('#fixQ', dlg); e.setSelectionRange(e.value.length, e.value.length); }, 250); };
+    $$('[data-id]', dlg).forEach(b => b.onclick = () => editView(spots.find(s => s.id === b.dataset.id)));
+  };
+  const editView = s => {
+    dlg.innerHTML = `<h3>Update listing</h3>
+      <form method="dialog" id="fixForm">
+        <label class="field">Name<input class="input" name="name" required maxlength="80" value="${esc(s.name)}"></label>
+        <label class="field">Address<input class="input" name="address" maxlength="120" value="${esc(s.address || '')}"></label>
+        <label class="field">Fan club or chapter<input class="input" name="club" maxlength="80" value="${esc(s.club || '')}"></label>
+        <label class="field">Note<input class="input" name="note" maxlength="200" value="${esc(s.note || '')}"></label>
+        <div class="field">Shows games for <span class="hint">untick a team to remove it</span>
+          <div class="picked">${(s.teams || []).map(id => `<label class="chip"><input type="checkbox" name="teams" value="${esc(id)}" checked>${logo(TEAM_BY_ID[id], 'sm')}${esc(teamName(id))}</label>`).join('')}</div>
+        </div>
+        <label class="row" style="gap:8px"><input type="checkbox" name="dismiss" checked>Dismiss this lead when saved</label>
+        <p class="muted" style="font-size:13px">If you change the address it is looked up again to move the pin. The static /watch/ pages update at the next export.</p>
+        <p class="err" id="fixErr"></p>
+        <div class="row" style="justify-content:flex-end"><button class="btn ghost" value="back" formnovalidate>Back</button><button class="btn primary" value="save">Save</button></div>
+      </form>`;
+    $('form', dlg).onsubmit = async e => {
+      e.preventDefault();
+      const err = $('#fixErr', dlg), f = new FormData(e.target), teams = f.getAll('teams');
+      if (e.submitter?.value === 'back') { pickView(); return; }
+      if (!teams.length) { err.textContent = 'Keep at least one team (or remove the listing from the map instead).'; return; }
+      const btns = $$('button', dlg); btns.forEach(b => b.disabled = true);
+      try {
+        const patch = { name: f.get('name'), address: f.get('address'), club: f.get('club'), note: f.get('note'), teams };
+        const addr = String(f.get('address') || '').trim();
+        if (addr && addr !== (s.address || '')) {
+          const r = await (await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=us&q=${encodeURIComponent(addr)}`)).json();
+          if (r[0]) { patch.lat = +r[0].lat; patch.lng = +r[0].lon; }
+          else if (!confirm('Could not find that address, so the pin will stay where it is. Save anyway?')) { btns.forEach(b => b.disabled = false); return; }
+        }
+        await S.updateSpot(s.id, patch);
+        if (f.get('dismiss')) await S.dismissVenueLead(lead.id);
+        cache = {}; cityCache = null;
+        dlg.close(); toast('Listing updated'); viewReview();
+      } catch (x) { err.textContent = errMsg(x); btns.forEach(b => b.disabled = false); }
+    };
+  };
+  pickView();
+  dlg.showModal();
 }
 
 function drawReports(reports) {
