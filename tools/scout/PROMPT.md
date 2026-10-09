@@ -97,6 +97,34 @@ address, list it as **high** with the official page as the source instead. Ignor
 "Best <team> Bar in <city>" pages: they're the chain's own SEO pages for every team at every location,
 not real team affiliations.
 
+### 2nd Home Sports backlog (directory mode)
+
+2nd Home Sports (`2ndhomesports.com`) is a third-party directory of NFL and college-football team
+bars with full street addresses. Its blog has 100+ index pages of posts titled "<Team> bars in
+<City>: Find a <Team> sports bar near you", each listing that team's bars in that city. Work through
+them a few pages per run so the whole archive gets covered over time:
+
+1. Read `runs/2ndhome-progress.json` if it exists: `{ "nextPage": <n>, "seen": [<post URLs>] }`.
+   If it doesn't, start at `{ "nextPage": 2, "seen": [] }`.
+2. Read index page 1 (`https://2ndhomesports.com/blogs/`) for posts newer than last run, plus
+   pages `nextPage` through `nextPage + 3` (`https://2ndhomesports.com/blogs/page/<n>/`). Collect the
+   "<team> bar <city>" post URLs that aren't in `seen`. Skip non-listing posts (videos, "submit a
+   bar"). The city guides (`/blogs/nfl-sports-bar-los-angeles-2024/`, `/blogs/nyc-sports-bars-nfl-2024/`,
+   `/blogs/nfl-sports-bars-washington-dc-2024/`) were read on 2026-10-09; skip them.
+3. Read the posts in batches with one `fetch.mjs` call each, e.g.
+   `node fetch.mjs <url1> <url2> ... <url12> --grep "\d+ .* (St|Ave|Rd|Blvd|Dr|Hwy|Pkwy|Way|Ln)|bars in"`.
+   Unlike the rest of directory mode, take every team on these pages, not just this week's bucket.
+4. Add each bar with a full street address as **medium** (`sourceName` "2nd Home Sports",
+   `sourceUrl` the post). Many posts date from 2024, so they go to Brian's review queue. If the bar's
+   own site or the team's club page confirms it, it can be **high** with that page as the source.
+   Home-team bars (a Cowboys bar in Dallas) go in the network file, not the directory file.
+5. Write `runs/2ndhome-progress.json` back with the post URLs you read added to `seen` and
+   `nextPage` moved on by 4. When an index page comes back empty, you've reached the end: set `nextPage` back to
+   2 so it starts a fresh pass, which re-confirms listings before they expire.
+
+Budget: about 4 index pages and up to 3 `fetch.mjs` batch calls per run. If the site blocks both
+WebFetch and `fetch.mjs`, note it in your summary and skip this step.
+
 ## City mode: one city at a time, all teams at once
 
 ```
@@ -117,6 +145,10 @@ home-team finds from city mode; it only strips them out of directory-mode result
   season and pull the venues tied to a specific team. Spend 2–3 fetches per city on it, ahead of
   general searches, since one page often lists 20+ venues with addresses.
 - The city's home teams' bar-network pages, if they have one (table above)
+- 2nd Home Sports posts for the city's biggest traveling fan bases, if one exists, e.g.
+  `https://2ndhomesports.com/blogs/green-bay-packers-bar-denver-colorado/` (pattern:
+  `<team-slug>-bar-<city>-<state>`). One `fetch.mjs` call with several guessed URLs is cheap; skip
+  any that 404. Medium confidence, as above.
 - Budget: about 12–15 searches per city. Favour the biggest traveling fan bases first (for example
   Steelers, Packers, Bills, Eagles, Cowboys, Chiefs, Buckeyes, Michigan, Notre Dame, Alabama, the big
   SEC and Big Ten schools, Red Sox, Yankees, Cubs), then spend a couple of searches on that city's
