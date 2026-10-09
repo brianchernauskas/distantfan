@@ -1,11 +1,11 @@
-import * as S from './store.js?v=202610090945';
-import { SITE, ADMINS } from './config.js?v=202610090945';
-import { TEAMS, TEAM_BY_ID, LEAGUES } from './teams.js?v=202610090945';
-import { METROS } from './metros.js?v=202610090945';
-import { encode, center, bounds, areaLabel, km, nearestMetro } from './geo.js?v=202610090945';
-import { nextGames } from './schedule.js?v=202610090945';
-import { shopStrip, hydrateShop, shopBanner, hydrateBanner } from './shop.js?v=202610090945';
-import { firstTouch, followPrefill, clearFollow } from './attrib.js?v=202610090945';
+import * as S from './store.js?v=202610090956';
+import { SITE, ADMINS } from './config.js?v=202610090956';
+import { TEAMS, TEAM_BY_ID, LEAGUES } from './teams.js?v=202610090956';
+import { METROS } from './metros.js?v=202610090956';
+import { encode, center, bounds, areaLabel, km, nearestMetro } from './geo.js?v=202610090956';
+import { nextGames } from './schedule.js?v=202610090956';
+import { shopStrip, hydrateShop, shopBanner, hydrateBanner } from './shop.js?v=202610090956';
+import { firstTouch, followPrefill, clearFollow } from './attrib.js?v=202610090956';
 
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -269,7 +269,7 @@ function renderOnboarding(editing = false) {
         if (!native && !navigator.geolocation) { err.textContent = 'Location is not available in this browser. Pick a metro instead.'; return; }
         $('#locate').disabled = true; $('#locate').textContent = 'Locating…';
         // Inside the Capacitor app, use the native location plugin (native.js); on the web, the browser API.
-        const locate = native ? (ok, fail, o) => import('./native.js?v=202610090945').then(n => n.getPosition(ok, fail, o)) : (ok, fail, o) => navigator.geolocation.getCurrentPosition(ok, fail, o);
+        const locate = native ? (ok, fail, o) => import('./native.js?v=202610090956').then(n => n.getPosition(ok, fail, o)) : (ok, fail, o) => navigator.geolocation.getCurrentPosition(ok, fail, o);
         locate(p => {
           // Round to a coarse cell immediately; the coordinates are discarded here.
           const cell = encode(p.coords.latitude, p.coords.longitude, SITE.homePrecision);
@@ -863,14 +863,14 @@ async function viewUsers() {
       sort: (a, b) => a.name.localeCompare(b.name),
     },
   };
-  let set = 'spots', group = 'city', showAll = false, browse = false, ga;
+  let set = 'spots', group = 'city', showAll = false, browse = false, ga, syncing = false;
 
   const drawTraffic = () => {
     const n = x => Math.round(x || 0).toLocaleString();
     const delta = (c, p) => !p ? '' : `<span class="muted" style="font-size:12px">${c >= p ? '+' : ''}${Math.round((c - p) / p * 100)}% vs prior 28d</span>`;
     let body;
     if (ga === undefined) body = '<div class="panel"><p class="muted">Loading…</p></div>';
-    else if (!ga) body = '<div class="panel"><p class="muted">No analytics yet. Run <code>node tools/scout/analytics-sync.mjs</code> (needs the one-time GA4 access setup described at the top of that file).</p></div>';
+    else if (!ga) body = `<div class="panel" style="display:grid;gap:10px"><p class="muted">No analytics yet.</p><div><button class="btn sm primary" id="gaSync"${syncing ? ' disabled' : ''}>${syncing ? 'Syncing…' : 'Sync now'}</button></div></div>`;
     else {
       const t = ga.totals, p = ga.prior, ev = name => ga.events.find(e => e.name === name)?.count || 0;
       const max = Math.max(1, ...ga.daily.map(d => d.users)), W = 560, H = 80, bw = W / Math.max(1, ga.daily.length);
@@ -887,10 +887,16 @@ async function viewUsers() {
           ${table('Top cities', ga.cities, 'users', null, r => r.name)}
           ${table('Events', ga.events, 'count', null, r => r.name)}
         </div>
-        <p class="muted" style="font-size:12px">Google Analytics 4 · updated ${esc(timeAgo(ga.updatedAt))} · refreshed by <code>analytics-sync.mjs</code>; new sign-ups can take a day to show.</p>`;
+        <div class="row" style="gap:10px"><button class="btn sm primary" id="gaSync"${syncing ? ' disabled' : ''}>${syncing ? 'Syncing…' : 'Sync now'}</button><span class="muted" style="font-size:12px">Google Analytics 4 · updated ${esc(timeAgo(ga.updatedAt))}; new sign-ups can take a day to show.</span></div>`;
     }
     v.innerHTML = shell(`<div class="row" style="gap:6px;margin-bottom:12px">${seg('data-set', set, [['spots', `Watch spots · ${spots.length}`], ['fans', `Fans · ${people.length}`], ['traffic', 'Traffic']])}</div><div style="display:grid;gap:14px">${body}</div>`);
     $$('[data-set]').forEach(b => b.onclick = () => { set = b.dataset.set; draw(); });
+    $('#gaSync')?.addEventListener('click', async () => {
+      syncing = true; drawTraffic();
+      try { ga = await S.syncAnalytics(); toast('Analytics updated'); }
+      catch (e) { toast(errMsg(e)); }
+      syncing = false; if (view === 'users' && set === 'traffic') drawTraffic();
+    });
   };
 
   const tally = (items, keys) => { const m = {}; items.forEach(i => keys(i).forEach(k => (m[k] ||= []).push(i))); return Object.entries(m).sort((a, b) => b[1].length - a[1].length || a[0].localeCompare(b[0])); };
