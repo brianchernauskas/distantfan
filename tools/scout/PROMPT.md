@@ -103,6 +103,15 @@ street address from the source or from the venue's own site.
   undated or older than 12 months, or the club page is vague about which bar. These go to Brian's review queue.
 - **low**: forum, Reddit or social-media hearsay; closed venues; no address. Leave these out.
 
+**Yelp suggestions are allowed, as medium only.** A Yelp category or search page (e.g. "Steelers
+Bar in Prescott, AZ") or a business listing can be the source for a venue that no club, team or
+news page names. Fetch the Yelp page (or the venue's own page for the address), confirm the venue
+is listed for that team and has a full street address, then add it as `"confidence": "medium"` so
+it goes to Brian's review queue. Never mark a Yelp-only find "high". The `note` must say it comes
+from Yelp, e.g. "Listed on Yelp as a Steelers bar; unconfirmed by the club. Call ahead." Set
+`sourceName` to "Yelp" and `sourceUrl` to the Yelp page. A Yelp hit seen only in a search snippet,
+without fetching the page or confirming the address, still stays out.
+
 ## Write the candidates file
 
 Write `runs/candidates-<mode>-YYYY-MM-DD.json` (today's date):
