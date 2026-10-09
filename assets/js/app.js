@@ -1,11 +1,11 @@
-import * as S from './store.js?v=202610090815';
-import { SITE, ADMINS } from './config.js?v=202610090815';
-import { TEAMS, TEAM_BY_ID, LEAGUES } from './teams.js?v=202610090815';
-import { METROS } from './metros.js?v=202610090815';
-import { encode, center, bounds, areaLabel, km, nearestMetro } from './geo.js?v=202610090815';
-import { nextGames } from './schedule.js?v=202610090815';
-import { shopStrip, hydrateShop, shopBanner, hydrateBanner } from './shop.js?v=202610090815';
-import { firstTouch, followPrefill, clearFollow } from './attrib.js?v=202610090815';
+import * as S from './store.js?v=202610090940';
+import { SITE, ADMINS } from './config.js?v=202610090940';
+import { TEAMS, TEAM_BY_ID, LEAGUES } from './teams.js?v=202610090940';
+import { METROS } from './metros.js?v=202610090940';
+import { encode, center, bounds, areaLabel, km, nearestMetro } from './geo.js?v=202610090940';
+import { nextGames } from './schedule.js?v=202610090940';
+import { shopStrip, hydrateShop, shopBanner, hydrateBanner } from './shop.js?v=202610090940';
+import { firstTouch, followPrefill, clearFollow } from './attrib.js?v=202610090940';
 
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -269,7 +269,7 @@ function renderOnboarding(editing = false) {
         if (!native && !navigator.geolocation) { err.textContent = 'Location is not available in this browser. Pick a metro instead.'; return; }
         $('#locate').disabled = true; $('#locate').textContent = 'Locating…';
         // Inside the Capacitor app, use the native location plugin (native.js); on the web, the browser API.
-        const locate = native ? (ok, fail, o) => import('./native.js?v=202610090815').then(n => n.getPosition(ok, fail, o)) : (ok, fail, o) => navigator.geolocation.getCurrentPosition(ok, fail, o);
+        const locate = native ? (ok, fail, o) => import('./native.js?v=202610090940').then(n => n.getPosition(ok, fail, o)) : (ok, fail, o) => navigator.geolocation.getCurrentPosition(ok, fail, o);
         locate(p => {
           // Round to a coarse cell immediately; the coordinates are discarded here.
           const cell = encode(p.coords.latitude, p.coords.longitude, SITE.homePrecision);
@@ -939,12 +939,13 @@ function drawLeads(leads) {
       <div style="font-size:14px">Contact: ${esc(l.contact)}</div>
       ${l.note ? `<div style="font-size:14px">“${esc(l.note)}”</div>` : ''}
       <div class="muted" style="font-size:13px">${Date.parse(l.createdAt) ? timeAgo(Date.parse(l.createdAt)) : ''}</div>
-      <div class="row"><button class="btn sm primary" data-fix>Update a listing</button><button class="btn sm primary" data-new>Add as new spot</button><button class="btn sm ghost" data-ok>Dismiss</button></div>
+      <div class="row"><button class="btn sm primary" data-fix>Update a listing</button><button class="btn sm primary" data-new>Add as new spot</button><button class="btn sm ghost" data-del>Remove a listing</button><button class="btn sm ghost" data-ok>Dismiss</button></div>
     </div>`).join('');
   $$('[data-l]', box).forEach(card => {
     const l = leads.find(x => x.id === card.dataset.l);
     $('[data-fix]', card).onclick = () => openFixDialog(l);
     $('[data-new]', card).onclick = () => openNewFromLead(l);
+    $('[data-del]', card).onclick = () => openFixDialog(l, true);
     $('[data-ok]', card).onclick = async () => {
       $$('button', card).forEach(b => b.disabled = true);
       try { await S.dismissVenueLead(l.id); toast('Dismissed'); viewReview(); }
@@ -1005,7 +1006,7 @@ function openNewFromLead(lead) {
 
 // Fix an existing listing from a bar lead: find it, edit name / address / club / note / teams, and
 // optionally dismiss the lead. A changed address is re-geocoded (Nominatim allows browser calls).
-async function openFixDialog(lead) {
+async function openFixDialog(lead, removing = false) {
   let spots;
   try { spots = await S.listSpots(); } catch (e) { toast(errMsg(e)); return; }
   const dlg = document.createElement('dialog');
@@ -1019,14 +1020,35 @@ async function openFixDialog(lead) {
   };
   const pickView = (q = cityOf(lead.address)) => {
     const hits = search(q);
-    dlg.innerHTML = `<h3>Which listing is wrong?</h3>
+    dlg.innerHTML = `<h3>${removing ? 'Which listing should go?' : 'Which listing is wrong?'}</h3>
       <p class="muted" style="font-size:13px">Lead: <b>${esc(lead.venue)}</b>${lead.address ? `, ${esc(lead.address)}` : ''}${lead.note ? `<br>“${esc(lead.note)}”` : ''}</p>
       <label class="field">Search listings<input class="input" id="fixQ" value="${esc(q)}" placeholder="name, city or club"></label>
       <div class="list" style="margin:0 -8px 10px;max-height:40vh;overflow:auto">${hits.map(s => `<button class="item" data-id="${esc(s.id)}"><span class="pinicon">📍</span><span class="main"><span class="t" style="display:block">${esc(s.name)}</span><span class="s">${esc(s.address || s.city || '')} · ${esc((s.teams || []).map(teamName).join(', '))}</span></span></button>`).join('') || '<p class="muted" style="padding:8px">No listings match.</p>'}</div>
       <div class="row" style="justify-content:flex-end"><button class="btn ghost" data-x>Cancel</button></div>`;
     $('[data-x]', dlg).onclick = () => dlg.close();
     const qi = $('#fixQ', dlg); qi.oninput = () => { clearTimeout(qi._t); qi._t = setTimeout(() => { pickView(qi.value); $('#fixQ', dlg).focus(); const e = $('#fixQ', dlg); e.setSelectionRange(e.value.length, e.value.length); }, 250); };
-    $$('[data-id]', dlg).forEach(b => b.onclick = () => editView(spots.find(s => s.id === b.dataset.id)));
+    $$('[data-id]', dlg).forEach(b => b.onclick = () => (removing ? removeView : editView)(spots.find(s => s.id === b.dataset.id)));
+  };
+  const removeView = s => {
+    dlg.innerHTML = `<h3>Remove listing</h3>
+      <form method="dialog">
+        <div class="panel" style="display:grid;gap:4px"><b>${esc(s.name)}</b><span style="font-size:14px">${esc(s.address || s.city || '')}</span><span class="muted" style="font-size:13px">${esc((s.teams || []).map(teamName).join(', '))}${s.club ? ` · ${esc(s.club)}` : ''}</span></div>
+        <p class="muted" style="font-size:13px">This takes the whole listing off the map for every team${s.id.startsWith('scout_') ? ', and tells the scout not to add it again' : ''}. To drop just one team, use Update a listing instead.</p>
+        <label class="row" style="gap:8px"><input type="checkbox" name="dismiss" checked>Dismiss this lead when removed</label>
+        <p class="err" id="fixErr"></p>
+        <div class="row" style="justify-content:flex-end"><button class="btn ghost" value="back" formnovalidate>Back</button><button class="btn primary" value="rm">Remove listing</button></div>
+      </form>`;
+    $('form', dlg).onsubmit = async e => {
+      e.preventDefault();
+      if (e.submitter?.value === 'back') { pickView(); return; }
+      const btns = $$('button', dlg); btns.forEach(b => b.disabled = true);
+      try {
+        await S.removeListing(s);
+        if (new FormData(e.target).get('dismiss')) await S.dismissVenueLead(lead.id);
+        cache = {}; cityCache = null;
+        dlg.close(); toast('Listing removed'); viewReview();
+      } catch (x) { $('#fixErr', dlg).textContent = errMsg(x); btns.forEach(b => b.disabled = false); }
+    };
   };
   const editView = s => {
     dlg.innerHTML = `<h3>Update listing</h3>
