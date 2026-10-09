@@ -1,5 +1,6 @@
 // Applies a scout candidates file to Firestore.
 //   node apply.mjs runs/candidates-<mode>-2026-09-29.json [--dry-run]
+//   node apply.mjs --inbox [--dry-run]   apply any not-yet-applied files in inbox/ (see below)
 // A find inside one of the tracked metros (see AREAS in lib.mjs) is filed under that metro's
 // label. One outside them still goes on the map nationwide -- it's just labelled from its own
 // address instead of a tracked metro, and doesn't get the "away from home market" treatment
@@ -32,9 +33,35 @@ function sameVenue(spot, cand) {
 }
 
 const args = process.argv.slice(2);
-const file = args.find(a => !a.startsWith('--'));
 const dry = args.includes('--dry-run');
-if (!file) { console.error('usage: node apply.mjs <candidates.json> [--dry-run]'); process.exit(2); }
+
+// --inbox: apply every candidates file in inbox/ that this machine hasn't applied yet. inbox/ is
+// committed to git, so finds researched in a session away from this computer reach it on the next
+// `git pull` (targets.mjs pulls at the start of every scout run). Each file is copied into runs/
+// first so its report lands there, and recorded in runs/inbox-applied.json so it runs only once.
+if (args.includes('--inbox')) {
+  const here = path.dirname((await import('node:url')).fileURLToPath(import.meta.url));
+  const inbox = path.join(here, 'inbox'), runs = path.join(here, 'runs');
+  const ledgerFile = path.join(runs, 'inbox-applied.json');
+  fs.mkdirSync(runs, { recursive: true });
+  let ledger = {};
+  try { ledger = JSON.parse(fs.readFileSync(ledgerFile, 'utf8')); } catch {}
+  const pending = (fs.existsSync(inbox) ? fs.readdirSync(inbox) : [])
+    .filter(f => /^candidates-.*\.json$/.test(f) && !ledger[f]).sort();
+  if (!pending.length) { console.log('inbox: nothing new to apply'); process.exit(0); }
+  const { execFileSync } = await import('node:child_process');
+  for (const f of pending) {
+    const copy = path.join(runs, f.replace(/^candidates-/, 'candidates-inbox-'));
+    fs.copyFileSync(path.join(inbox, f), copy);
+    console.log(`inbox: applying ${f}${dry ? ' (dry run)' : ''}`);
+    execFileSync(process.execPath, [path.join(here, 'apply.mjs'), copy, ...(dry ? ['--dry-run'] : [])], { stdio: 'inherit' });
+    if (!dry) { ledger[f] = new Date().toISOString(); fs.writeFileSync(ledgerFile, JSON.stringify(ledger, null, 1)); }
+  }
+  process.exit(0);
+}
+
+const file = args.find(a => !a.startsWith('--'));
+if (!file) { console.error('usage: node apply.mjs <candidates.json> [--dry-run] | node apply.mjs --inbox [--dry-run]'); process.exit(2); }
 
 const input = JSON.parse(fs.readFileSync(file, 'utf8'));
 // Directory mode reads a team's official away-fan-club/alumni directory, which by definition has

@@ -72,6 +72,10 @@ if ((changed.some(Boolean) || schedMoved) && process.argv.includes('--commit')) 
   const files = ['data/spots.json', 'data/fans.json', 'data/schedules.json', 'watch', 'sitemap.xml', 'robots.txt', 'data/redirects.json'];
   git('add', '--all', '--', ...files);
   git('commit', '-m', `Refresh spot and fan snapshots (${spots.length} spots, ${profiles.size} fans)`, '--', ...files); // only these files, never other staged work
+  // Commits can now arrive from elsewhere (inbox/ finds, code changes), so rebase onto origin first
+  // or the push is rejected as non-fast-forward.
+  try { git('pull', '--rebase', '--autostash', '--quiet'); }
+  catch { try { git('rebase', '--abort'); } catch {} console.error('git pull --rebase failed; pushing anyway'); }
   git('push');
   // Ping IndexNow (Bing etc.) about new/changed pages; a failure here must not fail the export.
   try { execFileSync(process.execPath, [path.join(root, 'tools/indexnow.mjs'), '--commit'], { cwd: root, stdio: 'inherit' }); }

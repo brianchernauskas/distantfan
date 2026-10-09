@@ -8,6 +8,21 @@ import { AREAS, CITY_DAYS, ROTATION, scoutTeams, isoWeek, adminDb, areaFor } fro
 
 const args = process.argv.slice(2);
 const opt = k => args.includes(k) ? args[args.indexOf(k) + 1] : null;
+
+// Pull first, so a scheduled run picks up code changes and inbox/ files pushed from elsewhere
+// (e.g. a session on the road). Best effort: a failed pull is reported and the run carries on.
+// --no-pull skips it.
+if (!args.includes('--no-pull')) {
+  const { execFileSync } = await import('node:child_process');
+  const { fileURLToPath } = await import('node:url');
+  const root = new URL('../..', import.meta.url);
+  try {
+    execFileSync('git', ['pull', '--ff-only', '--quiet'], { cwd: fileURLToPath(root), stdio: ['ignore', 'ignore', 'pipe'] });
+    console.error('git pull: up to date with origin');
+  } catch (e) {
+    console.error(`git pull failed, carrying on with the local copy: ${String(e.stderr || e.message).trim().split('\n')[0]}`);
+  }
+}
 const mode = opt('--mode') || 'directory';
 
 const cityList = () => Object.entries(AREAS).map(([key, a]) => ({ key, label: a.label, homeTeams: a.homeTeams }));

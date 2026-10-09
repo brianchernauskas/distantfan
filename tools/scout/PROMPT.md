@@ -150,9 +150,16 @@ Write `runs/candidates-<mode>-YYYY-MM-DD.json` (today's date):
 
 ```
 node apply.mjs runs/candidates-<mode>-YYYY-MM-DD.json
+node apply.mjs --inbox
 ```
 
-It geocodes, dedupes, publishes high-confidence finds, queues medium ones, expires stale listings,
+The second command publishes any candidates files waiting in `inbox/` (finds researched in a
+session away from this computer and pushed to GitHub; `targets.mjs` pulls them in at the start of
+the run). It applies each file once and remembers it in `runs/inbox-applied.json`, so it's safe to
+run every time; when there's nothing new it says so. Include anything it publishes or queues in your
+summary, under a separate "Inbox" heading. Run it even when your own run found nothing.
+
+`apply.mjs` geocodes, dedupes, publishes high-confidence finds, queues medium ones, expires stale listings,
 and writes `runs/report-<mode>-YYYY-MM-DD.md`. Finish with a short summary: counts of published,
 queued, refreshed, skipped and expired listings, broken down by city; the new venue names; and
 anything odd (for example a geocode failure worth a manual look). Don't commit anything to git,
