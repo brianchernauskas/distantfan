@@ -612,6 +612,68 @@ const sitemap = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://w
 out.set('sitemap.xml', sitemap);
 out.set('robots.txt', `User-agent: *\nAllow: /\n\nSitemap: ${SITE}/sitemap.xml\n`);
 
+// ---- redirects: GitHub Pages has no server rules, so a page that disappears (spots moved to a nearer city,
+// a venue renamed) leaves a small meta-refresh stub at its old URL, with a canonical pointing at the new one.
+// data/redirects.json remembers every retired URL; pages that vanish in this run are added automatically.
+const redirFile = path.join(root, 'data/redirects.json');
+const saved = fs.existsSync(redirFile) ? JSON.parse(fs.readFileSync(redirFile, 'utf8')) : { paths: [], geo: {} };
+const retired = new Set(saved.paths), retiredGeo = { ...(saved.geo || {}) };
+const geoOf = h => { const m = h.match(/"latitude":([-\d.]+),"longitude":([-\d.]+)/); return m ? `${m[1]},${m[2]}` : null; };
+const isStub = h => h.includes('data-redirect');
+(function collect(d) {
+  if (!fs.existsSync(d)) return;
+  for (const e of fs.readdirSync(d, { withFileTypes: true })) {
+    const f = path.join(d, e.name);
+    if (e.isDirectory()) collect(f);
+    else if (e.name === 'index.html') {
+      const rel = path.relative(root, f).split(path.sep).join('/');
+      if (out.has(rel)) continue;
+      const old = fs.readFileSync(f, 'utf8');
+      if (isStub(old)) continue;
+      const u = '/' + rel.slice(0, -'index.html'.length);
+      retired.add(u);
+      if (geoOf(old)) retiredGeo[u] = geoOf(old);
+    }
+  }
+})(path.join(root, 'watch'));
+const pageKey = u => u.slice(1) + 'index.html';
+const tokens = u => u.split('/').filter(Boolean).pop().split('-');
+function redirectTarget(u) {
+  if (u.startsWith('/watch/at/')) {   // a venue page: the same venue is the page with the same coordinates
+    if (retiredGeo[u]) { const k = [...out.keys()].find(k => k.startsWith('watch/at/') && geoOf(out.get(k)) === retiredGeo[u]); return k ? '/' + k.slice(0, -'index.html'.length) : '/watch/'; }
+    const t = tokens(u); let best = null, bestN = 0;
+    for (const k of out.keys()) {
+      if (!k.startsWith('watch/at/') || !k.endsWith('/index.html')) continue;
+      const t2 = k.split('/')[2].split('-'); let n = 0;
+      while (n < t.length && n < t2.length && t[n] === t2[n]) n++;
+      if (n > bestN) { bestN = n; best = '/' + k.slice(0, -'index.html'.length); }
+    }
+    if (best && bestN >= Math.max(2, t.length - 3)) return best;
+    return '/watch/';
+  }
+  const parts = u.split('/').filter(Boolean);   // team x city page: fall back to the team hub, then the main hub
+  for (let n = parts.length - 1; n >= 1; n--) { const c = '/' + parts.slice(0, n).join('/') + '/'; if (out.has(pageKey(c))) return c; }
+  return '/watch/';
+}
+const retiredList = [...retired].sort();
+let stubs = 0;
+for (const u of retiredList) {
+  if (out.has(pageKey(u))) continue;   // the page is live again
+  const to = redirectTarget(u);
+  out.set(pageKey(u), `<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Moved | Distant Fan</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="redirect" content="${to}" data-redirect>
+<link rel="canonical" href="${SITE}${to}">
+<meta http-equiv="refresh" content="0; url=${to}">
+<script>location.replace(${JSON.stringify(to)});</script></head>
+<body><p>This page moved. <a href="${to}">Continue to the new page</a>.</p></body></html>
+`);
+  stubs++;
+}
+fs.mkdirSync(path.dirname(redirFile), { recursive: true });
+fs.writeFileSync(redirFile, JSON.stringify({ paths: retiredList, geo: retiredGeo }, null, 1) + '\n');
+
 // ---- write only what changed, drop pages that no longer qualify
 let wrote = 0, removed = 0;
 for (const [rel, html] of out) {

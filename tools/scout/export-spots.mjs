@@ -69,7 +69,7 @@ if ((changed.some(Boolean) || schedMoved) && process.argv.includes('--commit')) 
   const git = (...a) => execFileSync('git', a, { cwd: root, stdio: 'inherit' });
   // Rebuild the static SEO pages from the fresh snapshots and ship them in the same commit.
   execFileSync(process.execPath, [path.join(root, 'tools/build-pages.mjs')], { cwd: root, stdio: 'inherit' });
-  const files = ['data/spots.json', 'data/fans.json', 'data/schedules.json', 'watch', 'sitemap.xml', 'robots.txt'];
+  const files = ['data/spots.json', 'data/fans.json', 'data/schedules.json', 'watch', 'sitemap.xml', 'robots.txt', 'data/redirects.json'];
   git('add', '--all', '--', ...files);
   git('commit', '-m', `Refresh spot and fan snapshots (${spots.length} spots, ${profiles.size} fans)`, '--', ...files); // only these files, never other staged work
   git('push');
