@@ -1,11 +1,11 @@
-import * as S from './store.js?v=202610091023';
-import { SITE, ADMINS } from './config.js?v=202610091023';
-import { TEAMS, TEAM_BY_ID, LEAGUES } from './teams.js?v=202610091023';
-import { METROS } from './metros.js?v=202610091023';
-import { encode, center, bounds, areaLabel, km, nearestMetro } from './geo.js?v=202610091023';
-import { nextGames } from './schedule.js?v=202610091023';
-import { shopStrip, hydrateShop, shopBanner, hydrateBanner } from './shop.js?v=202610091023';
-import { firstTouch, followPrefill, clearFollow } from './attrib.js?v=202610091023';
+import * as S from './store.js?v=202610091040';
+import { SITE, ADMINS } from './config.js?v=202610091040';
+import { TEAMS, TEAM_BY_ID, LEAGUES } from './teams.js?v=202610091040';
+import { METROS } from './metros.js?v=202610091040';
+import { encode, center, bounds, areaLabel, km, nearestMetro } from './geo.js?v=202610091040';
+import { nextGames } from './schedule.js?v=202610091040';
+import { shopStrip, hydrateShop, shopBanner, hydrateBanner } from './shop.js?v=202610091040';
+import { firstTouch, followPrefill, clearFollow } from './attrib.js?v=202610091040';
 
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -269,7 +269,7 @@ function renderOnboarding(editing = false) {
         if (!native && !navigator.geolocation) { err.textContent = 'Location is not available in this browser. Pick a metro instead.'; return; }
         $('#locate').disabled = true; $('#locate').textContent = 'Locating…';
         // Inside the Capacitor app, use the native location plugin (native.js); on the web, the browser API.
-        const locate = native ? (ok, fail, o) => import('./native.js?v=202610091023').then(n => n.getPosition(ok, fail, o)) : (ok, fail, o) => navigator.geolocation.getCurrentPosition(ok, fail, o);
+        const locate = native ? (ok, fail, o) => import('./native.js?v=202610091040').then(n => n.getPosition(ok, fail, o)) : (ok, fail, o) => navigator.geolocation.getCurrentPosition(ok, fail, o);
         locate(p => {
           // Round to a coarse cell immediately; the coordinates are discarded here.
           const cell = encode(p.coords.latitude, p.coords.longitude, SITE.homePrecision);
@@ -650,33 +650,91 @@ function setAdding(on) {
 
 function openSpotDialog(latlng, forClub = false) {
   const dlg = document.createElement('dialog');
-  dlg.innerHTML = `<h3>Add a watch spot</h3>
-    <form method="dialog" id="spotForm">
-      <label class="field">Name<input class="input" name="name" required maxlength="80" placeholder="The Brass Tap"></label>
-      <label class="field">Address <span class="hint">optional</span><input class="input" name="address" maxlength="120" placeholder="123 Main St"></label>
-      <label class="field">Fan club or chapter <span class="hint">${forClub ? 'the club that meets here' : 'optional'}</span><input class="input" name="club" maxlength="80" placeholder="Bills Backers of Phoenix" ${forClub ? 'required' : ''}></label>
-      <label class="field">Why go here? <span class="hint">optional</span><input class="input" name="note" maxlength="200" placeholder="Official backers bar, sound on, gets packed"></label>
-      <div class="field">Shows games for
-        <div class="picked">${profile.teams.map(id => `<label class="chip"><input type="checkbox" name="teams" value="${id}" ${id === teamId ? 'checked' : ''}>${logo(TEAM_BY_ID[id], 'sm')}${esc(TEAM_BY_ID[id]?.short)}</label>`).join('')}</div>
-      </div>
-      <p class="muted" style="font-size:13px">Public places only, please. Never add someone's home.${isAdmin() ? '' : ' New spots are checked before they appear on the map.'}</p>
-      <p class="err" id="spotErr"></p>
-      <div class="row" style="justify-content:flex-end"><button class="btn ghost" value="cancel" formnovalidate>Cancel</button><button class="btn primary" value="save">Add spot</button></div>
-    </form>`;
-  document.body.append(dlg); dlg.showModal();
+  document.body.append(dlg);
   dlg.addEventListener('close', () => dlg.remove());
-  dlg.querySelector('form').onsubmit = async e => {
-    if (e.submitter?.value !== 'save') return;
-    e.preventDefault();
-    const f = new FormData(e.target), teams = f.getAll('teams');
-    if (!teams.length) { $('#spotErr', dlg).textContent = 'Pick at least one team.'; return; }
-    try {
-      const spot = { name: f.get('name'), address: f.get('address'), club: f.get('club'), note: f.get('note'), lat: latlng.lat, lng: latlng.lng, teams, byName: profile.name };
-      if (isAdmin()) await S.addSpot(spot); else await S.suggestSpot(spot);
-      dlg.close(); toast(isAdmin() ? 'Spot added. Thanks!' : 'Thanks! It will show on the map once we have checked it.');
-      teams.forEach(t => delete cache[t]); cityCache = null; loadMap(true);
-    } catch (x) { $('#spotErr', dlg).textContent = errMsg(x); }
+  const spotsP = S.listSpots().catch(() => []);
+  const followed = profile.teams;
+
+  // The bar may already be on the map: search first so a fan adds a team to it instead of making a duplicate.
+  const barHits = async q => {
+    const toks = q.toLowerCase().split(/\s+/).filter(t => t.length > 1), now = Date.now();
+    if (!toks.length) return [];
+    return (await spotsP).filter(s => (!s.expiresAt || s.expiresAt > now) && !s.eventAt && toks.every(t => `${s.name} ${s.address || ''} ${s.club || ''}`.toLowerCase().includes(t)))
+      .map(s => ({ s, d: km(latlng, s) })).sort((a, b) => a.d - b.d).slice(0, 5);
   };
+
+  const newView = () => {
+    dlg.innerHTML = `<h3>Add a watch spot</h3>
+      <div class="field">Already on the map? <span class="hint">search before adding</span>
+        <input class="input" id="barQ" placeholder="Search bars by name or city" autocomplete="off">
+        <div class="list" id="barHits" style="margin:0 -8px"></div>
+      </div>
+      <form method="dialog" id="spotForm">
+        <label class="field">Name<input class="input" name="name" required maxlength="80" placeholder="The Brass Tap"></label>
+        <label class="field">Address <span class="hint">optional</span><input class="input" name="address" maxlength="120" placeholder="123 Main St"></label>
+        <label class="field">Fan club or chapter <span class="hint">${forClub ? 'the club that meets here' : 'optional'}</span><input class="input" name="club" maxlength="80" placeholder="Bills Backers of Phoenix" ${forClub ? 'required' : ''}></label>
+        <label class="field">Why go here? <span class="hint">optional</span><input class="input" name="note" maxlength="200" placeholder="Official backers bar, sound on, gets packed"></label>
+        <div class="field">Shows games for <span class="hint">your teams, or search any team</span>
+          <div class="picked">${followed.map(id => `<label class="chip"><input type="checkbox" name="teams" value="${id}" ${id === teamId ? 'checked' : ''}>${logo(TEAM_BY_ID[id], 'sm')}${esc(TEAM_BY_ID[id]?.short)}</label>`).join('')}</div>
+          <div class="picked" id="tpSel"></div><input class="input" id="tpQ" placeholder="Search any team, e.g. Chiefs" autocomplete="off"><div class="picked" id="tpHits"></div>
+        </div>
+        <p class="muted" style="font-size:13px">Public places only, please. Never add someone's home.${isAdmin() ? '' : ' New spots are checked before they appear on the map.'}</p>
+        <p class="err" id="spotErr"></p>
+        <div class="row" style="justify-content:flex-end"><button class="btn ghost" value="cancel" formnovalidate>Cancel</button><button class="btn primary" value="save">Add spot</button></div>
+      </form>`;
+    const extra = [];
+    mountTeamPicker(dlg, extra, 6, () => followed);
+    const qi = $('#barQ', dlg);
+    qi.oninput = () => {
+      clearTimeout(qi._t);
+      qi._t = setTimeout(async () => {
+        const hits = await barHits(qi.value);
+        $('#barHits', dlg).innerHTML = hits.map(({ s, d }) => `<button type="button" class="item" data-bar="${esc(s.id)}"><span class="pinicon">📍</span><span class="main"><span class="t" style="display:block">${esc(s.name)}</span><span class="s">${esc(s.address || '')} · ${fmtKm(d)} from your pin · ${esc((s.teams || []).map(id => TEAM_BY_ID[id]?.short || id).join(', '))}</span></span></button>`).join('')
+          || (qi.value.trim().length > 1 ? '<p class="muted" style="padding:6px 8px;font-size:13px">Not on the map yet. Fill in the form below.</p>' : '');
+        $$('[data-bar]', dlg).forEach(b => b.onclick = async () => existingView((await spotsP).find(s => s.id === b.dataset.bar)));
+      }, 200);
+    };
+    $('form', dlg).onsubmit = async e => {
+      if (e.submitter?.value !== 'save') return;
+      e.preventDefault();
+      const f = new FormData(e.target), teams = [...new Set([...f.getAll('teams'), ...extra])].slice(0, 6);
+      if (!teams.length) { $('#spotErr', dlg).textContent = 'Pick at least one team.'; return; }
+      try {
+        const spot = { name: f.get('name'), address: f.get('address'), club: f.get('club'), note: f.get('note'), lat: latlng.lat, lng: latlng.lng, teams, byName: profile.name };
+        if (isAdmin()) await S.addSpot(spot); else await S.suggestSpot(spot);
+        dlg.close(); toast(isAdmin() ? 'Spot added. Thanks!' : 'Thanks! It will show on the map once we have checked it.');
+        teams.forEach(t => delete cache[t]); cityCache = null; loadMap(true);
+      } catch (x) { $('#spotErr', dlg).textContent = errMsg(x); }
+    };
+  };
+
+  // Found it: just say which team it shows (a report the admin applies, or applied directly for the admin).
+  const existingView = s => {
+    dlg.innerHTML = `<h3>${esc(s.name)}</h3>
+      <form method="dialog">
+        <p class="muted" style="margin-top:-6px">${esc(s.address || '')}</p>
+        <div class="field">Already listed for<div class="picked">${(s.teams || []).map(id => `<span class="chip" style="cursor:default">${logo(TEAM_BY_ID[id], 'sm')}${esc(TEAM_BY_ID[id]?.short || id)}</span>`).join('')}</div></div>
+        <div class="field">Which team is missing? <div class="picked" id="tpSel"></div><input class="input" id="tpQ" placeholder="Search teams, e.g. Chiefs" autocomplete="off"><div class="picked" id="tpHits"></div></div>
+        <label class="field">Details <span class="hint">optional</span><input class="input" name="note" maxlength="300" placeholder="e.g. Chiefs Kingdom meets here on Sundays"></label>
+        <p class="err" id="spotErr"></p>
+        <div class="row" style="justify-content:flex-end"><button class="btn ghost" value="back" formnovalidate>Back</button><button class="btn primary" value="send">${isAdmin() ? 'Add team' : 'Send'}</button></div>
+      </form>`;
+    const picked = [];
+    mountTeamPicker(dlg, picked, 1, () => s.teams || []);
+    $('form', dlg).onsubmit = async e => {
+      e.preventDefault();
+      if (e.submitter?.value === 'back') { newView(); return; }
+      if (!picked.length) { $('#spotErr', dlg).textContent = 'Pick the team that shows games here.'; return; }
+      try {
+        if (isAdmin()) { await S.updateSpot(s.id, { name: s.name, address: s.address || '', club: s.club || '', note: s.note || '', teams: [...(s.teams || []), picked[0]].slice(0, 6) }); cache = {}; cityCache = null; loadMap(true); toast('Team added'); }
+        else { await S.reportSpot({ spotId: s.id, spotName: s.name, name: profile.name, reason: MISSING_TEAM, note: new FormData(e.target).get('note'), addTeam: picked[0] }); toast("Thanks, we'll check it"); }
+        dlg.close();
+      } catch (x) { $('#spotErr', dlg).textContent = errMsg(x); }
+    };
+  };
+
+  newView();
+  dlg.showModal();
 }
 
 const MISSING_TEAM = 'A team is missing here';
