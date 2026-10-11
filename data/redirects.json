@@ -37,6 +37,7 @@
   "/watch/at/deal-lake-bar-co-loch-arbour-ny/",
   "/watch/at/deuces-chicago-il/",
   "/watch/at/dilworth-grille-at-baxter-charlotte-nc/",
+  "/watch/at/east-end-bar-and-grill-new-york-ny-8f4a/",
   "/watch/at/fiddlers-green-stamford-ny/",
   "/watch/at/finnegan-s-sports-bar-and-grill-herndon-dc/",
   "/watch/at/firkin-tavern-ewing-pa/",
@@ -48,6 +49,7 @@
   "/watch/at/grasshopper-newfoundland-ny/",
   "/watch/at/grasshopper-too-wayne-ny/",
   "/watch/at/hammerheads-atlanta-ga/",
+  "/watch/at/happiest-hour-dallas-tx-f008/",
   "/watch/at/heritage-brewing-co-manassas-dc/",
   "/watch/at/homestead-morristown-ny/",
   "/watch/at/horseshoe-tavern-morristown-ny/",
@@ -65,6 +67,7 @@
   "/watch/at/johnny-malloy-s-cleveland-oh/",
   "/watch/at/kettles-and-grains-leesburg-dc/",
   "/watch/at/lazy-boy-saloon-white-plains-ny/",
+  "/watch/at/legacy-hall-plano-tx-231e/",
   "/watch/at/legends-sports-bar-morristown-ny/",
   "/watch/at/lions-roar-brewing-co-westfield-ny/",
   "/watch/at/little-falls-ale-house-little-falls-ny/",
@@ -171,6 +174,7 @@
   "/watch/ohio-state-buckeyes-football/cleveland-oh/",
   "/watch/ohio-state-buckeyes-football/fort-myers-fl/",
   "/watch/ohio-state-buckeyes-football/myrtle-beach-sc/",
+  "/watch/oklahoma-sooners-football/frisco-tx/",
   "/watch/oregon-ducks-football/riverside-ca/",
   "/watch/oregon-state-beavers-football/los-angeles-ca/",
   "/watch/penn-state-nittany-lions-football/denver-co/",
@@ -196,6 +200,7 @@
   "/watch/tennessee-titans/san-jose-ca/",
   "/watch/tennessee-titans/seattle-wa/",
   "/watch/tennessee-volunteers-football/san-diego-ca/",
+  "/watch/texas-longhorns-football/frisco-tx/",
   "/watch/texas-tech-red-raiders-football/los-angeles-ca/",
   "/watch/ucf-knights-football/dallas-fort-worth-tx/",
   "/watch/utah-utes-football/dallas-fort-worth-tx/",
@@ -342,6 +347,11 @@
   "/watch/san-francisco-49ers/austin-tx/": "30.28535,-97.71202",
   "/watch/san-francisco-49ers/raleigh-durham-nc/": "35.78315,-78.64737",
   "/watch/syracuse-orange-football/washington-dc/": "38.92164,-77.0423",
-  "/watch/at/native-new-yorker-phoenix-az/": "33.31992,-111.97798"
+  "/watch/at/native-new-yorker-phoenix-az/": "33.31992,-111.97798",
+  "/watch/at/east-end-bar-and-grill-new-york-ny-8f4a/": "40.78371,-73.95049",
+  "/watch/at/happiest-hour-dallas-tx-f008/": "32.79109,-96.80637",
+  "/watch/at/legacy-hall-plano-tx-231e/": "33.08803,-96.82584",
+  "/watch/oklahoma-sooners-football/frisco-tx/": "33.08803,-96.82584",
+  "/watch/texas-longhorns-football/frisco-tx/": "33.00442,-96.96883"
  }
 }
