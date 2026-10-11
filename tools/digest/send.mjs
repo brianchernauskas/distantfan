@@ -155,7 +155,7 @@ ${games.length ? `<div style="font-size:13px;color:#8a939e;margin:6px 0 0">Times
 ${blocks.map(b => b.html).join('\n')}
 </td></tr>
 <tr><td align="center" style="padding:14px 0 6px"><a href="${SITE}/app.html" style="display:inline-block;background:#df5a0b;color:#ffffff;text-decoration:none;font-weight:700;font-size:17px;padding:15px 34px;border-radius:999px">See who's going</a></td></tr>
-<tr><td style="padding:22px 6px 4px;font-size:13px;line-height:1.55;color:#8a939e;text-align:center">You're getting this because you turned on the weekly game-day email at distantfan.com. <a href="${unsub}" style="color:#8a939e">Unsubscribe</a> in one click.<br>${esc(cfg.postalAddress || '[postal address goes here]')}</td></tr>
+<tr><td style="padding:22px 6px 4px;font-size:13px;line-height:1.55;color:#8a939e;text-align:center">You're getting this because you turned on the weekly game-day email at distantfan.com. Follow us on <a href="https://www.instagram.com/distantfanofficial/" style="color:#8a939e">Instagram</a>. <a href="${unsub}" style="color:#8a939e">Unsubscribe</a> in one click.<br>${esc(cfg.postalAddress || '[postal address goes here]')}</td></tr>
 </table></div>`;
 
   const text = `Hey ${firstName}${welcome ? '. ' : ', '}${intro}${games.length ? ` (times for ${area})` : ''}\n\n${blocks.map(b =>

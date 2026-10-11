@@ -176,7 +176,7 @@ ${[crumbLd, ...ld].map(o => `<script type="application/ld+json">${noDash(JSON.st
 <nav class="crumbs" aria-label="Breadcrumb">${crumbs.map((c, i) => i === crumbs.length - 1 ? `<span>${esc(c[0])}</span>` : `<a href="${c[1]}">${esc(c[0])}</a>`).join(' <i>/</i> ')}</nav>
 ${body}
 </main>
-<footer class="site-foot"><div class="wrap"><span>© ${new Date(generatedAt).getUTCFullYear()} Distant Fan · <a href="/about.html">About</a> · <a href="/privacy.html">Privacy</a></span><span>Team names and logos belong to their teams and leagues. Listings gathered from official fan-club and alumni directories, venues and fans; confirm with the venue before you go.</span></div></footer>
+<footer class="site-foot"><div class="wrap"><span>© ${new Date(generatedAt).getUTCFullYear()} Distant Fan · <a href="/about.html">About</a> · <a href="/privacy.html">Privacy</a> · <a href="https://www.instagram.com/distantfanofficial/" rel="noopener" target="_blank">Instagram</a></span><span>Team names and logos belong to their teams and leagues. Listings gathered from official fan-club and alumni directories, venues and fans; confirm with the venue before you go.</span></div></footer>
 </body>
 </html>
 `;
