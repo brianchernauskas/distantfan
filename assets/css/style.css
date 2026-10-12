@@ -252,7 +252,8 @@ main.view { min-height: 0; }
 /* games + chat + profile views */
 .page { width: min(860px, 100% - 32px); margin: 24px auto 60px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-content: start; }
 .page > h2 { font-size: 40px; }
-#games { display: grid; gap: 14px; }
+#games { display: grid; gap: 14px; grid-template-columns: minmax(0, 1fr); }
+.game > * { min-width: 0; }
 .game { display: grid; grid-template-columns: auto 1fr auto; gap: 16px; align-items: center; }
 .game .when { font-family: var(--display); font-weight: 800; text-transform: uppercase; text-align: center; min-width: 64px; line-height: 1; }
 .game .when .d { font-size: 15px; color: var(--accent); }
@@ -263,6 +264,20 @@ main.view { min-height: 0; }
 .game .tv { display: inline-flex; gap: 4px; flex-wrap: wrap; margin-top: 8px; }
 .game .watch { border-top: 1px solid var(--line); grid-column: 1 / -1; padding-top: 12px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 .game .watch .s { flex: 1; font-size: 14px; color: var(--muted); min-width: 180px; }
+.game .how { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; margin-top: 8px; font-size: 13px; color: var(--muted); }
+.wbadge { display: inline-block; font-size: 12px; font-weight: 700; padding: 3px 9px; border-radius: 999px; background: var(--w, var(--faint)); color: #fff; white-space: nowrap; }
+.gameday { display: grid; gap: 14px; border-top: 5px solid var(--team, var(--accent)); }
+.gd-top { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; font-size: 13px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); }
+.gd-clock { color: var(--accent); }
+.gd-live { color: #e5383b; }
+.gd-teams { display: flex; align-items: center; justify-content: center; gap: 18px; font-family: var(--display); font-weight: 800; font-size: 22px; text-transform: uppercase; text-align: center; }
+.gd-teams .gd-side { display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 84px; }
+.gd-teams .logo { width: 56px; height: 56px; }
+.gd-score { font-size: 34px; min-width: 70px; color: var(--muted); }
+.gd-how { display: grid; gap: 6px; font-size: 14px; }
+.gd-bars { display: grid; gap: 10px; border-top: 1px solid var(--line); padding-top: 12px; }
+.gd-bar { display: flex; align-items: center; gap: 10px; }
+.gd-more { font-size: 18px; margin: 8px 0 -4px; }
 
 .chat { display: grid; grid-template-rows: auto 1fr auto; height: calc(100dvh - 60px - 57px - var(--banner, 0px)); width: min(860px, 100%); margin: 0 auto; }
 .chat .rooms { display: flex; gap: 8px; padding: 14px 16px; border-bottom: 1px solid var(--line); flex-wrap: wrap; align-items: center; }

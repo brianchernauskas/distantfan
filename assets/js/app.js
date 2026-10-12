@@ -1,11 +1,12 @@
-import * as S from './store.js?v=202610110928';
-import { SITE, ADMINS } from './config.js?v=202610110928';
-import { TEAMS, TEAM_BY_ID, LEAGUES } from './teams.js?v=202610110928';
-import { METROS } from './metros.js?v=202610110928';
-import { encode, center, bounds, areaLabel, km, nearestMetro } from './geo.js?v=202610110928';
-import { nextGames } from './schedule.js?v=202610110928';
-import { shopStrip, hydrateShop, shopBanner, hydrateBanner } from './shop.js?v=202610110928';
-import { firstTouch, followPrefill, clearFollow } from './attrib.js?v=202610110928';
+import * as S from './store.js?v=202610121506';
+import { SITE, ADMINS } from './config.js?v=202610121506';
+import { TEAMS, TEAM_BY_ID, LEAGUES } from './teams.js?v=202610121506';
+import { METROS } from './metros.js?v=202610121506';
+import { encode, center, bounds, areaLabel, km, nearestMetro } from './geo.js?v=202610121506';
+import { nextGames, liveStatus } from './schedule.js?v=202610121506';
+import { howToWatch, WATCH_COLOR, gcalUrl } from './watch.js?v=202610121506';
+import { shopStrip, hydrateShop, shopBanner, hydrateBanner } from './shop.js?v=202610121506';
+import { firstTouch, followPrefill, clearFollow } from './attrib.js?v=202610121506';
 
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -14,10 +15,16 @@ const root = $('#root');
 const NEAR_KM = 16; // ~10 miles
 const WIDE_KM = 40; // ~25 miles, the city view's "wider" toggle
 const isAdmin = () => !!user && ADMINS.includes(user.uid);
+// URL params, read once before anything rewrites the URL: utm_source of this visit (digest, welcome,
+// invite...) and the game-day email's one-tap "I'm going" link (?go=<spotId>&game=<eventId>&team=<teamId>).
+const QS = new URLSearchParams(location.search);
+const VIA = (QS.get('utm_source') || '').slice(0, 30);
+let GO = QS.get('go') ? { spot: QS.get('go'), game: QS.get('game') || '', team: QS.get('team') || '' } : null;
 
 let user = null, profile = null, teamId = null, view = 'map';
 let map = null, mapLayers = null, unsubRoom = null, room = 'local', adding = false;
 let cache = {}; // per-team { fans, spots, checkins }
+let liveTimer = null; // Games tab countdown / live-score ticker
 // Map scope: 'all' = every team's spots in the city (default), or one followed team id.
 let mapTeam = 'all', mapMetro = null, wide = false, cityCache = null, cityToken = 0;
 
@@ -76,14 +83,25 @@ const errMsg = e => (e?.code || '').replace('auth/', '').replace(/-/g, ' ') || e
     if (!u) return renderAuth();
     try { profile = await S.getProfile(u.uid); } catch (e) { profile = null; console.error(e); }
     if (!profile) return renderOnboarding();
+    S.noteVisit(u.uid, VIA).catch(e => console.warn('visit', e));
     teamId = profile.teams.includes(ls.get('df_team')) ? ls.get('df_team') : profile.teams[0];
     mapTeam = profile.teams.includes(ls.get('df_maptab')) ? ls.get('df_maptab') : 'all'; mapMetro = null;
-    view = views().includes(location.hash.slice(1)) ? location.hash.slice(1) : 'map';
+    const asked = views().includes(location.hash.slice(1)) ? location.hash.slice(1) : null;
+    view = GO ? 'games' : asked || (await gameSoon() ? 'games' : 'map');
     renderShell();
   });
 })();
 
+// True when a followed team plays within 12 hours or is playing now, so the app opens on Games.
+// Capped at 1.5 s: schedules are usually cached, and the map is a fine fallback.
+async function gameSoon() {
+  const all = await Promise.race([Promise.all(profile.teams.map(id => nextGames(id, 1).catch(() => []))), new Promise(r => setTimeout(() => r([]), 1500))]);
+  const now = Date.now();
+  return all.flat().some(g => g.time - now < 12 * 3.6e6 && now - g.time < 4 * 3.6e6);
+}
+
 function cleanupView() {
+  clearInterval(liveTimer); liveTimer = null;
   unsubRoom?.(); unsubRoom = null;
   if (map) { map.remove(); map = null; mapLayers = null; }
   adding = false;
@@ -269,7 +287,7 @@ function renderOnboarding(editing = false) {
         if (!native && !navigator.geolocation) { err.textContent = 'Location is not available in this browser. Pick a metro instead.'; return; }
         $('#locate').disabled = true; $('#locate').textContent = 'Locating…';
         // Inside the Capacitor app, use the native location plugin (native.js); on the web, the browser API.
-        const locate = native ? (ok, fail, o) => import('./native.js?v=202610110928').then(n => n.getPosition(ok, fail, o)) : (ok, fail, o) => navigator.geolocation.getCurrentPosition(ok, fail, o);
+        const locate = native ? (ok, fail, o) => import('./native.js?v=202610121506').then(n => n.getPosition(ok, fail, o)) : (ok, fail, o) => navigator.geolocation.getCurrentPosition(ok, fail, o);
         locate(p => {
           // Round to a coarse cell immediately; the coordinates are discarded here.
           const cell = encode(p.coords.latitude, p.coords.longitude, SITE.homePrecision);
@@ -321,6 +339,7 @@ function renderShell() {
   $('#meBtn').onclick = $('#meBtn2').onclick = openProfile;
   $('#inviteBtn').onclick = inviteFan;
   drawTeambar();
+  S.track(`tab_${view}`, { team_id: teamId || '' }); // one GA4 event per tab shown, so feature use is visible
   ({ map: viewMap, games: viewGames, chat: viewChat, review: viewReview, users: viewUsers })[view]();
 }
 
@@ -630,6 +649,7 @@ async function goTo(spot, game, tid = teamId) {
     const until = game ? game.time + 5 * 3.6e6 : Date.now() + 24 * 3.6e6;
     await S.checkIn({ teamId: tid, spotId: spot.id, name: profile.name, gameId: game?.id || '', gameName: game ? `${game.home ? 'vs' : 'at'} ${game.opp.short}` : '', gameDate: game?.time || Date.now(), expiresAt: until });
     toast(`You're going to ${spot.name}`);
+    S.track('check_in', { team_id: tid, from: view });
     delete cache[tid];
     if (view === 'map') loadMap(true); else viewGames();
   } catch (e) { toast(errMsg(e)); }
@@ -701,7 +721,7 @@ function openSpotDialog(latlng, forClub = false) {
       if (!teams.length) { $('#spotErr', dlg).textContent = 'Pick at least one team.'; return; }
       try {
         const spot = { name: f.get('name'), address: f.get('address'), club: f.get('club'), note: f.get('note'), lat: latlng.lat, lng: latlng.lng, teams, byName: profile.name };
-        if (isAdmin()) await S.addSpot(spot); else await S.suggestSpot(spot);
+        if (isAdmin()) await S.addSpot(spot); else { await S.suggestSpot(spot); S.track('spot_suggest', { team_id: teams[0] }); }
         dlg.close(); toast(isAdmin() ? 'Spot added. Thanks!' : 'Thanks! It will show on the map once we have checked it.');
         teams.forEach(t => delete cache[t]); cityCache = null; loadMap(true);
       } catch (x) { $('#spotErr', dlg).textContent = errMsg(x); }
@@ -804,6 +824,76 @@ function openClubDialog() {
 }
 
 /* ------------------------------------------------------------------ games */
+// Game-day view. The next game sits on top (countdown, or the live score once it starts, how to
+// watch it, the nearest bars and who's going), then every upcoming game with the same "how to
+// watch" verdict (assets/js/watch.js, shared with the watch/ pages and the email).
+const watchBadge = (h, tv = []) => `<span class="wbadge" style="--w:${WATCH_COLOR[h.kind]}"${tv.length ? ` title="${esc(tv.join(', '))}"` : ''}>${esc(h.label)}</span>`;
+const vsWord = g => g.neutral || g.home ? 'vs' : 'at';
+const untilText = ms => {
+  const m = Math.max(0, Math.round(ms / 6e4));
+  if (m < 60) return `in ${m} min`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `in ${h}h ${m % 60}m`;
+  const d = Math.round(h / 24);
+  return `in ${d} day${d === 1 ? '' : 's'}`;
+};
+const nearFor = (d, me) => {
+  if (!d) return [];
+  const going = goingBySpot(d.checkins);
+  return d.spots.map(s => ({ ...s, dist: km(me, s), going: going[s.id] || 0 })).filter(s => s.dist <= NEAR_KM).sort((a, b) => b.going - a.going || a.dist - b.dist);
+};
+
+function gameDayCard(g, t, near, mySpot) {
+  const h = howToWatch(t.lg, g.tv), dt = new Date(g.time);
+  const when = g.tbd
+    ? `${dt.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}, time TBA`
+    : dt.toLocaleString(undefined, { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+  const title = `${t.short} ${vsWord(g)} ${g.opp.short}`;
+  const cal = gcalUrl({
+    title, start: g.time, end: g.time + 3.5 * 3.6e6,
+    location: near[0] ? `${near[0].name}${near[0].address ? `, ${near[0].address}` : ''}` : '',
+    details: `${h.label}. ${h.tip}${near[0] ? `\nWatching with ${t.short} fans at ${near[0].name}.` : ''}\nhttps://distantfan.com/app.html#games`,
+  });
+  const bars = near.slice(0, 2).map(s => `<div class="gd-bar"><span class="pinicon">📍</span><span class="grow"><b>${esc(s.name)}</b><br><span class="muted" style="font-size:13px">${fmtKm(s.dist)}${s.going ? ` · ${s.going} going` : ''}</span></span></div>`).join('');
+  return `<div class="panel gameday" style="--team:${esc(t.color || 'var(--accent)')}">
+    <div class="gd-top"><span>${g.time - Date.now() < 864e5 ? 'Game day' : 'Next game'} · ${esc(when)}</span><span class="gd-clock" id="gdClock">${g.tbd ? '' : esc(untilText(g.time - Date.now()))}</span></div>
+    <div class="gd-teams">
+      <span class="gd-side">${logo(t)}<span>${esc(t.short)}</span></span>
+      <span class="gd-score" id="gdScore">${vsWord(g)}</span>
+      <span class="gd-side">${g.opp.logo ? `<img class="logo" src="${esc(g.opp.logo)}" alt="">` : ''}<span>${esc(g.opp.short)}</span></span>
+    </div>
+    <div class="gd-how"><div>${watchBadge(h, g.tv)}${g.tv.length > 1 ? ` <span class="muted" style="font-size:13px">${esc(g.tv.join(', '))}</span>` : ''}</div><span class="muted">${esc(h.tip)}</span></div>
+    <div class="gd-bars">
+      ${mySpot ? `<div class="gd-bar"><span class="pinicon">✓</span><span class="grow">You're going to <b>${esc(mySpot.name)}</b></span><button class="btn sm" data-out="${g.teamId}">Cancel</button></div>`
+      : near.length ? `<b style="font-size:14px">Watch with ${esc(t.short)} fans near you</b>${bars}<div class="row" style="gap:8px"><button class="btn sm primary" data-go="${g.teamId}|${g.id}">I'm going</button>${near.length > 2 ? `<span class="muted" style="font-size:13px">${near.length - 2} more spot${near.length > 3 ? 's' : ''} nearby</span>` : ''}</div>`
+      : `<div class="gd-bar"><span class="grow muted">No ${esc(t.short)} bars listed near you yet. Know one?</span><button class="btn sm" data-add="${g.teamId}">Add one</button></div>`}
+    </div>
+    <div class="row" style="gap:8px"><a class="btn sm ghost" href="${esc(cal)}" target="_blank" rel="noopener" data-cal>Add to calendar</a></div>
+  </div>`;
+}
+
+// Countdown every 30 s; from 10 minutes before start until the game ends, the live score each minute.
+function startGameDay(g) {
+  clearInterval(liveTimer);
+  let n = 0, done = false;
+  const tick = async () => {
+    const clock = $('#gdClock'), score = $('#gdScore');
+    if (view !== 'games' || !clock) { clearInterval(liveTimer); liveTimer = null; return; }
+    const now = Date.now();
+    if (!g.tbd && now < g.time - 10 * 6e4) { clock.textContent = untilText(g.time - now); return; }
+    if (done || n++ % 2) return; // poll every other tick = once a minute
+    const st = await liveStatus(g.teamId, g);
+    if (!st || view !== 'games') return;
+    if (st.state === 'pre') { clock.textContent = g.tbd ? '' : untilText(g.time - Date.now()); return; }
+    const live = st.state === 'in';
+    clock.innerHTML = live ? `<span class="gd-live">● Live</span> ${esc(st.detail)}` : esc(st.detail || 'Final');
+    if (st.us !== '' && st.them !== '') score.innerHTML = `${esc(st.us)}<span class="muted"> - </span>${esc(st.them)}`;
+    if (!live) done = true;
+  };
+  liveTimer = setInterval(tick, 30e3);
+  tick();
+}
+
 async function viewGames() {
   const v = $('#view');
   v.innerHTML = `<div class="page"><h2>Your games</h2><div id="games"><div class="loading" style="min-height:200px">Loading schedules…</div></div></div>`;
@@ -814,19 +904,22 @@ async function viewGames() {
   if (view !== 'games') return;
   const games = results.flat().sort((a, b) => a.time - b.time).slice(0, 16);
   const me = home();
-  $('#games').innerHTML = games.length ? games.map(g => {
-    const t = TEAM_BY_ID[g.teamId], d = data[g.teamId];
-    const going = d ? goingBySpot(d.checkins) : {};
-    const near = d ? d.spots.map(s => ({ ...s, dist: km(me, s), going: going[s.id] || 0 })).filter(s => s.dist <= NEAR_KM).sort((a, b) => b.going - a.going || a.dist - b.dist) : [];
-    const mine = d?.checkins.find(c => c.uid === user.uid && (!c.gameId || c.gameId === g.id));
-    const mySpot = mine && d.spots.find(s => s.id === mine.spotId);
-    const dt = new Date(g.time);
+  const mineFor = g => {
+    const d = data[g.teamId], c = d?.checkins.find(x => x.uid === user.uid && (!x.gameId || x.gameId === g.id));
+    return c && d.spots.find(s => s.id === c.spotId);
+  };
+  const lead = games[0] && games[0].time - Date.now() < 7 * 864e5 ? games[0] : null;
+  const hero = lead ? gameDayCard(lead, TEAM_BY_ID[lead.teamId], nearFor(data[lead.teamId], me), mineFor(lead)) : '';
+  const rest = lead ? games.slice(1) : games;
+  $('#games').innerHTML = games.length ? hero + (lead && rest.length ? '<h3 class="gd-more">Coming up</h3>' : '') + rest.map(g => {
+    const t = TEAM_BY_ID[g.teamId], near = nearFor(data[g.teamId], me), mySpot = mineFor(g);
+    const h = howToWatch(t.lg, g.tv), dt = new Date(g.time);
     return `<div class="panel game">
       <div class="when"><div class="d">${dt.toLocaleDateString(undefined, { weekday: 'short' })}</div><div class="n">${dt.getDate()}</div><div class="m">${dt.toLocaleDateString(undefined, { month: 'short' })}</div></div>
       <div>
-        <div class="vs">${logo(t, 'sm')}${esc(t.short)} <span class="muted" style="font-weight:500">${g.neutral ? 'vs' : g.home ? 'vs' : 'at'}</span> ${g.opp.logo ? `<img class="logo sm" src="${esc(g.opp.logo)}" alt="">` : ''}${esc(g.opp.short)}</div>
+        <div class="vs">${logo(t, 'sm')}${esc(t.short)} <span class="muted" style="font-weight:500">${vsWord(g)}</span> ${g.opp.logo ? `<img class="logo sm" src="${esc(g.opp.logo)}" alt="">` : ''}${esc(g.opp.short)}</div>
         <div class="meta">${g.tbd ? 'Time TBA' : dt.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit', timeZoneName: 'short' })}${g.city ? ` · ${esc(g.city)}` : ''}</div>
-        ${g.tv.length ? `<div class="tv">${g.tv.map(x => `<span class="badge plain">${esc(x)}</span>`).join('')}</div>` : ''}
+        <div class="how">${watchBadge(h, g.tv)}<span>${esc(h.tip)}</span></div>
       </div>
       <span></span>
       <div class="watch">
@@ -838,20 +931,36 @@ async function viewGames() {
   }).join('') : '<div class="panel"><p class="empty">No upcoming games found for your teams. Off-season, or the schedule isn\'t out yet.</p></div>';
   $('#games').insertAdjacentHTML('afterend', shopStrip(profile.teams, logo));
   hydrateShop(profile.teams);
+  if (lead) startGameDay(lead);
 
   $$('[data-out]').forEach(b => b.onclick = async () => { await S.checkOut(b.dataset.out); delete cache[b.dataset.out]; toast('Check-in cancelled'); viewGames(); });
   $$('[data-add]').forEach(b => b.onclick = () => { teamId = b.dataset.add; ls.set('df_team', teamId); mapTeam = teamId; ls.set('df_maptab', teamId); view = 'map'; history.replaceState(null, '', '#map'); renderShell(); setTimeout(() => setAdding(true), 300); });
+  $$('[data-cal]').forEach(a => a.addEventListener('click', () => S.track('add_to_calendar', { team_id: lead?.teamId || '' })));
   $$('[data-go]').forEach(b => b.onclick = () => {
     const [tid, gid] = b.dataset.go.split('|');
-    const g = games.find(x => x.teamId === tid && x.id === gid), d = data[tid], going = goingBySpot(d.checkins);
-    const near = d.spots.map(s => ({ ...s, dist: km(me, s), going: going[s.id] || 0 })).filter(s => s.dist <= NEAR_KM).sort((a, b) => b.going - a.going || a.dist - b.dist);
-    pickSpot(near, s => goTo(s, g, tid));
+    const g = games.find(x => x.teamId === tid && x.id === gid);
+    pickSpot(nearFor(data[tid], me), s => goTo(s, g, tid));
   });
+  if (GO) openEmailGo(GO, games, me);
 }
 
-function pickSpot(spots, done) {
+// The game-day email's "I'm going to <bar>" link lands here. Links in email get prefetched by mail
+// scanners, so the link itself never writes anything: it opens a one-tap confirm instead.
+async function openEmailGo(go, games, me) {
+  GO = null;
+  history.replaceState(null, '', `${location.pathname}#games`);
+  const t = TEAM_BY_ID[go.team];
+  if (!t || !profile.teams.includes(go.team)) return toast('That link is for a team you no longer follow.');
+  const spot = (await S.spotsFor(go.team).catch(() => [])).find(s => s.id === go.spot);
+  if (!spot) return toast('That bar is no longer listed. Here are your games.');
+  const g = games.find(x => x.teamId === go.team && x.id === go.game) || (await nextGames(go.team, 1).catch(() => []))[0];
+  S.track('email_go_open', { team_id: go.team });
+  pickSpot([{ ...spot, dist: km(me, spot), going: 0 }], s => goTo(s, g, go.team), g ? `Going to watch ${t.short} ${vsWord(g)} ${g.opp.short} here?` : `Going to watch ${t.short} here?`);
+}
+
+function pickSpot(spots, done, title = 'Where are you watching?') {
   const dlg = document.createElement('dialog');
-  dlg.innerHTML = `<h3>Where are you watching?</h3>
+  dlg.innerHTML = `<h3>${esc(title)}</h3>
     <div class="list" style="margin:0 -8px 10px">${spots.slice(0, 10).map(s => `<button class="item" data-id="${esc(s.id)}"><span class="pinicon">📍</span><span class="main"><span class="t" style="display:block">${esc(s.name)}</span><span class="s">${fmtKm(s.dist)}</span></span>${s.going ? `<span class="badge">${s.going} going</span>` : ''}</button>`).join('')}</div>
     <div class="row" style="justify-content:flex-end"><button class="btn ghost" data-x>Cancel</button></div>`;
   document.body.append(dlg); dlg.showModal();
@@ -901,7 +1010,7 @@ function viewChat() {
     if (Date.now() - lastSend < 2000) { toast('Slow down a little.'); return; }
     lastSend = Date.now();
     inp.value = '';
-    try { await S.sendMessage(rid, text, profile.name); } catch (x) { inp.value = text; toast(errMsg(x)); }
+    try { await S.sendMessage(rid, text, profile.name); S.track('chat_send', { team_id: teamId, room }); } catch (x) { inp.value = text; toast(errMsg(x)); }
   };
 }
 
@@ -918,8 +1027,8 @@ async function viewUsers() {
   const v = $('#view');
   const shell = body => `<div class="page"><h2>Users</h2>${body}</div>`;
   v.innerHTML = shell('<div class="panel"><p class="muted">Loading…</p></div>');
-  let people, allSpots;
-  try { [people, allSpots] = await Promise.all([S.listProfiles(), S.listSpots()]); } catch (e) { v.innerHTML = shell(`<div class="panel"><p class="err">${esc(errMsg(e))}</p></div>`); return; }
+  let people, allSpots, visits;
+  try { [people, allSpots, visits] = await Promise.all([S.listProfiles(), S.listSpots(), S.listVisits().catch(() => [])]); } catch (e) { v.innerHTML = shell(`<div class="panel"><p class="err">${esc(errMsg(e))}</p></div>`); return; }
   if (view !== 'users') return;
   const now = Date.now();
   const spots = allSpots.filter(s => !s.expiresAt || s.expiresAt > now); // same rule as the map: lapsed scout listings don't count
@@ -932,6 +1041,13 @@ async function viewUsers() {
   const fmtDay = ms => ms ? new Date(ms).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : '';
   const weekAgo = now - 7 * 864e5;
   people.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+  // Return visits (visits/{uid}, one count per day a fan opened the app). Started 2026-10-12, so older fans
+  // show nothing until their next visit.
+  const visit = Object.fromEntries(visits.map(x => [x.uid, x]));
+  const fanVisits = people.map(p => visit[p.uid]).filter(Boolean);
+  const returning = fanVisits.filter(x => x.days >= 2).length, active7 = fanVisits.filter(x => x.lastAt > weekAgo).length;
+  const viaMail = fanVisits.filter(x => /digest|welcome/.test(x.via || '')).length;
+  const visitNote = x => x ? `${x.days} day${x.days === 1 ? '' : 's'} · last ${fmtDay(x.lastAt)}` : 'no visit since tracking began';
 
   // Each dataset says how to find an entry's city and teams and how to draw one row.
   const SETS = {
@@ -945,8 +1061,8 @@ async function viewUsers() {
     fans: {
       label: 'Fans', items: people, noun: ['fan', 'fans'],
       city: p => [(p.area || 'Unknown').replace(/ area$/, '')], teams: p => p.teams || [],
-      note: `${people.filter(p => p.updatedAt > weekAgo).length} new or updated in the last 7 days · a fan following several teams appears under each`,
-      line: p => `<div class="grow"><b>${esc(p.name)}</b><div class="muted" style="font-size:13px">${esc(p.area || 'Unknown area')} · ${(p.teams || []).map(id => esc(teamShort(id))).join(', ')}</div></div><span class="muted" style="font-size:12px">${fmtDay(p.updatedAt)}</span>`,
+      note: `${people.filter(p => p.updatedAt > weekAgo).length} new or updated in the last 7 days · ${returning} came back on a second day · ${active7} opened the app in the last 7 days · a fan following several teams appears under each`,
+      line: p => `<div class="grow"><b>${esc(p.name)}</b><div class="muted" style="font-size:13px">${esc(p.area || 'Unknown area')} · ${(p.teams || []).map(id => esc(teamShort(id))).join(', ')}</div></div><span class="muted" style="font-size:12px;text-align:right">${esc(visitNote(visit[p.uid]))}</span>`,
       sort: (a, b) => a.name.localeCompare(b.name),
     },
   };
@@ -964,7 +1080,13 @@ async function viewUsers() {
       const bars = ga.daily.map((d, i) => { const h = Math.max(1, d.users / max * (H - 6)); return `<rect x="${(i * bw + 1).toFixed(1)}" y="${(H - h).toFixed(1)}" width="${Math.max(1, bw - 2).toFixed(1)}" height="${h.toFixed(1)}" rx="2" fill="currentColor" opacity=".55"><title>${esc(d.d.slice(4, 6) + '/' + d.d.slice(6))}: ${d.users} users, ${d.sessions} sessions</title></rect>`; }).join('');
       const tile = (label, val, pv) => `<div class="panel" style="display:grid;gap:2px;padding:12px"><span class="muted" style="font-size:12px">${label}</span><b style="font-size:26px;line-height:1.1">${n(val)}</b>${pv === undefined ? '' : delta(val, pv)}</div>`;
       const table = (title, rows, a, b, label) => `<div><b>${title}</b><div style="display:grid;gap:6px;margin-top:8px">${rows.length ? rows.map(r => `<div class="row"><span class="grow" style="word-break:break-all">${esc(label(r))}</span><b>${n(r[a])}</b>${b ? `<span class="muted" style="font-size:12px;width:56px;text-align:right">${r[a] ? Math.round(r[b] / r[a] * 100) : 0}% eng.</span>` : ''}</div>`).join('') : '<span class="muted">No data</span>'}</div></div>`;
+      const engage = ga.events.filter(e => /^(tab_|check_in|chat_send|spot_suggest|share|sign_up)/.test(e.name));
       body = `
+        <div class="panel" style="display:grid;gap:10px"><b>Fan engagement</b>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px">${tile('Fans tracked', fanVisits.length)}${tile('Came back (2+ days)', returning)}${tile('Active last 7d', active7)}${tile('Last visit from email', viaMail)}</div>
+          ${table('In-app actions (GA4, 28d)', engage, 'count', null, r => r.name)}
+          <span class="muted" style="font-size:12px">Visit counts started Oct 12, 2026 and come from Firestore, live. Tab and action events come from GA4 with the sync below.</span>
+        </div>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px">${tile('Users (28d)', t.users, p.users)}${tile('New users', t.newUsers, p.newUsers)}${tile('Sessions', t.sessions, p.sessions)}${tile('Page views', t.views, p.views)}${tile('Sign-ups', ev('sign_up'))}${tile('Shares', ev('share'))}</div>
         <div class="panel" style="display:grid;gap:6px"><b>Daily users</b><svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}" role="img" aria-label="Daily active users, last 28 days" preserveAspectRatio="none">${bars}</svg><span class="muted" style="font-size:12px">Last 28 days. Hover a bar for the day.</span></div>
         <div class="panel" style="display:grid;gap:16px">

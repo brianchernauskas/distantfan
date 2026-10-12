@@ -31,7 +31,7 @@ const [totals, daily, channels, sources, pages, events, cities] = await Promise.
   report({ dateRanges: [cur], dimensions: [{ name: 'sessionDefaultChannelGroup' }], metrics: M(['sessions', 'engagedSessions']), orderBys: [{ metric: { metricName: 'sessions' }, desc: true }], limit: 10 }),
   report({ dateRanges: [cur], dimensions: [{ name: 'sessionSourceMedium' }], metrics: M(['sessions']), orderBys: [{ metric: { metricName: 'sessions' }, desc: true }], limit: 10 }),
   report({ dateRanges: [cur], dimensions: [{ name: 'landingPage' }], metrics: M(['sessions', 'engagedSessions']), orderBys: [{ metric: { metricName: 'sessions' }, desc: true }], limit: 15 }),
-  report({ dateRanges: [cur], dimensions: [{ name: 'eventName' }], metrics: M(['eventCount']), orderBys: [{ metric: { metricName: 'eventCount' }, desc: true }], limit: 15 }),
+  report({ dateRanges: [cur], dimensions: [{ name: 'eventName' }], metrics: M(['eventCount']), orderBys: [{ metric: { metricName: 'eventCount' }, desc: true }], limit: 40 }),
   report({ dateRanges: [cur], dimensions: [{ name: 'city' }, { name: 'region' }], metrics: M(['activeUsers']), orderBys: [{ metric: { metricName: 'activeUsers' }, desc: true }], limit: 10 }),
 ]);
 

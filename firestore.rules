@@ -44,6 +44,22 @@ service cloud.firestore {
     // Send log so a fan is never emailed twice in a few days. Admin only.
     match /mailLog/{id} { allow read, write: if isAdmin(); }
 
+    // Return-visit counter (store.js noteVisit): one update per fan per day, days goes up by exactly 1.
+    // Private: only the owner and the admin can read it.
+    function visitShape() {
+      return data().keys().hasOnly(['firstDay', 'lastDay', 'days', 'lastAt', 'via'])
+        && str(data().firstDay, 10, 10) && str(data().lastDay, 10, 10) && str(data().via, 1, 30)
+        && data().days is int && data().lastAt == request.time;
+    }
+    match /visits/{uid} {
+      allow read: if signedIn() && (me() == uid || isAdmin());
+      allow create: if signedIn() && me() == uid && visitShape() && data().days == 1 && data().firstDay == data().lastDay;
+      allow update: if signedIn() && me() == uid && visitShape()
+        && data().firstDay == resource.data.firstDay && data().days == resource.data.days + 1
+        && data().lastDay > resource.data.lastDay;
+      allow delete: if signedIn() && me() == uid;
+    }
+
     // Watch spots are public places, so exact coordinates are fine here.
     match /spots/{id} {
       allow read: if signedIn();

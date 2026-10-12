@@ -24,6 +24,7 @@ import { fileURLToPath } from 'node:url';
 import { TEAMS, TEAM_BY_ID, LEAGUES } from '../assets/js/teams.js';
 import { nearestMetro, center, km } from '../assets/js/geo.js';
 import { METROS } from '../assets/js/metros.js';
+import { howToWatch, WATCH_COLOR } from '../assets/js/watch.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SITE = 'https://distantfan.com';
@@ -223,10 +224,15 @@ function scheduleBlock(team, where, limit = 6) {
   const d = sched(team);
   if (!d || !d.games.length) return { html: '', ld: [], next: null, changed: 0 };
   const games = d.games.slice(0, limit);
-  const rows = games.map(g => `<li><time class="gt" datetime="${g.t}"${g.tbd ? ' data-tbd="1"' : ''}>${esc(fmtGame(g))}</time> <b>${g.home ? 'vs' : 'at'} ${esc(g.opp)}</b>${g.tv.length ? ` <span class="tv">${esc(g.tv.join(', '))}</span>` : ''}</li>`).join('\n');
+  // Per-game "how to watch" verdict (assets/js/watch.js, same rules as the app and the email).
+  const wb = h => `<span class="wb" style="--w:${WATCH_COLOR[h.kind]}">${esc(h.label)}</span>`;
+  const rows = games.map(g => { const h = howToWatch(team.lg, g.tv); return `<li><time class="gt" datetime="${g.t}"${g.tbd ? ' data-tbd="1"' : ''}>${esc(fmtGame(g))}</time> <b>${g.home ? 'vs' : 'at'} ${esc(g.opp)}</b> ${wb(h)}${g.tv.length > 1 ? ` <span class="tv">${esc(g.tv.join(', '))}</span>` : ''}</li>`; }).join('\n');
+  const nh = howToWatch(team.lg, games[0].tv);
+  const howNext = `<p class="howto"><b>How to watch ${esc(team.short)} ${games[0].home ? 'vs' : 'at'} ${esc(oppShort(team, games[0]))}${where ? ` in ${esc(where)}` : ''}:</b> ${wb(nh)} ${esc(nh.tip)}</p>`;
   const rec = d.rec ? `${esc(team.short)} are ${esc(d.rec)}${d.stand ? ` (${esc(d.stand)})` : ''}.` : '';
   const html = `<section class="schedule"><h2>Upcoming ${esc(team.short)} games to watch${where ? ` in ${esc(where)}` : ''}</h2>
 <p class="muted">${rec}${resultLine(team, d)}</p>
+${howNext}
 <ul class="games">
 ${rows}
 </ul>

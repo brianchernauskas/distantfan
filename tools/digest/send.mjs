@@ -26,6 +26,7 @@ import { fileURLToPath } from 'node:url';
 import { TEAM_BY_ID } from '../../assets/js/teams.js';
 import { km, center, nearestMetro } from '../../assets/js/geo.js';
 import { adminDb } from '../scout/lib.mjs';
+import { howToWatch, WATCH_COLOR, gcalUrl } from '../../assets/js/watch.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const arg = n => { const i = process.argv.indexOf(n); return i < 0 ? null : (process.argv[i + 1]?.startsWith('--') ? true : process.argv[i + 1] ?? true); };
@@ -100,6 +101,13 @@ const tile = (src, size, alt = '') => src ? `<table role="presentation" cellpadd
 
 function render({ pref, profile, games, tz, pt, welcome = false }) {
   const unsub = `${SITE}/unsubscribe.html?t=${pref.id}`;
+  // Every site link carries utm tags so GA4 (and the app's visits/{uid}.via) can count email visits.
+  const campaign = new Date().toISOString().slice(0, 10);
+  const link = (params = {}, hash = 'games') => `${SITE}/app.html?${new URLSearchParams({ ...params, utm_source: welcome ? 'welcome' : 'digest', utm_medium: 'email', utm_campaign: campaign })}#${hash}`;
+  // "I'm going" opens the app on a one-tap confirm (the link never writes by itself, since mail scanners prefetch links).
+  const goLink = (s, g) => link({ go: s.id, game: g.key, team: g.teamId });
+  const btn = (href, label, bg = '#df5a0b') => `<a href="${esc(href)}" style="display:inline-block;background:${bg};color:#ffffff;text-decoration:none;font-weight:700;font-size:14px;padding:8px 14px;border-radius:999px;margin:0 6px 6px 0">${label}</a>`;
+  const ghost = (href, label) => `<a href="${esc(href)}" style="display:inline-block;border:1px solid #d6d0c3;color:#121820;text-decoration:none;font-weight:700;font-size:14px;padding:7px 14px;border-radius:999px;margin:0 6px 6px 0">${label}</a>`;
   const fmtDay = ms => new Date(ms).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', timeZone: tz });
   const fmtTime = g => g.tbd ? 'time TBA' : new Date(g.time).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZoneName: 'short', timeZone: tz });
   const first = games[0], t = first && TEAM_BY_ID[first.teamId];
@@ -114,23 +122,29 @@ function render({ pref, profile, games, tz, pt, welcome = false }) {
 
   const blocks = games.map(g => {
     const team = TEAM_BY_ID[g.teamId], spots = spotsNear(pt, g.teamId), col = teamColor(team);
+    const how = howToWatch(team.lg, g.tv);
+    const cal = gcalUrl({ title: `${short(team)} ${g.home ? 'vs' : 'at'} ${g.opp}`, start: g.time, end: g.time + 3.5 * 3.6e6,
+      location: spots[0] ? `${spots[0].name}${spots[0].address ? `, ${spots[0].address}` : ''}` : '',
+      details: `${how.label}. ${how.tip}${spots[0] ? `\nWatching with ${team.short} fans at ${spots[0].name}.` : ''}\n${SITE}/app.html#games` });
     const spotHtml = spots.length
-      ? spots.map(s => `<div style="margin:0 0 9px;font-size:15px;line-height:1.35">📍 <b style="color:#121820">${esc(s.name)}</b><br><span style="color:#6b7480;font-size:14px">${esc(s.address || '')}${s.address ? ' · ' : ''}${(s.d * 0.621).toFixed(0)} mi</span></div>`).join('')
-      : `<div style="font-size:14px;color:#6b7480">No spots listed near you yet. <a href="${SITE}/app.html" style="color:#df5a0b;font-weight:700">Add one</a> and be the first.</div>`;
+      ? spots.map(s => `<div style="margin:0 0 10px;font-size:15px;line-height:1.35">📍 <b style="color:#121820">${esc(s.name)}</b> <a href="${esc(goLink(s, g))}" style="color:#df5a0b;font-weight:700;font-size:14px;white-space:nowrap">I'm going</a><br><span style="color:#6b7480;font-size:14px">${esc(s.address || '')}${s.address ? ' · ' : ''}${(s.d * 0.621).toFixed(0)} mi</span></div>`).join('')
+      : `<div style="font-size:14px;color:#6b7480">No spots listed near you yet. <a href="${esc(link({}, 'map'))}" style="color:#df5a0b;font-weight:700">Add one</a> and be the first.</div>`;
     return { g, team, spots, html: `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 14px;background:#ffffff;border:1px solid #e3ded2;border-left:6px solid ${col};border-radius:12px"><tr><td style="padding:14px 14px">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
 <td width="56" valign="middle">${tile(team.logo, 52, team.name)}</td>
 <td valign="middle" style="padding:0 12px">
 <div style="font-size:13px;letter-spacing:.05em;text-transform:uppercase;font-weight:700;color:#6b7480">${esc(fmtDay(g.time))} · ${esc(fmtTime(g))}</div>
 <div style="font-size:20px;font-weight:800;line-height:1.2;margin:4px 0;color:#121820">${esc(short(team))} <span style="font-weight:600;color:#6b7480">${g.home ? 'vs' : 'at'}</span> ${esc(g.opp)}</div>
-${g.tv.length ? `<div style="font-size:14px;color:#6b7480">📺 ${esc(g.tv.join(', '))}</div>` : ''}
+<div style="font-size:14px;color:#6b7480;line-height:1.5"><span style="display:inline-block;background:${WATCH_COLOR[how.kind]};color:#ffffff;font-weight:700;font-size:12px;padding:2px 9px;border-radius:999px">${esc(how.label)}</span>${g.tv.length > 1 ? ` ${esc(g.tv.join(', '))}` : ''}</div>
 </td>
 <td width="44" valign="middle" align="right">${tile(g.oppLogo, 40, g.opp)}</td>
 </tr></table>
 <div style="border-top:1px solid #eee9de;margin-top:14px;padding-top:12px">
 <div style="font-size:12px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:${col === '#ffffff' ? '#6b7480' : col};margin-bottom:8px">Where to watch near you</div>
+<div style="font-size:14px;line-height:1.45;color:#4a5563;margin:0 0 12px">📺 ${esc(how.tip)}</div>
 ${spotHtml}
-</div></td></tr></table>` };
+<div style="margin-top:4px">${spots[0] ? btn(goLink(spots[0], g), `I'm going to ${esc(spots[0].name)}`) : ''}${ghost(cal, 'Add to calendar')}</div>
+</div></td></tr></table>`, how, cal };
   });
 
   const teamStrip = (profile.teams || []).map(id => TEAM_BY_ID[id]).filter(Boolean).map(tm => `<span style="display:inline-block;margin:0 8px 8px 0;vertical-align:top">${tile(tm.logo, 44, tm.name)}</span>`).join('');
@@ -154,13 +168,13 @@ ${games.length ? `<div style="font-size:13px;color:#8a939e;margin:6px 0 0">Times
 <tr><td style="padding:16px 0 4px">
 ${blocks.map(b => b.html).join('\n')}
 </td></tr>
-<tr><td align="center" style="padding:14px 0 6px"><a href="${SITE}/app.html" style="display:inline-block;background:#df5a0b;color:#ffffff;text-decoration:none;font-weight:700;font-size:17px;padding:15px 34px;border-radius:999px">See who's going</a></td></tr>
+<tr><td align="center" style="padding:14px 0 6px"><a href="${esc(link())}" style="display:inline-block;background:#df5a0b;color:#ffffff;text-decoration:none;font-weight:700;font-size:17px;padding:15px 34px;border-radius:999px">See who's going</a></td></tr>
 <tr><td style="padding:22px 6px 4px;font-size:13px;line-height:1.55;color:#8a939e;text-align:center">You're getting this because you turned on the weekly game-day email at distantfan.com. Follow us on <a href="https://www.instagram.com/distantfanofficial/" style="color:#8a939e">Instagram</a>. <a href="${unsub}" style="color:#8a939e">Unsubscribe</a> in one click.<br>${esc(cfg.postalAddress || '[postal address goes here]')}</td></tr>
 </table></div>`;
 
   const text = `Hey ${firstName}${welcome ? '. ' : ', '}${intro}${games.length ? ` (times for ${area})` : ''}\n\n${blocks.map(b =>
-    `${fmtDay(b.g.time)} ${fmtTime(b.g)}: ${short(b.team)} ${b.g.home ? 'vs' : 'at'} ${b.g.opp}${b.g.tv.length ? ` (${b.g.tv.join(', ')})` : ''}\n` +
-    (b.spots.length ? b.spots.map(s => `  - ${s.name}, ${s.address || ''}`).join('\n') : '  - No spots listed near you yet. Add one at ' + SITE + '/app.html') + '\n').join('\n')}\nSee who's going: ${SITE}/app.html\n\nUnsubscribe: ${unsub}\n${cfg.postalAddress || ''}\n`;
+    `${fmtDay(b.g.time)} ${fmtTime(b.g)}: ${short(b.team)} ${b.g.home ? 'vs' : 'at'} ${b.g.opp}${b.g.tv.length ? ` (${b.g.tv.join(', ')})` : ''}\n  ${b.how.label}. ${b.how.tip}\n` +
+    (b.spots.length ? b.spots.map(s => `  - ${s.name}, ${s.address || ''}\n    I'm going: ${goLink(s, b.g)}`).join('\n') : `  - No spots listed near you yet. Add one at ${link({}, 'map')}`) + `\n  Add to calendar: ${b.cal}\n`).join('\n')}\nSee who's going: ${link()}\n\nUnsubscribe: ${unsub}\n${cfg.postalAddress || ''}\n`;
   return { subject, html, text, unsub };
 }
 

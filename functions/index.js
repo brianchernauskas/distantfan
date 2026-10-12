@@ -31,7 +31,7 @@ exports.syncAnalytics = onCall({ region: 'us-central1', maxInstances: 2, timeout
     report({ ...top('sessionDefaultChannelGroup', 'sessions', 10), metrics: M(['sessions', 'engagedSessions']) }),
     report(top('sessionSourceMedium', 'sessions', 10)),
     report({ ...top('landingPage', 'sessions', 15), metrics: M(['sessions', 'engagedSessions']) }),
-    report(top('eventName', 'eventCount', 15)),
+    report(top('eventName', 'eventCount', 40)),
     report({ ...top('city', 'activeUsers', 10), dimensions: [{ name: 'city' }, { name: 'region' }] }),
   ]);
   const pick = tag => { const r = totals.find(x => x[0] === tag); return r ? { users: r[1], newUsers: r[2], sessions: r[3], engaged: r[4], views: r[5] } : { users: 0, newUsers: 0, sessions: 0, engaged: 0, views: 0 }; };

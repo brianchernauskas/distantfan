@@ -71,6 +71,11 @@
 .games time { color: var(--muted); font-size: 14px; min-width: 11.5em; }
 .games .tv { margin-left: auto; font-size: 13px; color: var(--accent); font-weight: 600; }
 .schedule .tip { font-size: 14px; }
+.wb { display: inline-block; font-size: 12px; font-weight: 700; padding: 2px 9px; border-radius: 999px; background: var(--w, #6b7480); color: #fff; white-space: nowrap; }
+.games .wb { margin-left: auto; }
+.games .wb + .tv { margin-left: 0; }
+.howto { font-size: 15px; line-height: 1.5; padding: 12px 14px; border-radius: var(--radius-sm); background: var(--accent-soft, rgba(223,90,11,.08)); }
+.howto .wb { margin: 0 4px; }
 
 /* share row on team and team x city pages */
 .sharebar { display: flex; gap: 12px 16px; align-items: center; justify-content: space-between; flex-wrap: wrap; margin: 6px 0 26px; padding: 12px 16px;

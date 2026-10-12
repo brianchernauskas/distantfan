@@ -1,9 +1,9 @@
 // Data layer. Uses Firebase (Auth + Firestore) when FIREBASE_CONFIG is set,
 // otherwise a demo store in localStorage seeded with clearly fake fans and spots.
-import { FIREBASE_CONFIG, SITE } from './config.js?v=202610110928';
-import { TEAMS, TEAM_BY_ID } from './teams.js?v=202610110928';
-import { METROS } from './metros.js?v=202610110928';
-import { encode, center } from './geo.js?v=202610110928';
+import { FIREBASE_CONFIG, SITE } from './config.js?v=202610121506';
+import { TEAMS, TEAM_BY_ID } from './teams.js?v=202610121506';
+import { METROS } from './metros.js?v=202610121506';
+import { encode, center } from './geo.js?v=202610121506';
 
 export const mode = FIREBASE_CONFIG ? 'firebase' : 'demo';
 let impl;
@@ -58,6 +58,8 @@ export const approveSuggestion = call('approveSuggestion');
 export const rejectSuggestion = call('rejectSuggestion');
 export const applyReportedTeam = call('applyReportedTeam');
 export const syncAnalytics = call('syncAnalytics');
+export const noteVisit = call('noteVisit');
+export const listVisits = call('listVisits');
 
 // Best-effort GA4 event; a no-op until Analytics has loaded (or when blocked).
 let trackImpl = null;
@@ -145,7 +147,7 @@ async function firebaseStore() {
     // Inside the Capacitor app popups don't work, so use the native Google account chooser (native.js).
     signInGoogle: async () => {
       if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
-        return (await import('./native.js?v=202610110928')).signInGoogle(A, auth);
+        return (await import('./native.js?v=202610121506')).signInGoogle(A, auth);
       }
       return A.signInWithPopup(auth, new A.GoogleAuthProvider());
     },
@@ -158,7 +160,7 @@ async function firebaseStore() {
     resetPassword: email => A.sendPasswordResetEmail(auth, email),
     signInDemo: () => { throw new Error('Demo sign-in is only available in demo mode.'); },
     signOut: async () => {
-      if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) await (await import('./native.js?v=202610110928')).signOut();
+      if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) await (await import('./native.js?v=202610121506')).signOut();
       return A.signOut(auth);
     },
 
@@ -184,6 +186,7 @@ async function firebaseStore() {
     async deleteProfile(uid) {
       const pref = await emailPrefFor(uid).catch(() => null);
       if (pref) await F.deleteDoc(F.doc(db, 'emailPrefs', pref.id)).catch(() => {});
+      await F.deleteDoc(F.doc(db, 'visits', uid)).catch(() => {});
       await F.deleteDoc(F.doc(db, 'profiles', uid));
       await auth.currentUser?.delete().catch(() => {}); // needs a recent sign-in; profile is gone either way
     },
@@ -260,6 +263,21 @@ async function firebaseStore() {
       spotId: r.spotId, spotName: clean(r.spotName, 80), uid: me.uid, name: clean(r.name, 40),
       reason: clean(r.reason, 40), note: clean(r.note, 300), addTeam: clean(r.addTeam, 30), createdAt: F.serverTimestamp(),
     }),
+    // Return-visit counter: one write per fan per local day (first app open that day), so we can tell
+    // whether anyone comes back. Kept out of the profile because profiles are readable by every fan;
+    // visits/{uid} is readable only by its owner and the admin. `via` = utm_source of that day's
+    // first visit (digest, welcome, ...) or 'direct'.
+    async noteVisit(uid, via) {
+      const day = new Date().toLocaleDateString('en-CA'), key = `df_visit_${uid}`;
+      try { if (localStorage.getItem(key) === day) return; } catch {}
+      const ref = F.doc(db, 'visits', uid), s = await F.getDoc(ref);
+      const base = { lastDay: day, lastAt: F.serverTimestamp(), via: clean(via || 'direct', 30) };
+      if (!s.exists()) await F.setDoc(ref, { ...base, firstDay: day, days: 1 });
+      else if (s.data().lastDay < day) await F.updateDoc(ref, { ...base, days: F.increment(1) });
+      try { localStorage.setItem(key, day); } catch {}
+    },
+    listVisits: () => list(F.query(F.collection(db, 'visits'), F.limit(5000)))
+      .then(r => r.map(({ id, lastAt, ...v }) => ({ uid: id, ...v, lastAt: lastAt?.toMillis?.() || 0 }))),
     // Admin Users tab. Profiles are already readable by any signed-in fan, so no rules change is needed.
     listProfiles: () => list(F.query(F.collection(db, 'profiles'), F.limit(5000)))
       .then(r => r.map(({ id, updatedAt, ...p }) => ({ uid: id, ...p, updatedAt: updatedAt?.toMillis?.() || 0 }))),
@@ -436,6 +454,8 @@ function demoStore() {
     async reportSpot() {},
     async listSpots() { return state.spots; },
     async listProfiles() { return Object.entries(state.profiles).map(([uid, p]) => ({ uid, ...p })); },
+    async noteVisit() {},
+    async listVisits() { return []; },
     async listReports() { return []; },
     async removeReportedSpot() {},
     async dismissReport() {},

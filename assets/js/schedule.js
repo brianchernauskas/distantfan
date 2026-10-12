@@ -1,5 +1,6 @@
 // Upcoming games from ESPN's public schedule feed (CORS-enabled). Cached per team for 30 minutes.
-import { TEAM_BY_ID } from './teams.js?v=202610110928';
+import { TEAM_BY_ID } from './teams.js?v=202610121506';
+import { CORE_PATH } from './watch.js?v=202610121506';
 
 const PATH = { nfl: 'football/nfl', cfb: 'football/college-football', nba: 'basketball/nba', cbb: 'basketball/mens-college-basketball', mlb: 'baseball/mlb', nhl: 'hockey/nhl', mls: 'soccer/usa.1' };
 const TTL = 30 * 60e3;
@@ -36,10 +37,23 @@ function parse(e, team) {
     tbd: c.timeValid === false || e.timeValid === false,
     home: us.homeAway === 'home',
     neutral: !!c.neutralSite,
+    oppId: them.team.id,
     opp: { name: them.team.displayName, short: them.team.shortDisplayName || them.team.abbreviation, logo: them.team.logos?.[0]?.href || them.team.logo || '' },
     venue: c.venue?.fullName || '',
     city: [c.venue?.address?.city, c.venue?.address?.state].filter(Boolean).join(', '),
     tv,
     name: e.shortName || e.name,
   };
+}
+
+// Live state of one game from ESPN's core API: three ~300-byte requests, cheap enough to poll each
+// minute while a game is on (the scoreboard feeds are 250 KB to 1 MB).
+export async function liveStatus(teamId, g) {
+  const team = TEAM_BY_ID[teamId];
+  if (!team || !CORE_PATH[team.lg]) return null;
+  const base = `https://sports.core.api.espn.com/v2/sports/${CORE_PATH[team.lg]}/events/${g.id}/competitions/${g.id}`;
+  const get = u => fetch(u).then(r => r.ok ? r.json() : null).catch(() => null);
+  const [st, us, them] = await Promise.all([get(`${base}/status`), get(`${base}/competitors/${team.eid}/score`), g.oppId ? get(`${base}/competitors/${g.oppId}/score`) : null]);
+  if (!st?.type) return null;
+  return { state: st.type.state, detail: st.type.shortDetail || st.type.detail || '', us: us?.displayValue ?? '', them: them?.displayValue ?? '' };
 }
