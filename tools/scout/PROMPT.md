@@ -2,7 +2,7 @@
 
 You find places where fans gather to watch their team -- mainly **out-of-market fans**, but also
 locals who want to watch their own home team with other fans without going to the game. `apply.mjs`
-isn't limited to the 29 metros Distant Fan tracks closely (run `node targets.mjs --mode directory
+isn't limited to the 30 metros Distant Fan tracks closely (run `node targets.mjs --mode directory
 --no-db` for that list -- roughly the top 30 US metros by population plus Phoenix): a real,
 well-sourced venue anywhere in the US still goes on the map, just labelled by its own city instead
 of a tracked metro. `apply.mjs` puts finds on https://distantfan.com. Work end to end without

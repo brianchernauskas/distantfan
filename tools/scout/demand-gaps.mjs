@@ -43,9 +43,9 @@ const BIG_CFB = { 'cfb-194': 2, 'cfb-333': 2, 'cfb-130': 1.9, 'cfb-251': 1.9, 'c
 // Metro population (millions, 2025 est.) and the transplant-heavy metros where out-of-market fans pile up.
 const POP = { nyc: 19.5, la: 12.8, chi: 9.3, dfw: 8.3, hou: 7.5, atl: 6.4, dc: 6.4, mia: 6.2, phl: 6.2, phx: 5.1, bos: 4.9, sf: 4.6,
   det: 4.3, sea: 4.1, msp: 3.7, sd: 3.3, tb: 3.4, den: 3, sa: 2.7, stl: 2.8, bal: 2.8, orl: 2.8, clt: 2.8, lv: 2.4, pdx: 2.5,
-  aus: 2.5, sac: 2.4, cmh: 2.2, pit: 2.4 };
+  aus: 2.5, sac: 2.4, cmh: 2.2, pit: 2.4, nsh: 2.1 };
 const TRANSPLANT = { phx: 1.4, lv: 1.4, dfw: 1.25, hou: 1.2, atl: 1.2, tb: 1.35, clt: 1.3, aus: 1.3, orl: 1.3, den: 1.25, sa: 1.15,
-  mia: 1.2, sd: 1.15, dc: 1.15, sea: 1.1, sac: 1.05, pdx: 1.05, la: 1.05, nyc: 1.05 };
+  mia: 1.2, sd: 1.15, dc: 1.15, sea: 1.1, sac: 1.05, pdx: 1.05, la: 1.05, nyc: 1.05, nsh: 1.35 };
 const LEAGUES = (process.env.DEMAND_LEAGUES || 'nfl,cfb,nba,nhl').split(',');
 
 const teams = scoutTeams().filter(t => LEAGUES.includes(t.league) && IN_SEASON[t.league].includes(MONTH));

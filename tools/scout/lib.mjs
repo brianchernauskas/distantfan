@@ -71,16 +71,19 @@ export const AREAS = {
     homeTeams: ['nhl-cbj', 'mls-clb', 'cfb-194', 'cbb-194'] },
   pit: { label: 'Pittsburgh', center: { lat: 40.44, lng: -79.99 }, radiusKm: 55,
     homeTeams: ['nfl-pit', 'mlb-pit', 'nhl-pit', 'cfb-221', 'cbb-221'] },
+  // Added 2026-10-15: Search Console showed 398 impressions / 37 queries for "<team> bar nashville" with no coverage.
+  nsh: { label: 'Nashville', center: { lat: 36.16, lng: -86.78 }, radiusKm: 55,
+    homeTeams: ['nfl-ten', 'nhl-nsh', 'mls-nsh', 'cfb-238', 'cbb-238'] },
 };
 
 // City sweep: which metros each weekday covers (Mon..Fri), so every city is searched roughly
-// every 6 business days now that there are 29 of them (was every week at 11).
+// every 6 business days now that there are 30 of them (was every week at 11).
 export const CITY_DAYS = [
   ['nyc', 'la', 'chi', 'sf', 'sea', 'det'],
   ['dfw', 'hou', 'sa', 'aus', 'sd', 'stl'],
   ['dc', 'phl', 'bal', 'pit', 'cmh', 'msp'],
   ['mia', 'atl', 'orl', 'tb', 'clt', 'sac'],
-  ['bos', 'phx', 'den', 'lv', 'pdx'],
+  ['bos', 'phx', 'den', 'lv', 'pdx', 'nsh'],
 ];
 
 // The covered metro a point falls in, or null.

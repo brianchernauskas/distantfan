@@ -27,7 +27,7 @@ for (const s of spots) {
   for (const t of s.teams || []) (have[k] ??= {})[t] = (have[k][t] || 0) + 1;
 }
 // Biggest-impact metros first (Phoenix is the owner's home market).
-const ORDER = ['phx', 'lv', 'dfw', 'hou', 'den', 'atl', 'chi', 'la', 'sd', 'tb', 'clt', 'sea', 'aus', 'sa', 'dc', 'nyc', 'mia', 'sf', 'orl', 'pdx', 'sac', 'cmh', 'phl', 'bos', 'det', 'msp', 'stl', 'bal', 'pit'];
+const ORDER = ['phx', 'lv', 'dfw', 'hou', 'den', 'atl', 'chi', 'la', 'sd', 'tb', 'clt', 'nsh', 'sea', 'aus', 'sa', 'dc', 'nyc', 'mia', 'sf', 'orl', 'pdx', 'sac', 'cmh', 'phl', 'bos', 'det', 'msp', 'stl', 'bal', 'pit'];
 
 const pairs = [];
 for (const k of ORDER) {
