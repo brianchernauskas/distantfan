@@ -106,8 +106,10 @@ function render({ pref, profile, games, tz, pt, welcome = false }) {
   const link = (params = {}, hash = 'games') => `${SITE}/app.html?${new URLSearchParams({ ...params, utm_source: welcome ? 'welcome' : 'digest', utm_medium: 'email', utm_campaign: campaign })}#${hash}`;
   // "I'm going" opens the app on a one-tap confirm (the link never writes by itself, since mail scanners prefetch links).
   const goLink = (s, g) => link({ go: s.id, game: g.key, team: g.teamId });
-  const btn = (href, label, bg = '#df5a0b') => `<a href="${esc(href)}" style="display:inline-block;background:${bg};color:#ffffff;text-decoration:none;font-weight:700;font-size:14px;padding:8px 14px;border-radius:999px;margin:0 6px 6px 0">${label}</a>`;
-  const ghost = (href, label) => `<a href="${esc(href)}" style="display:inline-block;border:1px solid #d6d0c3;color:#121820;text-decoration:none;font-weight:700;font-size:14px;padding:7px 14px;border-radius:999px;margin:0 6px 6px 0">${label}</a>`;
+  // 10px corners, not a full pill: a long venue name wraps on phones (large text in iOS Mail), and a wrapped
+  // 999px pill turns into a big oval.
+  const btn = (href, label, bg = '#df5a0b') => `<a href="${esc(href)}" style="display:inline-block;max-width:100%;box-sizing:border-box;background:${bg};color:#ffffff;text-decoration:none;font-weight:700;font-size:14px;line-height:18px;padding:9px 14px;border-radius:10px;margin:0 6px 6px 0">${label}</a>`;
+  const ghost = (href, label) => `<a href="${esc(href)}" style="display:inline-block;max-width:100%;box-sizing:border-box;border:1px solid #d6d0c3;color:#121820;text-decoration:none;font-weight:700;font-size:14px;line-height:18px;padding:8px 14px;border-radius:10px;margin:0 6px 6px 0">${label}</a>`;
   const fmtDay = ms => new Date(ms).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', timeZone: tz });
   const fmtTime = g => g.tbd ? 'time TBA' : new Date(g.time).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZoneName: 'short', timeZone: tz });
   const first = games[0], t = first && TEAM_BY_ID[first.teamId];
