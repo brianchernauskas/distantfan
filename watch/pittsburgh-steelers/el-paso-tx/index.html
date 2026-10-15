@@ -21,8 +21,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/css/style.css?v=b474a061">
-<link rel="stylesheet" href="/assets/css/watch.css?v=78aabcbf">
-<script type="module" src="/assets/js/analytics.js?v=b8c09f5f"></script>
+<link rel="stylesheet" href="/assets/css/watch.css?v=af8fd489">
+<script type="module" src="/assets/js/analytics.js?v=87c536ee"></script>
+<script type="module" src="/assets/js/join.js?v=d1961051"></script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://distantfan.com/"},{"@type":"ListItem","position":2,"name":"Where to watch","item":"https://distantfan.com/watch/"},{"@type":"ListItem","position":3,"name":"Pittsburgh Steelers","item":"https://distantfan.com/watch/pittsburgh-steelers/"},{"@type":"ListItem","position":4,"name":"El Paso","item":"https://distantfan.com/watch/pittsburgh-steelers/el-paso-tx/"}]}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"ItemList","name":"Pittsburgh Steelers watch spots in El Paso, TX","numberOfItems":3,"itemListElement":[{"@type":"ListItem","position":1,"item":{"@type":"BarOrPub","name":"Big Lou's Game Room","address":"1188 N Yarbrough Dr, El Paso, TX 79925","geo":{"@type":"GeoCoordinates","latitude":31.75604,"longitude":-106.34224}}},{"@type":"ListItem","position":2,"item":{"@type":"BarOrPub","name":"Kings-X Bar","address":"4119 N Mesa St, El Paso, TX 79902","geo":{"@type":"GeoCoordinates","latitude":31.79138,"longitude":-106.50802}}},{"@type":"ListItem","position":3,"item":{"@type":"BarOrPub","name":"Moose's Draft House","address":"1550 Hawkins Blvd, El Paso, TX 79925","geo":{"@type":"GeoCoordinates","latitude":31.79074,"longitude":-106.37127}}}]}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"SportsEvent","name":"Pittsburgh Steelers at Tampa Bay Buccaneers","startDate":"2026-10-18T17:00:00.000Z","description":"Pittsburgh Steelers at Tampa Bay Buccaneers (NFL), broadcast on CBS. Find bars showing the game in El Paso on Distant Fan.","eventStatus":"https://schema.org/EventScheduled","image":"https://a.espncdn.com/i/teamlogos/nfl/500/pit.png","homeTeam":{"@type":"SportsTeam","name":"Tampa Bay Buccaneers"},"awayTeam":{"@type":"SportsTeam","name":"Pittsburgh Steelers"},"performer":[{"@type":"SportsTeam","name":"Tampa Bay Buccaneers"},{"@type":"SportsTeam","name":"Pittsburgh Steelers"}],"organizer":{"@type":"SportsOrganization","name":"NFL","url":"https://www.nfl.com/"},"location":{"@type":"Place","name":"Raymond James Stadium","address":"Raymond James Stadium, Tampa, FL"}}</script>
@@ -40,7 +41,11 @@
   <p class="lede">3 bar and fan watch spots in the El Paso area where Steelers fans watch the game, including 3 official fan club and alumni chapters. Last checked September 2026. Next game: Steelers at Buccaneers, Sunday, October 18 on CBS.</p>
 </div></header>
 
-<div class="followbar"><span><b>Steelers fan?</b> Follow them for a weekly game-day email and see the fans near you.</span><a class="btn sm primary" href="/app.html?follow=nfl-pit">Follow Steelers</a></div>
+<form class="joinbar" action="/app.html" data-team="nfl-pit" data-m="El Paso|TX" novalidate><input type="hidden" name="follow" value="nfl-pit">
+  <div class="jtxt"><b>Get Steelers games and El Paso fan bars by email</b><span>Every Thursday: this week's Steelers games, how to watch, and where fans near you are going. Free, one-click unsubscribe.</span></div>
+  <div class="jrow"><input class="input" type="email" placeholder="you@example.com" autocomplete="email" aria-label="Your email" required><button class="btn primary">Email me</button></div>
+  <p class="jmsg" role="status" aria-live="polite"></p>
+</form>
 
 <p class="intro">Looking for a Steelers bar in El Paso? Steelers Nation in the area watch games at Big Lou's Game Room, Kings-X Bar and Moose's Draft House. Listed groups include The El Paso Steelers Fan Club, Steelers Nation Fan Club at KingsX and Steelers fan club. Call ahead on game days to make sure the bar will have your game on.</p>
 

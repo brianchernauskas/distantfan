@@ -21,8 +21,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/css/style.css?v=b474a061">
-<link rel="stylesheet" href="/assets/css/watch.css?v=78aabcbf">
-<script type="module" src="/assets/js/analytics.js?v=b8c09f5f"></script>
+<link rel="stylesheet" href="/assets/css/watch.css?v=af8fd489">
+<script type="module" src="/assets/js/analytics.js?v=87c536ee"></script>
+<script type="module" src="/assets/js/join.js?v=d1961051"></script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://distantfan.com/"},{"@type":"ListItem","position":2,"name":"Where to watch","item":"https://distantfan.com/watch/"},{"@type":"ListItem","position":3,"name":"Washington Huskies football","item":"https://distantfan.com/watch/washington-huskies-football/"},{"@type":"ListItem","position":4,"name":"Huntington Beach","item":"https://distantfan.com/watch/washington-huskies-football/huntington-beach-ca/"}]}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"ItemList","name":"Washington Huskies football watch spots in Huntington Beach, CA","numberOfItems":2,"itemListElement":[{"@type":"ListItem","position":1,"item":{"@type":"BarOrPub","name":"Legends Restaurant & Sports Bar","address":"5236 E. 2nd St., Long Beach, CA 90803","geo":{"@type":"GeoCoordinates","latitude":33.75993,"longitude":-118.13422}}},{"@type":"ListItem","position":2,"item":{"@type":"BarOrPub","name":"Ozzie's Sports Bar & Lounge","address":"17110 Brookhurst St., Fountain Valley, CA 92708","geo":{"@type":"GeoCoordinates","latitude":33.71436,"longitude":-117.9543}}}]}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"SportsEvent","name":"Washington Huskies at Purdue Boilermakers","startDate":"2026-10-17T00:00:00.000Z","description":"Washington Huskies at Purdue Boilermakers (NCAA Football), broadcast on Fox. Find bars showing the game in Huntington Beach on Distant Fan.","eventStatus":"https://schema.org/EventScheduled","image":"https://a.espncdn.com/i/teamlogos/ncaa/500/264.png","homeTeam":{"@type":"SportsTeam","name":"Purdue Boilermakers"},"awayTeam":{"@type":"SportsTeam","name":"Washington Huskies"},"performer":[{"@type":"SportsTeam","name":"Purdue Boilermakers"},{"@type":"SportsTeam","name":"Washington Huskies"}],"organizer":{"@type":"SportsOrganization","name":"NCAA Football","url":"https://www.ncaa.com/sports/football"},"location":{"@type":"Place","name":"Ross-Ade Stadium","address":"Ross-Ade Stadium, West Lafayette, IN"}}</script>
@@ -40,7 +41,11 @@
   <p class="lede">2 bar and fan watch spots in the Huntington Beach area where Washington fans watch the game, including 2 official fan club and alumni chapters. Last checked October 2026. Next game: Washington at Purdue, Friday, October 16 on Fox.</p>
 </div></header>
 
-<div class="followbar"><span><b>Washington fan?</b> Follow them for a weekly game-day email and see the fans near you.</span><a class="btn sm primary" href="/app.html?follow=cfb-264">Follow Washington</a></div>
+<form class="joinbar" action="/app.html" data-team="cfb-264" data-m="Huntington Beach|CA" novalidate><input type="hidden" name="follow" value="cfb-264">
+  <div class="jtxt"><b>Get Washington games and Huntington Beach fan bars by email</b><span>Every Thursday: this week's Washington games, how to watch, and where fans near you are going. Free, one-click unsubscribe.</span></div>
+  <div class="jrow"><input class="input" type="email" placeholder="you@example.com" autocomplete="email" aria-label="Your email" required><button class="btn primary">Email me</button></div>
+  <p class="jmsg" role="status" aria-live="polite"></p>
+</form>
 
 <p class="intro">Looking for a Washington bar in Huntington Beach? Washington fans in the area, from Long Beach and Fountain Valley, watch games at Legends Restaurant &amp; Sports Bar in Long Beach and Ozzie's Sports Bar &amp; Lounge in Fountain Valley. Call ahead on game days to make sure the bar will have your game on.</p>
 

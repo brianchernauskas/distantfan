@@ -21,8 +21,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/css/style.css?v=b474a061">
-<link rel="stylesheet" href="/assets/css/watch.css?v=78aabcbf">
-<script type="module" src="/assets/js/analytics.js?v=b8c09f5f"></script>
+<link rel="stylesheet" href="/assets/css/watch.css?v=af8fd489">
+<script type="module" src="/assets/js/analytics.js?v=87c536ee"></script>
+<script type="module" src="/assets/js/join.js?v=d1961051"></script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://distantfan.com/"},{"@type":"ListItem","position":2,"name":"Where to watch","item":"https://distantfan.com/watch/"},{"@type":"ListItem","position":3,"name":"Wisconsin Badgers football","item":"https://distantfan.com/watch/wisconsin-badgers-football/"},{"@type":"ListItem","position":4,"name":"Denver","item":"https://distantfan.com/watch/wisconsin-badgers-football/denver-co/"}]}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"ItemList","name":"Wisconsin Badgers football watch spots in Denver, CO","numberOfItems":2,"itemListElement":[{"@type":"ListItem","position":1,"item":{"@type":"BarOrPub","name":"Swanky's Vittles and Libations","address":"1938 Blake St, Denver, CO 80202","geo":{"@type":"GeoCoordinates","latitude":39.7537,"longitude":-104.99497}}},{"@type":"ListItem","position":2,"item":{"@type":"BarOrPub","name":"Wally's Wisconsin Tavern","address":"1417 Market St, Denver, CO 80202","geo":{"@type":"GeoCoordinates","latitude":39.74821,"longitude":-105.00052}}}]}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"SportsEvent","name":"Wisconsin Badgers at UCLA Bruins","startDate":"2026-10-17T23:30:00.000Z","description":"Wisconsin Badgers at UCLA Bruins (NCAA Football), broadcast on NBC. Find bars showing the game in Denver on Distant Fan.","eventStatus":"https://schema.org/EventScheduled","image":"https://a.espncdn.com/i/teamlogos/ncaa/500/275.png","homeTeam":{"@type":"SportsTeam","name":"UCLA Bruins"},"awayTeam":{"@type":"SportsTeam","name":"Wisconsin Badgers"},"performer":[{"@type":"SportsTeam","name":"UCLA Bruins"},{"@type":"SportsTeam","name":"Wisconsin Badgers"}],"organizer":{"@type":"SportsOrganization","name":"NCAA Football","url":"https://www.ncaa.com/sports/football"},"location":{"@type":"Place","name":"Rose Bowl","address":"Rose Bowl, Pasadena, CA"}}</script>
@@ -40,7 +41,11 @@
   <p class="lede">2 bar and fan watch spots in the Denver area where Wisconsin fans watch the game, including 2 official fan club and alumni chapters. Last checked October 2026. Next game: Wisconsin at UCLA, Saturday, October 17 on NBC.</p>
 </div></header>
 
-<div class="followbar"><span><b>Wisconsin fan?</b> Follow them for a weekly game-day email and see the fans near you.</span><a class="btn sm primary" href="/app.html?follow=cfb-275">Follow Wisconsin</a></div>
+<form class="joinbar" action="/app.html" data-team="cfb-275" data-m="Denver|CO" novalidate><input type="hidden" name="follow" value="cfb-275">
+  <div class="jtxt"><b>Get Wisconsin games and Denver fan bars by email</b><span>Every Thursday: this week's Wisconsin games, how to watch, and where fans near you are going. Free, one-click unsubscribe.</span></div>
+  <div class="jrow"><input class="input" type="email" placeholder="you@example.com" autocomplete="email" aria-label="Your email" required><button class="btn primary">Email me</button></div>
+  <p class="jmsg" role="status" aria-live="polite"></p>
+</form>
 
 <p class="intro">Looking for a Wisconsin bar in Denver? Wisconsin fans in the area watch games at Swanky's Vittles and Libations and Wally's Wisconsin Tavern. Listed groups include Wisconsin Alumni Association - Mile High Chapter. Call ahead on game days to make sure the bar will have your game on.</p>
 

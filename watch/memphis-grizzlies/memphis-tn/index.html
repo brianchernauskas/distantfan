@@ -21,8 +21,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/css/style.css?v=b474a061">
-<link rel="stylesheet" href="/assets/css/watch.css?v=78aabcbf">
-<script type="module" src="/assets/js/analytics.js?v=b8c09f5f"></script>
+<link rel="stylesheet" href="/assets/css/watch.css?v=af8fd489">
+<script type="module" src="/assets/js/analytics.js?v=87c536ee"></script>
+<script type="module" src="/assets/js/join.js?v=d1961051"></script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://distantfan.com/"},{"@type":"ListItem","position":2,"name":"Where to watch","item":"https://distantfan.com/watch/"},{"@type":"ListItem","position":3,"name":"Memphis Grizzlies","item":"https://distantfan.com/watch/memphis-grizzlies/"},{"@type":"ListItem","position":4,"name":"Memphis","item":"https://distantfan.com/watch/memphis-grizzlies/memphis-tn/"}]}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"ItemList","name":"Memphis Grizzlies watch spots in Memphis, TN","numberOfItems":4,"itemListElement":[{"@type":"ListItem","position":1,"item":{"@type":"BarOrPub","name":"Cooper's Restaurant","address":"959 Cooper St, Memphis, TN 38104","geo":{"@type":"GeoCoordinates","latitude":35.11959,"longitude":-89.99115}}},{"@type":"ListItem","position":2,"item":{"@type":"BarOrPub","name":"Half Shell Germantown","address":"9091 Poplar Ave #101, Germantown, TN 38138","geo":{"@type":"GeoCoordinates","latitude":35.06839,"longitude":-89.75991}}},{"@type":"ListItem","position":3,"item":{"@type":"BarOrPub","name":"Slider Inn Downtown","address":"363 Mulberry St, Memphis, TN 38103","geo":{"@type":"GeoCoordinates","latitude":35.13684,"longitude":-90.05643}}},{"@type":"ListItem","position":4,"item":{"@type":"BarOrPub","name":"Tony's Trophy Room","address":"929 W Poplar Ave, Collierville, TN 38017","geo":{"@type":"GeoCoordinates","latitude":35.04614,"longitude":-89.69317}}}]}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"SportsEvent","name":"Charlotte Hornets at Memphis Grizzlies","startDate":"2026-10-17T00:00:00.000Z","description":"Charlotte Hornets at Memphis Grizzlies (NBA). Find bars showing the game in Memphis on Distant Fan.","eventStatus":"https://schema.org/EventScheduled","image":"https://a.espncdn.com/i/teamlogos/nba/500/mem.png","homeTeam":{"@type":"SportsTeam","name":"Memphis Grizzlies"},"awayTeam":{"@type":"SportsTeam","name":"Charlotte Hornets"},"performer":[{"@type":"SportsTeam","name":"Memphis Grizzlies"},{"@type":"SportsTeam","name":"Charlotte Hornets"}],"organizer":{"@type":"SportsOrganization","name":"NBA","url":"https://www.nba.com/"},"location":{"@type":"Place","name":"FedExForum","address":"FedExForum, Memphis, TN"}}</script>
@@ -38,7 +39,11 @@
   <p class="lede">4 bar and fan watch spots in the Memphis area where Grizzlies fans watch the game, including 1 official fan club and alumni chapter. Last checked October 2026. Next game: Grizzlies vs Hornets, Friday, October 16.</p>
 </div></header>
 
-<div class="followbar"><span><b>Grizzlies fan?</b> Follow them for a weekly game-day email and see the fans near you.</span><a class="btn sm primary" href="/app.html?follow=nba-mem">Follow Grizzlies</a></div>
+<form class="joinbar" action="/app.html" data-team="nba-mem" data-m="Memphis|TN" novalidate><input type="hidden" name="follow" value="nba-mem">
+  <div class="jtxt"><b>Get Grizzlies games and Memphis fan bars by email</b><span>Every Thursday: this week's Grizzlies games, how to watch, and where fans near you are going. Free, one-click unsubscribe.</span></div>
+  <div class="jrow"><input class="input" type="email" placeholder="you@example.com" autocomplete="email" aria-label="Your email" required><button class="btn primary">Email me</button></div>
+  <p class="jmsg" role="status" aria-live="polite"></p>
+</form>
 
 <p class="intro">Looking for a Grizzlies bar in Memphis? Grizzlies fans in the area, from Germantown and Collierville, watch games at Cooper's Restaurant, Half Shell Germantown in Germantown and Slider Inn Downtown, plus 1 more below. Listed groups include UT Alumni Chapter - Memphis. Call ahead on game days to make sure the bar will have your game on.</p>
 

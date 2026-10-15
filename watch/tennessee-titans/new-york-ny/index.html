@@ -21,8 +21,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/css/style.css?v=b474a061">
-<link rel="stylesheet" href="/assets/css/watch.css?v=78aabcbf">
-<script type="module" src="/assets/js/analytics.js?v=b8c09f5f"></script>
+<link rel="stylesheet" href="/assets/css/watch.css?v=af8fd489">
+<script type="module" src="/assets/js/analytics.js?v=87c536ee"></script>
+<script type="module" src="/assets/js/join.js?v=d1961051"></script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://distantfan.com/"},{"@type":"ListItem","position":2,"name":"Where to watch","item":"https://distantfan.com/watch/"},{"@type":"ListItem","position":3,"name":"Tennessee Titans","item":"https://distantfan.com/watch/tennessee-titans/"},{"@type":"ListItem","position":4,"name":"New York","item":"https://distantfan.com/watch/tennessee-titans/new-york-ny/"}]}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"ItemList","name":"Tennessee Titans watch spots in New York, NY","numberOfItems":1,"itemListElement":[{"@type":"ListItem","position":1,"item":{"@type":"BarOrPub","name":"Grand Street Social","address":"155 Grand Street, New York, NY 10013","geo":{"@type":"GeoCoordinates","latitude":40.71992,"longitude":-73.99895}}}]}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"SportsEvent","name":"Tennessee Titans at Indianapolis Colts","startDate":"2026-10-18T17:00:00.000Z","description":"Tennessee Titans at Indianapolis Colts (NFL), broadcast on Fox. Find bars showing the game in New York on Distant Fan.","eventStatus":"https://schema.org/EventScheduled","image":"https://a.espncdn.com/i/teamlogos/nfl/500/ten.png","homeTeam":{"@type":"SportsTeam","name":"Indianapolis Colts"},"awayTeam":{"@type":"SportsTeam","name":"Tennessee Titans"},"performer":[{"@type":"SportsTeam","name":"Indianapolis Colts"},{"@type":"SportsTeam","name":"Tennessee Titans"}],"organizer":{"@type":"SportsOrganization","name":"NFL","url":"https://www.nfl.com/"},"location":{"@type":"Place","name":"Lucas Oil Stadium","address":"Lucas Oil Stadium, Indianapolis, IN"}}</script>
@@ -40,7 +41,11 @@
   <p class="lede">1 bar and fan watch spot in the New York area where Titans fans watch the game, including 1 official fan club and alumni chapter. Last checked October 2026. Next game: Titans at Colts, Sunday, October 18 on Fox.</p>
 </div></header>
 
-<div class="followbar"><span><b>Titans fan?</b> Follow them for a weekly game-day email and see the fans near you.</span><a class="btn sm primary" href="/app.html?follow=nfl-ten">Follow Titans</a></div>
+<form class="joinbar" action="/app.html" data-team="nfl-ten" data-m="New York|NY" novalidate><input type="hidden" name="follow" value="nfl-ten">
+  <div class="jtxt"><b>Get Titans games and New York fan bars by email</b><span>Every Thursday: this week's Titans games, how to watch, and where fans near you are going. Free, one-click unsubscribe.</span></div>
+  <div class="jrow"><input class="input" type="email" placeholder="you@example.com" autocomplete="email" aria-label="Your email" required><button class="btn primary">Email me</button></div>
+  <p class="jmsg" role="status" aria-live="polite"></p>
+</form>
 
 <p class="intro">Looking for a Titans bar in New York? Titans fans in the area watch games at Grand Street Social. Listed groups include Titans Fan Club. Call ahead on game days to make sure the bar will have your game on.</p>
 

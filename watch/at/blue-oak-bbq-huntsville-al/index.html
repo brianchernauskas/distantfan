@@ -21,8 +21,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/css/style.css?v=b474a061">
-<link rel="stylesheet" href="/assets/css/watch.css?v=78aabcbf">
-<script type="module" src="/assets/js/analytics.js?v=b8c09f5f"></script>
+<link rel="stylesheet" href="/assets/css/watch.css?v=af8fd489">
+<script type="module" src="/assets/js/analytics.js?v=87c536ee"></script>
+<script type="module" src="/assets/js/join.js?v=d1961051"></script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://distantfan.com/"},{"@type":"ListItem","position":2,"name":"Where to watch","item":"https://distantfan.com/watch/"},{"@type":"ListItem","position":3,"name":"Huntsville, AL","item":"https://distantfan.com/watch/in/huntsville-al/"},{"@type":"ListItem","position":4,"name":"Blue Oak BBQ","item":"https://distantfan.com/watch/at/blue-oak-bbq-huntsville-al/"}]}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BarOrPub","name":"Blue Oak BBQ","address":"1000 Mid City Dr NW, Huntsville, AL 35806","geo":{"@type":"GeoCoordinates","latitude":34.74034,"longitude":-86.66593},"description":"Official Alabama alumni chapter watch spot. Fans gather here for games."}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"SportsEvent","name":"Alabama Crimson Tide at Tennessee Volunteers","startDate":"2026-10-17T19:30:00.000Z","description":"Alabama Crimson Tide at Tennessee Volunteers (NCAA Football), broadcast on ABC, ERADM. Find bars showing the game in Huntsville on Distant Fan.","eventStatus":"https://schema.org/EventScheduled","image":"https://a.espncdn.com/i/teamlogos/ncaa/500/333.png","homeTeam":{"@type":"SportsTeam","name":"Tennessee Volunteers"},"awayTeam":{"@type":"SportsTeam","name":"Alabama Crimson Tide"},"performer":[{"@type":"SportsTeam","name":"Tennessee Volunteers"},{"@type":"SportsTeam","name":"Alabama Crimson Tide"}],"organizer":{"@type":"SportsOrganization","name":"NCAA Football","url":"https://www.ncaa.com/sports/football"},"location":{"@type":"Place","name":"Neyland Stadium","address":"Neyland Stadium, Knoxville, TN"}}</script>
@@ -40,7 +41,11 @@
   <p class="lede">Official Alabama alumni chapter watch spot. Fans gather here for games.</p>
 </div></header>
 
-<div class="followbar"><span><b>Alabama fan?</b> Follow them for a weekly game-day email and see the fans near you.</span><a class="btn sm primary" href="/app.html?follow=cfb-333">Follow Alabama</a></div>
+<form class="joinbar" action="/app.html" data-team="cfb-333" data-m="Huntsville|AL" novalidate><input type="hidden" name="follow" value="cfb-333">
+  <div class="jtxt"><b>Get Alabama games and Huntsville fan bars by email</b><span>Every Thursday: this week's Alabama games, how to watch, and where fans near you are going. Free, one-click unsubscribe.</span></div>
+  <div class="jrow"><input class="input" type="email" placeholder="you@example.com" autocomplete="email" aria-label="Your email" required><button class="btn primary">Email me</button></div>
+  <p class="jmsg" role="status" aria-live="polite"></p>
+</form>
 
 <section class="venue">
   <dl>

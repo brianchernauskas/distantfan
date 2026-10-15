@@ -21,8 +21,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/css/style.css?v=b474a061">
-<link rel="stylesheet" href="/assets/css/watch.css?v=78aabcbf">
-<script type="module" src="/assets/js/analytics.js?v=b8c09f5f"></script>
+<link rel="stylesheet" href="/assets/css/watch.css?v=af8fd489">
+<script type="module" src="/assets/js/analytics.js?v=87c536ee"></script>
+<script type="module" src="/assets/js/join.js?v=d1961051"></script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://distantfan.com/"},{"@type":"ListItem","position":2,"name":"Where to watch","item":"https://distantfan.com/watch/"},{"@type":"ListItem","position":3,"name":"Detroit, MI","item":"https://distantfan.com/watch/in/detroit-mi/"},{"@type":"ListItem","position":4,"name":"Johnny Blacks Lakehouse","item":"https://distantfan.com/watch/at/johnny-blacks-lakehouse-st-clair-shores-mi/"}]}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BarOrPub","name":"Johnny Blacks Lakehouse","address":"24409 Jefferson Ave, St. Clair Shores, MI 48080","geo":{"@type":"GeoCoordinates","latitude":42.47118,"longitude":-82.88872},"description":"Red Wings on Tap bar, part of the team's official bar program. Wings games on."}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"SportsEvent","name":"Philadelphia Flyers at Detroit Red Wings","startDate":"2026-10-15T23:30:00.000Z","description":"Philadelphia Flyers at Detroit Red Wings (NHL), broadcast on Disney+, ESPN+, Hulu. Find bars showing the game in St. Clair Shores on Distant Fan.","eventStatus":"https://schema.org/EventScheduled","image":"https://a.espncdn.com/i/teamlogos/nhl/500/det.png","homeTeam":{"@type":"SportsTeam","name":"Detroit Red Wings"},"awayTeam":{"@type":"SportsTeam","name":"Philadelphia Flyers"},"performer":[{"@type":"SportsTeam","name":"Detroit Red Wings"},{"@type":"SportsTeam","name":"Philadelphia Flyers"}],"organizer":{"@type":"SportsOrganization","name":"NHL","url":"https://www.nhl.com/"},"location":{"@type":"Place","name":"Little Caesars Arena","address":"Little Caesars Arena, Detroit, MI"}}</script>
@@ -40,7 +41,11 @@
   <p class="lede">Red Wings on Tap bar, part of the team's official bar program. Wings games on.</p>
 </div></header>
 
-<div class="followbar"><span><b>Red Wings fan?</b> Follow them for a weekly game-day email and see the fans near you.</span><a class="btn sm primary" href="/app.html?follow=nhl-det">Follow Red Wings</a></div>
+<form class="joinbar" action="/app.html" data-team="nhl-det" data-m="Detroit|MI" novalidate><input type="hidden" name="follow" value="nhl-det">
+  <div class="jtxt"><b>Get Red Wings games and Detroit fan bars by email</b><span>Every Thursday: this week's Red Wings games, how to watch, and where fans near you are going. Free, one-click unsubscribe.</span></div>
+  <div class="jrow"><input class="input" type="email" placeholder="you@example.com" autocomplete="email" aria-label="Your email" required><button class="btn primary">Email me</button></div>
+  <p class="jmsg" role="status" aria-live="polite"></p>
+</form>
 
 <section class="venue">
   <dl>

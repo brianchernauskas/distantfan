@@ -21,8 +21,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/css/style.css?v=b474a061">
-<link rel="stylesheet" href="/assets/css/watch.css?v=78aabcbf">
-<script type="module" src="/assets/js/analytics.js?v=b8c09f5f"></script>
+<link rel="stylesheet" href="/assets/css/watch.css?v=af8fd489">
+<script type="module" src="/assets/js/analytics.js?v=87c536ee"></script>
+<script type="module" src="/assets/js/join.js?v=d1961051"></script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://distantfan.com/"},{"@type":"ListItem","position":2,"name":"Where to watch","item":"https://distantfan.com/watch/"},{"@type":"ListItem","position":3,"name":"Indianapolis Colts","item":"https://distantfan.com/watch/indianapolis-colts/"},{"@type":"ListItem","position":4,"name":"Atlanta","item":"https://distantfan.com/watch/indianapolis-colts/atlanta-ga/"}]}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"ItemList","name":"Indianapolis Colts watch spots in Atlanta, GA","numberOfItems":1,"itemListElement":[{"@type":"ListItem","position":1,"item":{"@type":"BarOrPub","name":"Hudson Grille","address":"6317 Roswell Rd, Sandy Springs, GA 30328","geo":{"@type":"GeoCoordinates","latitude":33.92735,"longitude":-84.37906}}}]}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"SportsEvent","name":"Tennessee Titans at Indianapolis Colts","startDate":"2026-10-18T17:00:00.000Z","description":"Tennessee Titans at Indianapolis Colts (NFL), broadcast on Fox. Find bars showing the game in Atlanta on Distant Fan.","eventStatus":"https://schema.org/EventScheduled","image":"https://a.espncdn.com/i/teamlogos/nfl/500/ind.png","homeTeam":{"@type":"SportsTeam","name":"Indianapolis Colts"},"awayTeam":{"@type":"SportsTeam","name":"Tennessee Titans"},"performer":[{"@type":"SportsTeam","name":"Indianapolis Colts"},{"@type":"SportsTeam","name":"Tennessee Titans"}],"organizer":{"@type":"SportsOrganization","name":"NFL","url":"https://www.nfl.com/"},"location":{"@type":"Place","name":"Lucas Oil Stadium","address":"Lucas Oil Stadium, Indianapolis, IN"}}</script>
@@ -40,7 +41,11 @@
   <p class="lede">1 bar and fan watch spot in the Atlanta area where Colts fans watch the game, including 1 official fan club and alumni chapter. Last checked October 2026. Next game: Colts vs Titans, Sunday, October 18 on Fox.</p>
 </div></header>
 
-<div class="followbar"><span><b>Colts fan?</b> Follow them for a weekly game-day email and see the fans near you.</span><a class="btn sm primary" href="/app.html?follow=nfl-ind">Follow Colts</a></div>
+<form class="joinbar" action="/app.html" data-team="nfl-ind" data-m="Atlanta|GA" novalidate><input type="hidden" name="follow" value="nfl-ind">
+  <div class="jtxt"><b>Get Colts games and Atlanta fan bars by email</b><span>Every Thursday: this week's Colts games, how to watch, and where fans near you are going. Free, one-click unsubscribe.</span></div>
+  <div class="jrow"><input class="input" type="email" placeholder="you@example.com" autocomplete="email" aria-label="Your email" required><button class="btn primary">Email me</button></div>
+  <p class="jmsg" role="status" aria-live="polite"></p>
+</form>
 
 <p class="intro">Looking for a Colts bar in Atlanta? Colts fans in the area watch games at Hudson Grille in Sandy Springs. Call ahead on game days to make sure the bar will have your game on.</p>
 

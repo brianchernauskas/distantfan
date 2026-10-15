@@ -21,8 +21,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/css/style.css?v=b474a061">
-<link rel="stylesheet" href="/assets/css/watch.css?v=78aabcbf">
-<script type="module" src="/assets/js/analytics.js?v=b8c09f5f"></script>
+<link rel="stylesheet" href="/assets/css/watch.css?v=af8fd489">
+<script type="module" src="/assets/js/analytics.js?v=87c536ee"></script>
+<script type="module" src="/assets/js/join.js?v=d1961051"></script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://distantfan.com/"},{"@type":"ListItem","position":2,"name":"Where to watch","item":"https://distantfan.com/watch/"},{"@type":"ListItem","position":3,"name":"Des Moines, IA","item":"https://distantfan.com/watch/in/des-moines-ia/"},{"@type":"ListItem","position":4,"name":"Quinton's Bar & Deli","item":"https://distantfan.com/watch/at/quinton-s-bar-and-deli-des-moines-ia/"}]}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BarOrPub","name":"Quinton's Bar & Deli","address":"506 E Grand Ave, Des Moines, IA 50309","geo":{"@type":"GeoCoordinates","latitude":41.59072,"longitude":-93.61144},"description":"Official CU Boulder alumni game-watch spot (Forever Buffs). Go Buffs."}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"SportsEvent","name":"Utah Utes at Colorado Buffaloes","startDate":"2026-10-18T02:15:00.000Z","description":"Utah Utes at Colorado Buffaloes (NCAA Football), broadcast on ESPN. Find bars showing the game in Des Moines on Distant Fan.","eventStatus":"https://schema.org/EventScheduled","image":"https://a.espncdn.com/i/teamlogos/ncaa/500/38.png","homeTeam":{"@type":"SportsTeam","name":"Colorado Buffaloes"},"awayTeam":{"@type":"SportsTeam","name":"Utah Utes"},"performer":[{"@type":"SportsTeam","name":"Colorado Buffaloes"},{"@type":"SportsTeam","name":"Utah Utes"}],"organizer":{"@type":"SportsOrganization","name":"NCAA Football","url":"https://www.ncaa.com/sports/football"},"location":{"@type":"Place","name":"Folsom Field","address":"Folsom Field, Boulder, CO"}}</script>
@@ -40,7 +41,11 @@
   <p class="lede">Official CU Boulder alumni game-watch spot (Forever Buffs). Go Buffs.</p>
 </div></header>
 
-<div class="followbar"><span><b>Colorado fan?</b> Follow them for a weekly game-day email and see the fans near you.</span><a class="btn sm primary" href="/app.html?follow=cfb-38">Follow Colorado</a></div>
+<form class="joinbar" action="/app.html" data-team="cfb-38" data-m="Des Moines|IA" novalidate><input type="hidden" name="follow" value="cfb-38">
+  <div class="jtxt"><b>Get Colorado games and Des Moines fan bars by email</b><span>Every Thursday: this week's Colorado games, how to watch, and where fans near you are going. Free, one-click unsubscribe.</span></div>
+  <div class="jrow"><input class="input" type="email" placeholder="you@example.com" autocomplete="email" aria-label="Your email" required><button class="btn primary">Email me</button></div>
+  <p class="jmsg" role="status" aria-live="polite"></p>
+</form>
 
 <section class="venue">
   <dl>

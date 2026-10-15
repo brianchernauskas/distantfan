@@ -21,8 +21,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/css/style.css?v=b474a061">
-<link rel="stylesheet" href="/assets/css/watch.css?v=78aabcbf">
-<script type="module" src="/assets/js/analytics.js?v=b8c09f5f"></script>
+<link rel="stylesheet" href="/assets/css/watch.css?v=af8fd489">
+<script type="module" src="/assets/js/analytics.js?v=87c536ee"></script>
+<script type="module" src="/assets/js/join.js?v=d1961051"></script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://distantfan.com/"},{"@type":"ListItem","position":2,"name":"Where to watch","item":"https://distantfan.com/watch/"},{"@type":"ListItem","position":3,"name":"Carolina Panthers","item":"https://distantfan.com/watch/carolina-panthers/"},{"@type":"ListItem","position":4,"name":"Houston","item":"https://distantfan.com/watch/carolina-panthers/houston-tx/"}]}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"ItemList","name":"Carolina Panthers watch spots in Houston, TX","numberOfItems":1,"itemListElement":[{"@type":"ListItem","position":1,"item":{"@type":"BarOrPub","name":"Coaches Pub","address":"2240 Louisiana St, Houston, TX 77002","geo":{"@type":"GeoCoordinates","latitude":29.74929,"longitude":-95.3749}}}]}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"SportsEvent","name":"Carolina Panthers at Philadelphia Eagles","startDate":"2026-10-18T17:00:00.000Z","description":"Carolina Panthers at Philadelphia Eagles (NFL), broadcast on CBS. Find bars showing the game in Houston on Distant Fan.","eventStatus":"https://schema.org/EventScheduled","image":"https://a.espncdn.com/i/teamlogos/nfl/500/car.png","homeTeam":{"@type":"SportsTeam","name":"Philadelphia Eagles"},"awayTeam":{"@type":"SportsTeam","name":"Carolina Panthers"},"performer":[{"@type":"SportsTeam","name":"Philadelphia Eagles"},{"@type":"SportsTeam","name":"Carolina Panthers"}],"organizer":{"@type":"SportsOrganization","name":"NFL","url":"https://www.nfl.com/"},"location":{"@type":"Place","name":"Lincoln Financial Field","address":"Lincoln Financial Field, Philadelphia, PA"}}</script>
@@ -40,7 +41,11 @@
   <p class="lede">1 bar and fan watch spot in the Houston area where Panthers fans watch the game, including 1 official fan club and alumni chapter. Last checked September 2026. Next game: Panthers at Eagles, Sunday, October 18 on CBS.</p>
 </div></header>
 
-<div class="followbar"><span><b>Panthers fan?</b> Follow them for a weekly game-day email and see the fans near you.</span><a class="btn sm primary" href="/app.html?follow=nfl-car">Follow Panthers</a></div>
+<form class="joinbar" action="/app.html" data-team="nfl-car" data-m="Houston|TX" novalidate><input type="hidden" name="follow" value="nfl-car">
+  <div class="jtxt"><b>Get Panthers games and Houston fan bars by email</b><span>Every Thursday: this week's Panthers games, how to watch, and where fans near you are going. Free, one-click unsubscribe.</span></div>
+  <div class="jrow"><input class="input" type="email" placeholder="you@example.com" autocomplete="email" aria-label="Your email" required><button class="btn primary">Email me</button></div>
+  <p class="jmsg" role="status" aria-live="polite"></p>
+</form>
 
 <p class="intro">Looking for a Panthers bar in Houston? Panthers fans in the area watch games at Coaches Pub. Call ahead on game days to make sure the bar will have your game on.</p>
 

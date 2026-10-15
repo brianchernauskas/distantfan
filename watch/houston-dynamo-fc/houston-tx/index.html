@@ -21,8 +21,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/css/style.css?v=b474a061">
-<link rel="stylesheet" href="/assets/css/watch.css?v=78aabcbf">
-<script type="module" src="/assets/js/analytics.js?v=b8c09f5f"></script>
+<link rel="stylesheet" href="/assets/css/watch.css?v=af8fd489">
+<script type="module" src="/assets/js/analytics.js?v=87c536ee"></script>
+<script type="module" src="/assets/js/join.js?v=d1961051"></script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://distantfan.com/"},{"@type":"ListItem","position":2,"name":"Where to watch","item":"https://distantfan.com/watch/"},{"@type":"ListItem","position":3,"name":"Houston Dynamo FC","item":"https://distantfan.com/watch/houston-dynamo-fc/"},{"@type":"ListItem","position":4,"name":"Houston","item":"https://distantfan.com/watch/houston-dynamo-fc/houston-tx/"}]}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"ItemList","name":"Houston Dynamo FC watch spots in Houston, TX","numberOfItems":1,"itemListElement":[{"@type":"ListItem","position":1,"item":{"@type":"BarOrPub","name":"Texas Tailgate Sports Bar & Grill","address":"2401 Texas Ave, TX 77003","geo":{"@type":"GeoCoordinates","latitude":29.75278,"longitude":-95.35039}}}]}</script>
 </head>
@@ -37,7 +38,11 @@
   <p class="lede">1 bar and fan watch spot in the Houston area where Houston fans watch the game. Last checked October 2026.</p>
 </div></header>
 
-<div class="followbar"><span><b>Houston fan?</b> Follow them for a weekly game-day email and see the fans near you.</span><a class="btn sm primary" href="/app.html?follow=mls-hou">Follow Houston</a></div>
+<form class="joinbar" action="/app.html" data-team="mls-hou" data-m="Houston|TX" novalidate><input type="hidden" name="follow" value="mls-hou">
+  <div class="jtxt"><b>Get Houston games and Houston fan bars by email</b><span>Every Thursday: this week's Houston games, how to watch, and where fans near you are going. Free, one-click unsubscribe.</span></div>
+  <div class="jrow"><input class="input" type="email" placeholder="you@example.com" autocomplete="email" aria-label="Your email" required><button class="btn primary">Email me</button></div>
+  <p class="jmsg" role="status" aria-live="polite"></p>
+</form>
 
 <p class="intro">Looking for a Houston bar in Houston? Houston fans in the area watch games at Texas Tailgate Sports Bar &amp; Grill. Call ahead on game days to make sure the bar will have your game on.</p>
 

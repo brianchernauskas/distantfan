@@ -21,8 +21,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/css/style.css?v=b474a061">
-<link rel="stylesheet" href="/assets/css/watch.css?v=78aabcbf">
-<script type="module" src="/assets/js/analytics.js?v=b8c09f5f"></script>
+<link rel="stylesheet" href="/assets/css/watch.css?v=af8fd489">
+<script type="module" src="/assets/js/analytics.js?v=87c536ee"></script>
+<script type="module" src="/assets/js/join.js?v=d1961051"></script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://distantfan.com/"},{"@type":"ListItem","position":2,"name":"Where to watch","item":"https://distantfan.com/watch/"},{"@type":"ListItem","position":3,"name":"Cincinnati Bengals","item":"https://distantfan.com/watch/cincinnati-bengals/"},{"@type":"ListItem","position":4,"name":"San Francisco","item":"https://distantfan.com/watch/cincinnati-bengals/san-francisco-ca/"}]}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"ItemList","name":"Cincinnati Bengals watch spots in San Francisco, CA","numberOfItems":1,"itemListElement":[{"@type":"ListItem","position":1,"item":{"@type":"BarOrPub","name":"Bus Stop","address":"1901 Union St, San Francisco, CA 94123","geo":{"@type":"GeoCoordinates","latitude":37.79774,"longitude":-122.43085}}}]}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"SportsEvent","name":"Cincinnati Bengals at Baltimore Ravens","startDate":"2026-10-25T17:00:00.000Z","description":"Cincinnati Bengals at Baltimore Ravens (NFL), broadcast on CBS. Find bars showing the game in San Francisco on Distant Fan.","eventStatus":"https://schema.org/EventScheduled","image":"https://a.espncdn.com/i/teamlogos/nfl/500/cin.png","homeTeam":{"@type":"SportsTeam","name":"Baltimore Ravens"},"awayTeam":{"@type":"SportsTeam","name":"Cincinnati Bengals"},"performer":[{"@type":"SportsTeam","name":"Baltimore Ravens"},{"@type":"SportsTeam","name":"Cincinnati Bengals"}],"organizer":{"@type":"SportsOrganization","name":"NFL","url":"https://www.nfl.com/"},"location":{"@type":"Place","name":"M&T Bank Stadium","address":"M&T Bank Stadium, Baltimore, MD"}}</script>
@@ -40,7 +41,11 @@
   <p class="lede">1 bar and fan watch spot in the San Francisco area where Bengals fans watch the game, including 1 official fan club and alumni chapter. Last checked October 2026. Next game: Bengals at Ravens, Sunday, October 25 on CBS.</p>
 </div></header>
 
-<div class="followbar"><span><b>Bengals fan?</b> Follow them for a weekly game-day email and see the fans near you.</span><a class="btn sm primary" href="/app.html?follow=nfl-cin">Follow Bengals</a></div>
+<form class="joinbar" action="/app.html" data-team="nfl-cin" data-m="San Francisco|CA" novalidate><input type="hidden" name="follow" value="nfl-cin">
+  <div class="jtxt"><b>Get Bengals games and San Francisco fan bars by email</b><span>Every Thursday: this week's Bengals games, how to watch, and where fans near you are going. Free, one-click unsubscribe.</span></div>
+  <div class="jrow"><input class="input" type="email" placeholder="you@example.com" autocomplete="email" aria-label="Your email" required><button class="btn primary">Email me</button></div>
+  <p class="jmsg" role="status" aria-live="polite"></p>
+</form>
 
 <p class="intro">Looking for a Bengals bar in San Francisco? Bengals fans in the area watch games at Bus Stop. Call ahead on game days to make sure the bar will have your game on.</p>
 

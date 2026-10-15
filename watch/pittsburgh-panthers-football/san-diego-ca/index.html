@@ -21,8 +21,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/css/style.css?v=b474a061">
-<link rel="stylesheet" href="/assets/css/watch.css?v=78aabcbf">
-<script type="module" src="/assets/js/analytics.js?v=b8c09f5f"></script>
+<link rel="stylesheet" href="/assets/css/watch.css?v=af8fd489">
+<script type="module" src="/assets/js/analytics.js?v=87c536ee"></script>
+<script type="module" src="/assets/js/join.js?v=d1961051"></script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://distantfan.com/"},{"@type":"ListItem","position":2,"name":"Where to watch","item":"https://distantfan.com/watch/"},{"@type":"ListItem","position":3,"name":"Pittsburgh Panthers football","item":"https://distantfan.com/watch/pittsburgh-panthers-football/"},{"@type":"ListItem","position":4,"name":"San Diego","item":"https://distantfan.com/watch/pittsburgh-panthers-football/san-diego-ca/"}]}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"ItemList","name":"Pittsburgh Panthers football watch spots in San Diego, CA","numberOfItems":1,"itemListElement":[{"@type":"ListItem","position":1,"item":{"@type":"BarOrPub","name":"Hennessey's Tavern","address":"7811 Herschel Ave., La Jolla, CA 92037","geo":{"@type":"GeoCoordinates","latitude":32.84561,"longitude":-117.27277}}}]}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"SportsEvent","name":"Pittsburgh Panthers at Boston College Eagles","startDate":"2026-10-17T16:00:00.000Z","description":"Pittsburgh Panthers at Boston College Eagles (NCAA Football), broadcast on ESPN2. Find bars showing the game in San Diego on Distant Fan.","eventStatus":"https://schema.org/EventScheduled","image":"https://a.espncdn.com/i/teamlogos/ncaa/500/221.png","homeTeam":{"@type":"SportsTeam","name":"Boston College Eagles"},"awayTeam":{"@type":"SportsTeam","name":"Pittsburgh Panthers"},"performer":[{"@type":"SportsTeam","name":"Boston College Eagles"},{"@type":"SportsTeam","name":"Pittsburgh Panthers"}],"organizer":{"@type":"SportsOrganization","name":"NCAA Football","url":"https://www.ncaa.com/sports/football"},"location":{"@type":"Place","name":"Alumni Stadium (Chestnut Hill","address":"Alumni Stadium (Chestnut Hill, MA), Chestnut Hill, MA"}}</script>
@@ -40,7 +41,11 @@
   <p class="lede">1 bar and fan watch spot in the San Diego area where Pitt fans watch the game, including 1 official fan club and alumni chapter. Last checked October 2026. Next game: Pitt at Boston College, Saturday, October 17 on ESPN2.</p>
 </div></header>
 
-<div class="followbar"><span><b>Pitt fan?</b> Follow them for a weekly game-day email and see the fans near you.</span><a class="btn sm primary" href="/app.html?follow=cfb-221">Follow Pitt</a></div>
+<form class="joinbar" action="/app.html" data-team="cfb-221" data-m="San Diego|CA" novalidate><input type="hidden" name="follow" value="cfb-221">
+  <div class="jtxt"><b>Get Pitt games and San Diego fan bars by email</b><span>Every Thursday: this week's Pitt games, how to watch, and where fans near you are going. Free, one-click unsubscribe.</span></div>
+  <div class="jrow"><input class="input" type="email" placeholder="you@example.com" autocomplete="email" aria-label="Your email" required><button class="btn primary">Email me</button></div>
+  <p class="jmsg" role="status" aria-live="polite"></p>
+</form>
 
 <p class="intro">Looking for a Pitt bar in San Diego? Pitt fans in the area watch games at Hennessey's Tavern in La Jolla. Listed groups include Pitt Alumni SAN DIEGO, CA game watch. Call ahead on game days to make sure the bar will have your game on.</p>
 

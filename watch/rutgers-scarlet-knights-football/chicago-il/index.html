@@ -21,8 +21,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/css/style.css?v=b474a061">
-<link rel="stylesheet" href="/assets/css/watch.css?v=78aabcbf">
-<script type="module" src="/assets/js/analytics.js?v=b8c09f5f"></script>
+<link rel="stylesheet" href="/assets/css/watch.css?v=af8fd489">
+<script type="module" src="/assets/js/analytics.js?v=87c536ee"></script>
+<script type="module" src="/assets/js/join.js?v=d1961051"></script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://distantfan.com/"},{"@type":"ListItem","position":2,"name":"Where to watch","item":"https://distantfan.com/watch/"},{"@type":"ListItem","position":3,"name":"Rutgers Scarlet Knights football","item":"https://distantfan.com/watch/rutgers-scarlet-knights-football/"},{"@type":"ListItem","position":4,"name":"Chicago","item":"https://distantfan.com/watch/rutgers-scarlet-knights-football/chicago-il/"}]}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"ItemList","name":"Rutgers Scarlet Knights football watch spots in Chicago, IL","numberOfItems":1,"itemListElement":[{"@type":"ListItem","position":1,"item":{"@type":"BarOrPub","name":"The Evans at Canal Shores","address":"1030 Central St, Evanston, IL 60201","geo":{"@type":"GeoCoordinates","latitude":42.06414,"longitude":-87.68592}}}]}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"SportsEvent","name":"Rutgers Scarlet Knights at Maryland Terrapins","startDate":"2026-10-17T16:30:00.000Z","description":"Rutgers Scarlet Knights at Maryland Terrapins (NCAA Football), broadcast on BTN. Find bars showing the game in Chicago on Distant Fan.","eventStatus":"https://schema.org/EventScheduled","image":"https://a.espncdn.com/i/teamlogos/ncaa/500/164.png","homeTeam":{"@type":"SportsTeam","name":"Maryland Terrapins"},"awayTeam":{"@type":"SportsTeam","name":"Rutgers Scarlet Knights"},"performer":[{"@type":"SportsTeam","name":"Maryland Terrapins"},{"@type":"SportsTeam","name":"Rutgers Scarlet Knights"}],"organizer":{"@type":"SportsOrganization","name":"NCAA Football","url":"https://www.ncaa.com/sports/football"},"location":{"@type":"Place","name":"SECU Stadium","address":"SECU Stadium, College Park, MD"}}</script>
@@ -40,7 +41,11 @@
   <p class="lede">1 bar and fan watch spot in the Chicago area where Rutgers fans watch the game, including 1 official fan club and alumni chapter. Last checked October 2026. Next game: Rutgers at Maryland, Saturday, October 17 on BTN.</p>
 </div></header>
 
-<div class="followbar"><span><b>Rutgers fan?</b> Follow them for a weekly game-day email and see the fans near you.</span><a class="btn sm primary" href="/app.html?follow=cfb-164">Follow Rutgers</a></div>
+<form class="joinbar" action="/app.html" data-team="cfb-164" data-m="Chicago|IL" novalidate><input type="hidden" name="follow" value="cfb-164">
+  <div class="jtxt"><b>Get Rutgers games and Chicago fan bars by email</b><span>Every Thursday: this week's Rutgers games, how to watch, and where fans near you are going. Free, one-click unsubscribe.</span></div>
+  <div class="jrow"><input class="input" type="email" placeholder="you@example.com" autocomplete="email" aria-label="Your email" required><button class="btn primary">Email me</button></div>
+  <p class="jmsg" role="status" aria-live="polite"></p>
+</form>
 
 <p class="intro">Looking for a Rutgers bar in Chicago? Rutgers fans in the area watch games at The Evans at Canal Shores in Evanston. Listed groups include Rutgers alumni watch party. Call ahead on game days to make sure the bar will have your game on.</p>
 

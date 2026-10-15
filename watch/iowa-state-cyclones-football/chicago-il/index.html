@@ -21,8 +21,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/css/style.css?v=b474a061">
-<link rel="stylesheet" href="/assets/css/watch.css?v=78aabcbf">
-<script type="module" src="/assets/js/analytics.js?v=b8c09f5f"></script>
+<link rel="stylesheet" href="/assets/css/watch.css?v=af8fd489">
+<script type="module" src="/assets/js/analytics.js?v=87c536ee"></script>
+<script type="module" src="/assets/js/join.js?v=d1961051"></script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://distantfan.com/"},{"@type":"ListItem","position":2,"name":"Where to watch","item":"https://distantfan.com/watch/"},{"@type":"ListItem","position":3,"name":"Iowa State Cyclones football","item":"https://distantfan.com/watch/iowa-state-cyclones-football/"},{"@type":"ListItem","position":4,"name":"Chicago","item":"https://distantfan.com/watch/iowa-state-cyclones-football/chicago-il/"}]}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"ItemList","name":"Iowa State Cyclones football watch spots in Chicago, IL","numberOfItems":1,"itemListElement":[{"@type":"ListItem","position":1,"item":{"@type":"BarOrPub","name":"Murphy's Bleachers at Wrigley Field","address":"3655 N Sheffield Ave, Chicago, IL 60613","geo":{"@type":"GeoCoordinates","latitude":41.94833,"longitude":-87.65429}}}]}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"SportsEvent","name":"Iowa State Cyclones at Arizona Wildcats","startDate":"2026-10-24T04:00:00.000Z","description":"Iowa State Cyclones at Arizona Wildcats (NCAA Football). Find bars showing the game in Chicago on Distant Fan.","eventStatus":"https://schema.org/EventScheduled","image":"https://a.espncdn.com/i/teamlogos/ncaa/500/66.png","homeTeam":{"@type":"SportsTeam","name":"Arizona Wildcats"},"awayTeam":{"@type":"SportsTeam","name":"Iowa State Cyclones"},"performer":[{"@type":"SportsTeam","name":"Arizona Wildcats"},{"@type":"SportsTeam","name":"Iowa State Cyclones"}],"organizer":{"@type":"SportsOrganization","name":"NCAA Football","url":"https://www.ncaa.com/sports/football"},"location":{"@type":"Place","name":"Casino Del Sol Stadium","address":"Casino Del Sol Stadium, Tucson, AZ"}}</script>
@@ -40,7 +41,11 @@
   <p class="lede">1 bar and fan watch spot in the Chicago area where Iowa State fans watch the game, including 1 official fan club and alumni chapter. Last checked September 2026. Next game: Iowa State at Arizona, Saturday, October 24.</p>
 </div></header>
 
-<div class="followbar"><span><b>Iowa State fan?</b> Follow them for a weekly game-day email and see the fans near you.</span><a class="btn sm primary" href="/app.html?follow=cfb-66">Follow Iowa State</a></div>
+<form class="joinbar" action="/app.html" data-team="cfb-66" data-m="Chicago|IL" novalidate><input type="hidden" name="follow" value="cfb-66">
+  <div class="jtxt"><b>Get Iowa State games and Chicago fan bars by email</b><span>Every Thursday: this week's Iowa State games, how to watch, and where fans near you are going. Free, one-click unsubscribe.</span></div>
+  <div class="jrow"><input class="input" type="email" placeholder="you@example.com" autocomplete="email" aria-label="Your email" required><button class="btn primary">Email me</button></div>
+  <p class="jmsg" role="status" aria-live="polite"></p>
+</form>
 
 <p class="intro">Looking for an Iowa State bar in Chicago? Iowa State fans in the area watch games at Murphy's Bleachers at Wrigley Field. Call ahead on game days to make sure the bar will have your game on.</p>
 

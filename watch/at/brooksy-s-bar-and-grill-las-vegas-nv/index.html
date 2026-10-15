@@ -21,8 +21,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/css/style.css?v=b474a061">
-<link rel="stylesheet" href="/assets/css/watch.css?v=78aabcbf">
-<script type="module" src="/assets/js/analytics.js?v=b8c09f5f"></script>
+<link rel="stylesheet" href="/assets/css/watch.css?v=af8fd489">
+<script type="module" src="/assets/js/analytics.js?v=87c536ee"></script>
+<script type="module" src="/assets/js/join.js?v=d1961051"></script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://distantfan.com/"},{"@type":"ListItem","position":2,"name":"Where to watch","item":"https://distantfan.com/watch/"},{"@type":"ListItem","position":3,"name":"Las Vegas, NV","item":"https://distantfan.com/watch/in/las-vegas-nv/"},{"@type":"ListItem","position":4,"name":"Brooksy's Bar & Grill","item":"https://distantfan.com/watch/at/brooksy-s-bar-and-grill-las-vegas-nv/"}]}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BarOrPub","name":"Brooksy's Bar & Grill","address":"9295 West Flamingo Road, Las Vegas, NV 88147","geo":{"@type":"GeoCoordinates","latitude":36.11487,"longitude":-115.29489},"description":"Official Las Vegas Alumni Chapter football watch party spot for Razorbacks fans."}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"SportsEvent","name":"Arkansas Razorbacks at Vanderbilt Commodores","startDate":"2026-10-17T23:00:00.000Z","description":"Arkansas Razorbacks at Vanderbilt Commodores (NCAA Football), broadcast on ESPN2. Find bars showing the game in Las Vegas on Distant Fan.","eventStatus":"https://schema.org/EventScheduled","image":"https://a.espncdn.com/i/teamlogos/ncaa/500/8.png","homeTeam":{"@type":"SportsTeam","name":"Vanderbilt Commodores"},"awayTeam":{"@type":"SportsTeam","name":"Arkansas Razorbacks"},"performer":[{"@type":"SportsTeam","name":"Vanderbilt Commodores"},{"@type":"SportsTeam","name":"Arkansas Razorbacks"}],"organizer":{"@type":"SportsOrganization","name":"NCAA Football","url":"https://www.ncaa.com/sports/football"},"location":{"@type":"Place","name":"FirstBank Stadium","address":"FirstBank Stadium, Nashville, TN"}}</script>
@@ -40,7 +41,11 @@
   <p class="lede">Official Las Vegas Alumni Chapter football watch party spot for Razorbacks fans.</p>
 </div></header>
 
-<div class="followbar"><span><b>Arkansas fan?</b> Follow them for a weekly game-day email and see the fans near you.</span><a class="btn sm primary" href="/app.html?follow=cfb-8">Follow Arkansas</a></div>
+<form class="joinbar" action="/app.html" data-team="cfb-8" data-m="Las Vegas|NV" novalidate><input type="hidden" name="follow" value="cfb-8">
+  <div class="jtxt"><b>Get Arkansas games and Las Vegas fan bars by email</b><span>Every Thursday: this week's Arkansas games, how to watch, and where fans near you are going. Free, one-click unsubscribe.</span></div>
+  <div class="jrow"><input class="input" type="email" placeholder="you@example.com" autocomplete="email" aria-label="Your email" required><button class="btn primary">Email me</button></div>
+  <p class="jmsg" role="status" aria-live="polite"></p>
+</form>
 
 <section class="venue">
   <dl>

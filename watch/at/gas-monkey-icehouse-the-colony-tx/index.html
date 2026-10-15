@@ -21,8 +21,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/css/style.css?v=b474a061">
-<link rel="stylesheet" href="/assets/css/watch.css?v=78aabcbf">
-<script type="module" src="/assets/js/analytics.js?v=b8c09f5f"></script>
+<link rel="stylesheet" href="/assets/css/watch.css?v=af8fd489">
+<script type="module" src="/assets/js/analytics.js?v=87c536ee"></script>
+<script type="module" src="/assets/js/join.js?v=d1961051"></script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://distantfan.com/"},{"@type":"ListItem","position":2,"name":"Where to watch","item":"https://distantfan.com/watch/"},{"@type":"ListItem","position":3,"name":"Frisco, TX","item":"https://distantfan.com/watch/in/frisco-tx/"},{"@type":"ListItem","position":4,"name":"Gas Monkey Icehouse","item":"https://distantfan.com/watch/at/gas-monkey-icehouse-the-colony-tx/"}]}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BarOrPub","name":"Gas Monkey Icehouse","address":"4545 Destination Dr, The Colony, TX 75056","geo":{"@type":"GeoCoordinates","latitude":33.07867,"longitude":-96.85741},"description":"Cowboys watch parties with 37 TVs, game day specials and no cover."}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"SportsEvent","name":"Dallas Cowboys at Green Bay Packers","startDate":"2026-10-19T00:20:00.000Z","description":"Dallas Cowboys at Green Bay Packers (NFL), broadcast on NBC. Find bars showing the game in The Colony on Distant Fan.","eventStatus":"https://schema.org/EventScheduled","image":"https://a.espncdn.com/i/teamlogos/nfl/500/dal.png","homeTeam":{"@type":"SportsTeam","name":"Green Bay Packers"},"awayTeam":{"@type":"SportsTeam","name":"Dallas Cowboys"},"performer":[{"@type":"SportsTeam","name":"Green Bay Packers"},{"@type":"SportsTeam","name":"Dallas Cowboys"}],"organizer":{"@type":"SportsOrganization","name":"NFL","url":"https://www.nfl.com/"},"location":{"@type":"Place","name":"Lambeau Field","address":"Lambeau Field, Green Bay, WI"}}</script>
@@ -40,7 +41,11 @@
   <p class="lede">Cowboys watch parties with 37 TVs, game day specials and no cover.</p>
 </div></header>
 
-<div class="followbar"><span><b>Cowboys fan?</b> Follow them for a weekly game-day email and see the fans near you.</span><a class="btn sm primary" href="/app.html?follow=nfl-dal">Follow Cowboys</a></div>
+<form class="joinbar" action="/app.html" data-team="nfl-dal" data-m="Frisco|TX" novalidate><input type="hidden" name="follow" value="nfl-dal">
+  <div class="jtxt"><b>Get Cowboys games and Frisco fan bars by email</b><span>Every Thursday: this week's Cowboys games, how to watch, and where fans near you are going. Free, one-click unsubscribe.</span></div>
+  <div class="jrow"><input class="input" type="email" placeholder="you@example.com" autocomplete="email" aria-label="Your email" required><button class="btn primary">Email me</button></div>
+  <p class="jmsg" role="status" aria-live="polite"></p>
+</form>
 
 <section class="venue">
   <dl>

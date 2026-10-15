@@ -139,7 +139,7 @@ for (const [tid, cells] of Object.entries(fansData.teams || {})) {
 }
 
 // ---- shared chrome
-const V = { style: hash('assets/css/style.css'), watch: hash('assets/css/watch.css'), analytics: hash('assets/js/analytics.js') };
+const V = { style: hash('assets/css/style.css'), watch: hash('assets/css/watch.css'), analytics: hash('assets/js/analytics.js'), join: hash('assets/js/join.js') };
 const BRAND = `<a class="brand" href="/" aria-label="Distant Fan home"><svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="8" cy="32" r="4.5" fill="currentColor" opacity=".35"/><path d="M12 29C15 20 19 17 23.5 17.5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-dasharray=".5 5" opacity=".55"/><path d="M29 3.5a8.5 8.5 0 0 0-8.5 8.5c0 6.4 8.5 15 8.5 15s8.5-8.6 8.5-15A8.5 8.5 0 0 0 29 3.5z" fill="var(--accent)"/><circle cx="29" cy="12" r="3.2" fill="var(--bg)"/></svg><span>Distant<b>Fan</b></span></a>`;
 
 function page({ url, title, desc, body, crumbs, ld = [], image }) {
@@ -169,7 +169,8 @@ function page({ url, title, desc, body, crumbs, ld = [], image }) {
 <link rel="stylesheet" href="/assets/css/style.css?v=${V.style}">
 <link rel="stylesheet" href="/assets/css/watch.css?v=${V.watch}">
 <script type="module" src="/assets/js/analytics.js?v=${V.analytics}"></script>
-${[crumbLd, ...ld].map(o => `<script type="application/ld+json">${noDash(JSON.stringify(o)).replace(/</g, '\\u003c')}</script>`).join('\n')}
+${body.includes('class="joinbar"') ? `<script type="module" src="/assets/js/join.js?v=${V.join}"></script>
+` : ''}${[crumbLd, ...ld].map(o => `<script type="application/ld+json">${noDash(JSON.stringify(o)).replace(/</g, '\\u003c')}</script>`).join('\n')}
 </head>
 <body>
 <header class="site-head"><div class="wrap">${BRAND}<nav><a href="/watch/">Where to watch</a><a class="btn sm primary" href="/app.html">Open the app</a></nav></div></header>
@@ -277,8 +278,13 @@ const itemListLd = (name, list) => ({
 });
 
 const CTA = (line, team) => `<section class="cta"><div><h2>${line}</h2><p>Free. Follow ${team ? esc(team.short) : 'your teams'}, see the fans near you and who's going to the next game${team ? `, and get a weekly game-day email with the games and the bars` : ''}. You only share a rough area, never your address.</p></div><a class="btn lg primary" href="/app.html${team ? `?follow=${encodeURIComponent(team.id)}` : ''}">${team ? `Follow ${esc(team.short)}` : 'Find my people'}</a></section>`;
-// Slim version near the top of the page, where most search visitors decide whether to stay.
-const FOLLOW = team => `<div class="followbar"><span><b>${esc(team.short)} fan?</b> Follow them for a weekly game-day email and see the fans near you.</span><a class="btn sm primary" href="/app.html?follow=${encodeURIComponent(team.id)}">Follow ${esc(team.short)}</a></div>`;
+// One-step email signup near the top of team x city and venue pages, where most search visitors decide
+// whether to stay (assets/js/join.js sends a Firebase sign-in link; tapping it creates the profile).
+const JOIN = (team, metro) => `<form class="joinbar" action="/app.html" data-team="${esc(team.id)}" data-m="${esc(`${metro.name}|${metro.st}`)}" novalidate><input type="hidden" name="follow" value="${esc(team.id)}">
+  <div class="jtxt"><b>Get ${esc(team.short)} games and ${esc(metro.name)} fan bars by email</b><span>Every Thursday: this week's ${esc(team.short)} games, how to watch, and where fans near you are going. Free, one-click unsubscribe.</span></div>
+  <div class="jrow"><input class="input" type="email" placeholder="you@example.com" autocomplete="email" aria-label="Your email" required><button class="btn primary">Email me</button></div>
+  <p class="jmsg" role="status" aria-live="polite"></p>
+</form>`;
 
 // Share card per team (tools/build-og.py). Falls back to the site card when a team has none yet.
 const ogFor = team => { const p = `/assets/og/${teamSlug(team)}.png`; return fs.existsSync(path.join(root, p)) ? p : undefined; };
@@ -368,7 +374,7 @@ for (const p of pairs) {
   <p class="lede">${plural(spots.length, 'bar and fan watch spot')} in the ${esc(metro.name)} area where ${esc(team.short)} fans watch the game${clubs ? `, including ${plural(clubs, 'official fan club and alumni chapter')}` : ''}. Last checked ${esc(monthYear(lc))}.${nextLine(team, sb.next)}</p>
 </div></header>
 
-${FOLLOW(team)}
+${JOIN(team, metro)}
 
 ${intro(team, metro, spots)}
 
@@ -422,7 +428,7 @@ for (const v of venues) {
   <p class="lede">${esc(s.note)}</p>
 </div></header>
 
-${FOLLOW(lead)}
+${JOIN(lead, metro)}
 
 <section class="venue">
   <dl>

@@ -21,8 +21,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/css/style.css?v=b474a061">
-<link rel="stylesheet" href="/assets/css/watch.css?v=78aabcbf">
-<script type="module" src="/assets/js/analytics.js?v=b8c09f5f"></script>
+<link rel="stylesheet" href="/assets/css/watch.css?v=af8fd489">
+<script type="module" src="/assets/js/analytics.js?v=87c536ee"></script>
+<script type="module" src="/assets/js/join.js?v=d1961051"></script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://distantfan.com/"},{"@type":"ListItem","position":2,"name":"Where to watch","item":"https://distantfan.com/watch/"},{"@type":"ListItem","position":3,"name":"Dallas Cowboys","item":"https://distantfan.com/watch/dallas-cowboys/"},{"@type":"ListItem","position":4,"name":"Leesburg","item":"https://distantfan.com/watch/dallas-cowboys/leesburg-va/"}]}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"ItemList","name":"Dallas Cowboys watch spots in Leesburg, VA","numberOfItems":2,"itemListElement":[{"@type":"ListItem","position":1,"item":{"@type":"BarOrPub","name":"Bungalow Lakehouse","address":"46116 Lake Center Plaza, Sterling, VA 20164","geo":{"@type":"GeoCoordinates","latitude":39.0335,"longitude":-77.40514}}},{"@type":"ListItem","position":2,"item":{"@type":"BarOrPub","name":"Rai's Rendezvous","address":"44042 Pipeline Plz, Ashburn, VA 20147","geo":{"@type":"GeoCoordinates","latitude":39.02231,"longitude":-77.47671}}}]}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"SportsEvent","name":"Dallas Cowboys at Green Bay Packers","startDate":"2026-10-19T00:20:00.000Z","description":"Dallas Cowboys at Green Bay Packers (NFL), broadcast on NBC. Find bars showing the game in Leesburg on Distant Fan.","eventStatus":"https://schema.org/EventScheduled","image":"https://a.espncdn.com/i/teamlogos/nfl/500/dal.png","homeTeam":{"@type":"SportsTeam","name":"Green Bay Packers"},"awayTeam":{"@type":"SportsTeam","name":"Dallas Cowboys"},"performer":[{"@type":"SportsTeam","name":"Green Bay Packers"},{"@type":"SportsTeam","name":"Dallas Cowboys"}],"organizer":{"@type":"SportsOrganization","name":"NFL","url":"https://www.nfl.com/"},"location":{"@type":"Place","name":"Lambeau Field","address":"Lambeau Field, Green Bay, WI"}}</script>
@@ -40,7 +41,11 @@
   <p class="lede">2 bar and fan watch spots in the Leesburg area where Cowboys fans watch the game, including 1 official fan club and alumni chapter. Last checked October 2026. Next game: Cowboys at Packers, Sunday, October 18 on NBC.</p>
 </div></header>
 
-<div class="followbar"><span><b>Cowboys fan?</b> Follow them for a weekly game-day email and see the fans near you.</span><a class="btn sm primary" href="/app.html?follow=nfl-dal">Follow Cowboys</a></div>
+<form class="joinbar" action="/app.html" data-team="nfl-dal" data-m="Leesburg|VA" novalidate><input type="hidden" name="follow" value="nfl-dal">
+  <div class="jtxt"><b>Get Cowboys games and Leesburg fan bars by email</b><span>Every Thursday: this week's Cowboys games, how to watch, and where fans near you are going. Free, one-click unsubscribe.</span></div>
+  <div class="jrow"><input class="input" type="email" placeholder="you@example.com" autocomplete="email" aria-label="Your email" required><button class="btn primary">Email me</button></div>
+  <p class="jmsg" role="status" aria-live="polite"></p>
+</form>
 
 <p class="intro">Looking for a Cowboys bar in Leesburg? Cowboys fans in the area, from Sterling and Ashburn, watch games at Bungalow Lakehouse in Sterling and Rai's Rendezvous in Ashburn. Listed groups include NOVA Dallas Cowboys Fans. Call ahead on game days to make sure the bar will have your game on.</p>
 

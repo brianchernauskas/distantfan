@@ -1,12 +1,12 @@
-import * as S from './store.js?v=202610121506';
-import { SITE, ADMINS } from './config.js?v=202610121506';
-import { TEAMS, TEAM_BY_ID, LEAGUES } from './teams.js?v=202610121506';
-import { METROS } from './metros.js?v=202610121506';
-import { encode, center, bounds, areaLabel, km, nearestMetro } from './geo.js?v=202610121506';
-import { nextGames, liveStatus } from './schedule.js?v=202610121506';
-import { howToWatch, WATCH_COLOR, gcalUrl } from './watch.js?v=202610121506';
-import { shopStrip, hydrateShop, shopBanner, hydrateBanner } from './shop.js?v=202610121506';
-import { firstTouch, followPrefill, clearFollow } from './attrib.js?v=202610121506';
+import * as S from './store.js?v=202610150903';
+import { SITE, ADMINS } from './config.js?v=202610150903';
+import { TEAMS, TEAM_BY_ID, LEAGUES } from './teams.js?v=202610150903';
+import { METROS } from './metros.js?v=202610150903';
+import { encode, center, bounds, areaLabel, km, nearestMetro } from './geo.js?v=202610150903';
+import { nextGames, liveStatus } from './schedule.js?v=202610150903';
+import { howToWatch, WATCH_COLOR, gcalUrl } from './watch.js?v=202610150903';
+import { shopStrip, hydrateShop, shopBanner, hydrateBanner } from './shop.js?v=202610150903';
+import { firstTouch, followPrefill, clearFollow } from './attrib.js?v=202610150903';
 
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -20,6 +20,8 @@ const isAdmin = () => !!user && ADMINS.includes(user.uid);
 const QS = new URLSearchParams(location.search);
 const VIA = (QS.get('utm_source') || '').slice(0, 30);
 let GO = QS.get('go') ? { spot: QS.get('go'), game: QS.get('game') || '', team: QS.get('team') || '' } : null;
+// One-step signup from a watch page (join.js): the emailed sign-in link opens app.html?join=<teamId>&m=<Metro|ST>.
+let JOIN = TEAM_BY_ID[QS.get('join')] ? { team: QS.get('join'), metro: METROS.find(x => `${x.name}|${x.st}` === QS.get('m')) || null } : null;
 
 let user = null, profile = null, teamId = null, view = 'map';
 let map = null, mapLayers = null, unsubRoom = null, room = 'local', adding = false;
@@ -78,19 +80,85 @@ const errMsg = e => (e?.code || '').replace('auth/', '').replace(/-/g, ' ') || e
 (async function boot() {
   try { await S.init(); }
   catch (e) { root.innerHTML = `<div class="center-card"><h2>Can't connect</h2><p class="muted">${esc(e.message)}</p></div>`; return; }
+  if (S.isEmailLink()) await finishEmailLink();
   S.onUser(async u => {
     user = u; cleanupView();
     if (!u) return renderAuth();
     try { profile = await S.getProfile(u.uid); } catch (e) { profile = null; console.error(e); }
+    const joined = JOIN && await applyJoin(u).catch(e => { console.error(e); return false; });
+    JOIN = null;
     if (!profile) return renderOnboarding();
     S.noteVisit(u.uid, VIA).catch(e => console.warn('visit', e));
     teamId = profile.teams.includes(ls.get('df_team')) ? ls.get('df_team') : profile.teams[0];
     mapTeam = profile.teams.includes(ls.get('df_maptab')) ? ls.get('df_maptab') : 'all'; mapMetro = null;
     const asked = views().includes(location.hash.slice(1)) ? location.hash.slice(1) : null;
-    view = GO ? 'games' : asked || (await gameSoon() ? 'games' : 'map');
+    view = GO || joined ? 'games' : asked || (await gameSoon() ? 'games' : 'map');
     renderShell();
+    if (joined) toast(joined === 'new' ? "You're in. Your first game-day email is on its way. Set your display name in Profile." : 'Game-day email on');
   });
 })();
+
+// Finishes a passwordless sign-in link from the watch pages' signup form. The address normally comes
+// from this browser's localStorage (join.js saved it); a link opened on another device asks for it.
+// A failed link (expired, already used) falls through to the normal sign-in screen with a note.
+async function finishEmailLink() {
+  let saved = null;
+  try { saved = JSON.parse(localStorage.getItem('df_join')); } catch {}
+  let email = saved?.email;
+  const strip = () => history.replaceState(null, '', location.pathname + location.hash);
+  for (let tries = 0; tries < 3; tries++) {
+    if (!email) email = await askEmail(tries ? 'That email does not match the link. Use the address you signed up with.' : '');
+    try {
+      await S.completeEmailLink(email);
+      try { localStorage.removeItem('df_join'); } catch {}
+      strip();
+      return true;
+    } catch (e) {
+      if (e?.code === 'auth/invalid-email') { email = null; continue; }
+      strip();
+      JOIN = null;
+      setTimeout(() => toast('That sign-in link has expired or was already used. Sign in below, or request a new link from any watch page.'), 400);
+      return false;
+    }
+  }
+  strip();
+  return false;
+}
+
+function askEmail(note) {
+  return new Promise(resolve => {
+    root.innerHTML = `<div class="center-card">${BRAND}
+      <div><h2>Confirm your email</h2><p class="muted" style="margin-top:8px">You opened the sign-in link on a different device or browser. Enter the email address you signed up with.</p></div>
+      <form id="confirmEmail" style="display:grid;gap:12px"><label class="field">Email<input class="input" name="email" type="email" autocomplete="email" required></label><button class="btn primary block">Continue</button></form>
+      <p class="err" role="alert">${esc(note)}</p></div>`;
+    $('#confirmEmail').onsubmit = e => { e.preventDefault(); resolve(new FormData(e.target).get('email').trim()); };
+  });
+}
+
+// Applies ?join= after sign-in. A new fan gets a profile straight away (that team, the page's metro as
+// the rough home area, a placeholder display name they can change) and the weekly email switched on;
+// an existing fan gets the team added and the email switched on. Returns 'new', 'existing' or false.
+async function applyJoin(u) {
+  const t = TEAM_BY_ID[JOIN.team], m = JOIN.metro;
+  if (!profile) {
+    if (!m || !u.email) return false; // no metro on the link: the normal onboarding (team prefilled) takes over
+    const ft = firstTouch();
+    const draft = { name: `${t.short} fan`, teams: [t.id], cell: encode(m.lat, m.lng, SITE.homePrecision), area: `${m.name} area`,
+      ...(ft ? { src: ft.path || '/', ref: ft.ref || ft.utm || 'direct' } : {}) };
+    await S.saveProfile(u.uid, draft);
+    profile = { uid: u.uid, ...draft };
+    clearFollow();
+    S.track('sign_up', { method: 'email_link', first_path: draft.src || '', first_ref: draft.ref || '', how: '', teams: 1 });
+    await S.setEmailPref(u.uid, u.email, true).catch(console.error);
+    return 'new';
+  }
+  if (!profile.teams.includes(t.id) && profile.teams.length < SITE.maxTeams) {
+    profile.teams = [...profile.teams, t.id];
+    await S.saveProfile(u.uid, profile);
+  }
+  if (u.email) await S.setEmailPref(u.uid, u.email, true).catch(console.error);
+  return 'existing';
+}
 
 // True when a followed team plays within 12 hours or is playing now, so the app opens on Games.
 // Capped at 1.5 s: schedules are usually cached, and the map is a fine fallback.
@@ -287,7 +355,7 @@ function renderOnboarding(editing = false) {
         if (!native && !navigator.geolocation) { err.textContent = 'Location is not available in this browser. Pick a metro instead.'; return; }
         $('#locate').disabled = true; $('#locate').textContent = 'Locating…';
         // Inside the Capacitor app, use the native location plugin (native.js); on the web, the browser API.
-        const locate = native ? (ok, fail, o) => import('./native.js?v=202610121506').then(n => n.getPosition(ok, fail, o)) : (ok, fail, o) => navigator.geolocation.getCurrentPosition(ok, fail, o);
+        const locate = native ? (ok, fail, o) => import('./native.js?v=202610150903').then(n => n.getPosition(ok, fail, o)) : (ok, fail, o) => navigator.geolocation.getCurrentPosition(ok, fail, o);
         locate(p => {
           // Round to a coarse cell immediately; the coordinates are discarded here.
           const cell = encode(p.coords.latitude, p.coords.longitude, SITE.homePrecision);

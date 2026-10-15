@@ -21,8 +21,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/css/style.css?v=b474a061">
-<link rel="stylesheet" href="/assets/css/watch.css?v=78aabcbf">
-<script type="module" src="/assets/js/analytics.js?v=b8c09f5f"></script>
+<link rel="stylesheet" href="/assets/css/watch.css?v=af8fd489">
+<script type="module" src="/assets/js/analytics.js?v=87c536ee"></script>
+<script type="module" src="/assets/js/join.js?v=d1961051"></script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://distantfan.com/"},{"@type":"ListItem","position":2,"name":"Where to watch","item":"https://distantfan.com/watch/"},{"@type":"ListItem","position":3,"name":"Des Moines, IA","item":"https://distantfan.com/watch/in/des-moines-ia/"},{"@type":"ListItem","position":4,"name":"Inside Golf & Axe Throwing","item":"https://distantfan.com/watch/at/inside-golf-and-axe-throwing-ames-ia/"}]}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BarOrPub","name":"Inside Golf & Axe Throwing","address":"2801 Grand Ave, Ames, IA 50010","geo":{"@type":"GeoCoordinates","latitude":42.04946,"longitude":-93.62073},"description":"Cowboys fans meeting up to watch Monday Night Football vs the Eagles at the North Grand Mall location. Non-Dallas fans welcome too."}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"SportsEvent","name":"Dallas Cowboys at Green Bay Packers","startDate":"2026-10-19T00:20:00.000Z","description":"Dallas Cowboys at Green Bay Packers (NFL), broadcast on NBC. Find bars showing the game in Ames on Distant Fan.","eventStatus":"https://schema.org/EventScheduled","image":"https://a.espncdn.com/i/teamlogos/nfl/500/dal.png","homeTeam":{"@type":"SportsTeam","name":"Green Bay Packers"},"awayTeam":{"@type":"SportsTeam","name":"Dallas Cowboys"},"performer":[{"@type":"SportsTeam","name":"Green Bay Packers"},{"@type":"SportsTeam","name":"Dallas Cowboys"}],"organizer":{"@type":"SportsOrganization","name":"NFL","url":"https://www.nfl.com/"},"location":{"@type":"Place","name":"Lambeau Field","address":"Lambeau Field, Green Bay, WI"}}</script>
@@ -40,7 +41,11 @@
   <p class="lede">Cowboys fans meeting up to watch Monday Night Football vs the Eagles at the North Grand Mall location. Non-Dallas fans welcome too.</p>
 </div></header>
 
-<div class="followbar"><span><b>Cowboys fan?</b> Follow them for a weekly game-day email and see the fans near you.</span><a class="btn sm primary" href="/app.html?follow=nfl-dal">Follow Cowboys</a></div>
+<form class="joinbar" action="/app.html" data-team="nfl-dal" data-m="Des Moines|IA" novalidate><input type="hidden" name="follow" value="nfl-dal">
+  <div class="jtxt"><b>Get Cowboys games and Des Moines fan bars by email</b><span>Every Thursday: this week's Cowboys games, how to watch, and where fans near you are going. Free, one-click unsubscribe.</span></div>
+  <div class="jrow"><input class="input" type="email" placeholder="you@example.com" autocomplete="email" aria-label="Your email" required><button class="btn primary">Email me</button></div>
+  <p class="jmsg" role="status" aria-live="polite"></p>
+</form>
 
 <section class="venue">
   <dl>

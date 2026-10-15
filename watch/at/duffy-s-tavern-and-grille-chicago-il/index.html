@@ -21,8 +21,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/css/style.css?v=b474a061">
-<link rel="stylesheet" href="/assets/css/watch.css?v=78aabcbf">
-<script type="module" src="/assets/js/analytics.js?v=b8c09f5f"></script>
+<link rel="stylesheet" href="/assets/css/watch.css?v=af8fd489">
+<script type="module" src="/assets/js/analytics.js?v=87c536ee"></script>
+<script type="module" src="/assets/js/join.js?v=d1961051"></script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://distantfan.com/"},{"@type":"ListItem","position":2,"name":"Where to watch","item":"https://distantfan.com/watch/"},{"@type":"ListItem","position":3,"name":"Chicago, IL","item":"https://distantfan.com/watch/in/chicago-il/"},{"@type":"ListItem","position":4,"name":"Duffy's Tavern and Grille","item":"https://distantfan.com/watch/at/duffy-s-tavern-and-grille-chicago-il/"}]}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BarOrPub","name":"Duffy's Tavern and Grille","address":"420 W Diversey Pkwy, Chicago, IL 60614","geo":{"@type":"GeoCoordinates","latitude":41.93296,"longitude":-87.64025},"description":"Official Chicago alumni game-watch spot for Michigan Wolverines fans. Check the school page for which games."}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"SportsEvent","name":"Penn State Nittany Lions at Michigan Wolverines","startDate":"2026-10-17T19:30:00.000Z","description":"Penn State Nittany Lions at Michigan Wolverines (NCAA Football), broadcast on CBS. Find bars showing the game in Chicago on Distant Fan.","eventStatus":"https://schema.org/EventScheduled","image":"https://a.espncdn.com/i/teamlogos/ncaa/500/130.png","homeTeam":{"@type":"SportsTeam","name":"Michigan Wolverines"},"awayTeam":{"@type":"SportsTeam","name":"Penn State Nittany Lions"},"performer":[{"@type":"SportsTeam","name":"Michigan Wolverines"},{"@type":"SportsTeam","name":"Penn State Nittany Lions"}],"organizer":{"@type":"SportsOrganization","name":"NCAA Football","url":"https://www.ncaa.com/sports/football"},"location":{"@type":"Place","name":"Michigan Stadium","address":"Michigan Stadium, Ann Arbor, MI"}}</script>
@@ -40,7 +41,11 @@
   <p class="lede">Official Chicago alumni game-watch spot for Michigan Wolverines fans. Check the school page for which games.</p>
 </div></header>
 
-<div class="followbar"><span><b>Michigan fan?</b> Follow them for a weekly game-day email and see the fans near you.</span><a class="btn sm primary" href="/app.html?follow=cfb-130">Follow Michigan</a></div>
+<form class="joinbar" action="/app.html" data-team="cfb-130" data-m="Chicago|IL" novalidate><input type="hidden" name="follow" value="cfb-130">
+  <div class="jtxt"><b>Get Michigan games and Chicago fan bars by email</b><span>Every Thursday: this week's Michigan games, how to watch, and where fans near you are going. Free, one-click unsubscribe.</span></div>
+  <div class="jrow"><input class="input" type="email" placeholder="you@example.com" autocomplete="email" aria-label="Your email" required><button class="btn primary">Email me</button></div>
+  <p class="jmsg" role="status" aria-live="polite"></p>
+</form>
 
 <section class="venue">
   <dl>

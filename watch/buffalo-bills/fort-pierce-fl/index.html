@@ -21,8 +21,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/css/style.css?v=b474a061">
-<link rel="stylesheet" href="/assets/css/watch.css?v=78aabcbf">
-<script type="module" src="/assets/js/analytics.js?v=b8c09f5f"></script>
+<link rel="stylesheet" href="/assets/css/watch.css?v=af8fd489">
+<script type="module" src="/assets/js/analytics.js?v=87c536ee"></script>
+<script type="module" src="/assets/js/join.js?v=d1961051"></script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://distantfan.com/"},{"@type":"ListItem","position":2,"name":"Where to watch","item":"https://distantfan.com/watch/"},{"@type":"ListItem","position":3,"name":"Buffalo Bills","item":"https://distantfan.com/watch/buffalo-bills/"},{"@type":"ListItem","position":4,"name":"Fort Pierce","item":"https://distantfan.com/watch/buffalo-bills/fort-pierce-fl/"}]}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"ItemList","name":"Buffalo Bills watch spots in Fort Pierce, FL","numberOfItems":3,"itemListElement":[{"@type":"ListItem","position":1,"item":{"@type":"BarOrPub","name":"Bogeys & Stogeys","address":"1032 SE Port St Lucie Blvd, Port Saint Lucie, FL 34952","geo":{"@type":"GeoCoordinates","latitude":27.27167,"longitude":-80.32038}}},{"@type":"ListItem","position":2,"item":{"@type":"BarOrPub","name":"J Michael’s Tavern and Grille","address":"715 NW Federal Hwy, Stuart, FL 34994","geo":{"@type":"GeoCoordinates","latitude":27.21314,"longitude":-80.25995}}},{"@type":"ListItem","position":3,"item":{"@type":"BarOrPub","name":"Twisted Lime Restaurant & Bar","address":"710 Us Hwy 1, Vero Beach, FL 32962","geo":{"@type":"GeoCoordinates","latitude":27.61474,"longitude":-80.38721}}}]}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"SportsEvent","name":"Buffalo Bills at Las Vegas Raiders","startDate":"2026-10-18T20:25:00.000Z","description":"Buffalo Bills at Las Vegas Raiders (NFL), broadcast on CBS. Find bars showing the game in Fort Pierce on Distant Fan.","eventStatus":"https://schema.org/EventScheduled","image":"https://a.espncdn.com/i/teamlogos/nfl/500/buf.png","homeTeam":{"@type":"SportsTeam","name":"Las Vegas Raiders"},"awayTeam":{"@type":"SportsTeam","name":"Buffalo Bills"},"performer":[{"@type":"SportsTeam","name":"Las Vegas Raiders"},{"@type":"SportsTeam","name":"Buffalo Bills"}],"organizer":{"@type":"SportsOrganization","name":"NFL","url":"https://www.nfl.com/"},"location":{"@type":"Place","name":"Allegiant Stadium","address":"Allegiant Stadium, Las Vegas, NV"}}</script>
@@ -40,7 +41,11 @@
   <p class="lede">3 bar and fan watch spots in the Fort Pierce area where Bills fans watch the game, including 3 official fan club and alumni chapters. Last checked September 2026. Next game: Bills at Raiders, Sunday, October 18 on CBS.</p>
 </div></header>
 
-<div class="followbar"><span><b>Bills fan?</b> Follow them for a weekly game-day email and see the fans near you.</span><a class="btn sm primary" href="/app.html?follow=nfl-buf">Follow Bills</a></div>
+<form class="joinbar" action="/app.html" data-team="nfl-buf" data-m="Fort Pierce|FL" novalidate><input type="hidden" name="follow" value="nfl-buf">
+  <div class="jtxt"><b>Get Bills games and Fort Pierce fan bars by email</b><span>Every Thursday: this week's Bills games, how to watch, and where fans near you are going. Free, one-click unsubscribe.</span></div>
+  <div class="jrow"><input class="input" type="email" placeholder="you@example.com" autocomplete="email" aria-label="Your email" required><button class="btn primary">Email me</button></div>
+  <p class="jmsg" role="status" aria-live="polite"></p>
+</form>
 
 <p class="intro">Looking for a Bills bar in Fort Pierce? Bills Backers in the area, from Port Saint Lucie, Stuart and Vero Beach, watch games at Bogeys &amp; Stogeys in Port Saint Lucie, J Michael’s Tavern and Grille in Stuart and Twisted Lime Restaurant &amp; Bar in Vero Beach. Listed groups include Treasure Coast Bills Backers and Vero Beach Bills Backers. Call ahead on game days to make sure the bar will have your game on.</p>
 

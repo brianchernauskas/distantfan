@@ -21,8 +21,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/css/style.css?v=b474a061">
-<link rel="stylesheet" href="/assets/css/watch.css?v=78aabcbf">
-<script type="module" src="/assets/js/analytics.js?v=b8c09f5f"></script>
+<link rel="stylesheet" href="/assets/css/watch.css?v=af8fd489">
+<script type="module" src="/assets/js/analytics.js?v=87c536ee"></script>
+<script type="module" src="/assets/js/join.js?v=d1961051"></script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://distantfan.com/"},{"@type":"ListItem","position":2,"name":"Where to watch","item":"https://distantfan.com/watch/"},{"@type":"ListItem","position":3,"name":"Riverside, CA","item":"https://distantfan.com/watch/in/riverside-ca/"},{"@type":"ListItem","position":4,"name":"The Rustic Inn","item":"https://distantfan.com/watch/at/the-rustic-inn-san-bernardino-ca/"}]}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BarOrPub","name":"The Rustic Inn","address":"800 Kendall Dr., San Bernardino, CA 92407","geo":{"@type":"GeoCoordinates","latitude":34.16196,"longitude":-117.30051},"description":"SoCal Aggies (Inland Empire) game watching party spot. Watch Texas A&M football with fellow Aggies."}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"SportsEvent","name":"The Citadel Bulldogs at Texas A&M Aggies","startDate":"2026-10-17T17:00:00.000Z","description":"The Citadel Bulldogs at Texas A&M Aggies (NCAA Football), broadcast on SECN+. Find bars showing the game in San Bernardino on Distant Fan.","eventStatus":"https://schema.org/EventScheduled","image":"https://a.espncdn.com/i/teamlogos/ncaa/500/245.png","homeTeam":{"@type":"SportsTeam","name":"Texas A&M Aggies"},"awayTeam":{"@type":"SportsTeam","name":"The Citadel Bulldogs"},"performer":[{"@type":"SportsTeam","name":"Texas A&M Aggies"},{"@type":"SportsTeam","name":"The Citadel Bulldogs"}],"organizer":{"@type":"SportsOrganization","name":"NCAA Football","url":"https://www.ncaa.com/sports/football"},"location":{"@type":"Place","name":"Kyle Field","address":"Kyle Field, College Station, TX"}}</script>
@@ -40,7 +41,11 @@
   <p class="lede">SoCal Aggies (Inland Empire) game watching party spot. Watch Texas A&amp;M football with fellow Aggies.</p>
 </div></header>
 
-<div class="followbar"><span><b>Texas A&amp;M fan?</b> Follow them for a weekly game-day email and see the fans near you.</span><a class="btn sm primary" href="/app.html?follow=cfb-245">Follow Texas A&amp;M</a></div>
+<form class="joinbar" action="/app.html" data-team="cfb-245" data-m="Riverside|CA" novalidate><input type="hidden" name="follow" value="cfb-245">
+  <div class="jtxt"><b>Get Texas A&amp;M games and Riverside fan bars by email</b><span>Every Thursday: this week's Texas A&amp;M games, how to watch, and where fans near you are going. Free, one-click unsubscribe.</span></div>
+  <div class="jrow"><input class="input" type="email" placeholder="you@example.com" autocomplete="email" aria-label="Your email" required><button class="btn primary">Email me</button></div>
+  <p class="jmsg" role="status" aria-live="polite"></p>
+</form>
 
 <section class="venue">
   <dl>

@@ -21,8 +21,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/css/style.css?v=b474a061">
-<link rel="stylesheet" href="/assets/css/watch.css?v=78aabcbf">
-<script type="module" src="/assets/js/analytics.js?v=b8c09f5f"></script>
+<link rel="stylesheet" href="/assets/css/watch.css?v=af8fd489">
+<script type="module" src="/assets/js/analytics.js?v=87c536ee"></script>
+<script type="module" src="/assets/js/join.js?v=d1961051"></script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://distantfan.com/"},{"@type":"ListItem","position":2,"name":"Where to watch","item":"https://distantfan.com/watch/"},{"@type":"ListItem","position":3,"name":"Michigan Wolverines football","item":"https://distantfan.com/watch/michigan-wolverines-football/"},{"@type":"ListItem","position":4,"name":"Atlanta","item":"https://distantfan.com/watch/michigan-wolverines-football/atlanta-ga/"}]}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"ItemList","name":"Michigan Wolverines football watch spots in Atlanta, GA","numberOfItems":3,"itemListElement":[{"@type":"ListItem","position":1,"item":{"@type":"BarOrPub","name":"Dave & Buster's Marietta","address":"2215 D and B Dr SE, Marietta, GA","geo":{"@type":"GeoCoordinates","latitude":33.91934,"longitude":-84.48665}}},{"@type":"ListItem","position":2,"item":{"@type":"BarOrPub","name":"Fado Irish Pub","address":"933 Peachtree Street, Atlanta, GA 30309","geo":{"@type":"GeoCoordinates","latitude":33.78031,"longitude":-84.38407}}},{"@type":"ListItem","position":3,"item":{"@type":"BarOrPub","name":"Midtown (Atlanta)","address":"933 Peachtree St NE, Atlanta, GA 30309","geo":{"@type":"GeoCoordinates","latitude":33.78031,"longitude":-84.38407}}}]}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"SportsEvent","name":"Penn State Nittany Lions at Michigan Wolverines","startDate":"2026-10-17T19:30:00.000Z","description":"Penn State Nittany Lions at Michigan Wolverines (NCAA Football), broadcast on CBS. Find bars showing the game in Atlanta on Distant Fan.","eventStatus":"https://schema.org/EventScheduled","image":"https://a.espncdn.com/i/teamlogos/ncaa/500/130.png","homeTeam":{"@type":"SportsTeam","name":"Michigan Wolverines"},"awayTeam":{"@type":"SportsTeam","name":"Penn State Nittany Lions"},"performer":[{"@type":"SportsTeam","name":"Michigan Wolverines"},{"@type":"SportsTeam","name":"Penn State Nittany Lions"}],"organizer":{"@type":"SportsOrganization","name":"NCAA Football","url":"https://www.ncaa.com/sports/football"},"location":{"@type":"Place","name":"Michigan Stadium","address":"Michigan Stadium, Ann Arbor, MI"}}</script>
@@ -40,7 +41,11 @@
   <p class="lede">3 bar and fan watch spots in the Atlanta area where Michigan fans watch the game, including 3 official fan club and alumni chapters. Last checked September 2026. Next game: Michigan vs Penn State, Saturday, October 17 on CBS.</p>
 </div></header>
 
-<div class="followbar"><span><b>Michigan fan?</b> Follow them for a weekly game-day email and see the fans near you.</span><a class="btn sm primary" href="/app.html?follow=cfb-130">Follow Michigan</a></div>
+<form class="joinbar" action="/app.html" data-team="cfb-130" data-m="Atlanta|GA" novalidate><input type="hidden" name="follow" value="cfb-130">
+  <div class="jtxt"><b>Get Michigan games and Atlanta fan bars by email</b><span>Every Thursday: this week's Michigan games, how to watch, and where fans near you are going. Free, one-click unsubscribe.</span></div>
+  <div class="jrow"><input class="input" type="email" placeholder="you@example.com" autocomplete="email" aria-label="Your email" required><button class="btn primary">Email me</button></div>
+  <p class="jmsg" role="status" aria-live="polite"></p>
+</form>
 
 <p class="intro">Looking for a Michigan bar in Atlanta? Michigan fans in the area watch games at Dave &amp; Buster's Marietta in Marietta, Fado Irish Pub and Midtown (Atlanta). Listed groups include Michigan Wolverines alumni Atlanta. Call ahead on game days to make sure the bar will have your game on.</p>
 

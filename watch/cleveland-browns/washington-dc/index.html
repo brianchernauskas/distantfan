@@ -21,8 +21,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/css/style.css?v=b474a061">
-<link rel="stylesheet" href="/assets/css/watch.css?v=78aabcbf">
-<script type="module" src="/assets/js/analytics.js?v=b8c09f5f"></script>
+<link rel="stylesheet" href="/assets/css/watch.css?v=af8fd489">
+<script type="module" src="/assets/js/analytics.js?v=87c536ee"></script>
+<script type="module" src="/assets/js/join.js?v=d1961051"></script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://distantfan.com/"},{"@type":"ListItem","position":2,"name":"Where to watch","item":"https://distantfan.com/watch/"},{"@type":"ListItem","position":3,"name":"Cleveland Browns","item":"https://distantfan.com/watch/cleveland-browns/"},{"@type":"ListItem","position":4,"name":"Washington","item":"https://distantfan.com/watch/cleveland-browns/washington-dc/"}]}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"ItemList","name":"Cleveland Browns watch spots in Washington, DC","numberOfItems":4,"itemListElement":[{"@type":"ListItem","position":1,"item":{"@type":"BarOrPub","name":"Bungalow Ale House","address":"2840 Prince William Pkwy, Woodbridge, VA 22192","geo":{"@type":"GeoCoordinates","latitude":38.65163,"longitude":-77.29668}}},{"@type":"ListItem","position":2,"item":{"@type":"BarOrPub","name":"La Mexacana","address":"16143 Shady Grove Rd., Gaithersburg, MD 20877","geo":{"@type":"GeoCoordinates","latitude":39.12083,"longitude":-77.17944}}},{"@type":"ListItem","position":3,"item":{"@type":"BarOrPub","name":"Solace Outpost","address":"444 W Broad St, Falls Church, VA","geo":{"@type":"GeoCoordinates","latitude":38.88626,"longitude":-77.17722}}},{"@type":"ListItem","position":4,"item":{"@type":"BarOrPub","name":"Yard House","address":"812 7th St NW, Washington, DC 20001","geo":{"@type":"GeoCoordinates","latitude":38.89998,"longitude":-77.02199}}}]}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"SportsEvent","name":"Baltimore Ravens at Cleveland Browns","startDate":"2026-10-18T17:00:00.000Z","description":"Baltimore Ravens at Cleveland Browns (NFL), broadcast on Fox. Find bars showing the game in Washington on Distant Fan.","eventStatus":"https://schema.org/EventScheduled","image":"https://a.espncdn.com/i/teamlogos/nfl/500/cle.png","homeTeam":{"@type":"SportsTeam","name":"Cleveland Browns"},"awayTeam":{"@type":"SportsTeam","name":"Baltimore Ravens"},"performer":[{"@type":"SportsTeam","name":"Cleveland Browns"},{"@type":"SportsTeam","name":"Baltimore Ravens"}],"organizer":{"@type":"SportsOrganization","name":"NFL","url":"https://www.nfl.com/"},"location":{"@type":"Place","name":"Huntington Bank Field","address":"Huntington Bank Field, Cleveland, OH"}}</script>
@@ -40,7 +41,11 @@
   <p class="lede">4 bar and fan watch spots in the Washington area where Browns fans watch the game, including 4 official fan club and alumni chapters. Last checked October 2026. Next game: Browns vs Ravens, Sunday, October 18 on Fox.</p>
 </div></header>
 
-<div class="followbar"><span><b>Browns fan?</b> Follow them for a weekly game-day email and see the fans near you.</span><a class="btn sm primary" href="/app.html?follow=nfl-cle">Follow Browns</a></div>
+<form class="joinbar" action="/app.html" data-team="nfl-cle" data-m="Washington|DC" novalidate><input type="hidden" name="follow" value="nfl-cle">
+  <div class="jtxt"><b>Get Browns games and Washington fan bars by email</b><span>Every Thursday: this week's Browns games, how to watch, and where fans near you are going. Free, one-click unsubscribe.</span></div>
+  <div class="jrow"><input class="input" type="email" placeholder="you@example.com" autocomplete="email" aria-label="Your email" required><button class="btn primary">Email me</button></div>
+  <p class="jmsg" role="status" aria-live="polite"></p>
+</form>
 
 <p class="intro">Looking for a Browns bar in Washington? Browns Backers in the area, from Woodbridge, Gaithersburg and Falls Church, watch games at Bungalow Ale House in Woodbridge, La Mexacana in Gaithersburg and Solace Outpost in Falls Church, plus 1 more below. Listed groups include Browns Backers of Central Maryland and Washington DC Area Browns Backers Club. Call ahead on game days to make sure the bar will have your game on.</p>
 

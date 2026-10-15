@@ -21,8 +21,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/css/style.css?v=b474a061">
-<link rel="stylesheet" href="/assets/css/watch.css?v=78aabcbf">
-<script type="module" src="/assets/js/analytics.js?v=b8c09f5f"></script>
+<link rel="stylesheet" href="/assets/css/watch.css?v=af8fd489">
+<script type="module" src="/assets/js/analytics.js?v=87c536ee"></script>
+<script type="module" src="/assets/js/join.js?v=d1961051"></script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://distantfan.com/"},{"@type":"ListItem","position":2,"name":"Where to watch","item":"https://distantfan.com/watch/"},{"@type":"ListItem","position":3,"name":"Syracuse Orange football","item":"https://distantfan.com/watch/syracuse-orange-football/"},{"@type":"ListItem","position":4,"name":"Tampa","item":"https://distantfan.com/watch/syracuse-orange-football/tampa-fl/"}]}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"ItemList","name":"Syracuse Orange football watch spots in Tampa, FL","numberOfItems":1,"itemListElement":[{"@type":"ListItem","position":1,"item":{"@type":"BarOrPub","name":"Glory Days Grill","address":"9900 4th St N, St Petersburg, FL 33702","geo":{"@type":"GeoCoordinates","latitude":27.86219,"longitude":-82.63888}}}]}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"SportsEvent","name":"Louisville Cardinals at Syracuse Orange","startDate":"2026-10-17T23:30:00.000Z","description":"Louisville Cardinals at Syracuse Orange (NCAA Football), broadcast on ACC Network. Find bars showing the game in Tampa on Distant Fan.","eventStatus":"https://schema.org/EventScheduled","image":"https://a.espncdn.com/i/teamlogos/ncaa/500/183.png","homeTeam":{"@type":"SportsTeam","name":"Syracuse Orange"},"awayTeam":{"@type":"SportsTeam","name":"Louisville Cardinals"},"performer":[{"@type":"SportsTeam","name":"Syracuse Orange"},{"@type":"SportsTeam","name":"Louisville Cardinals"}],"organizer":{"@type":"SportsOrganization","name":"NCAA Football","url":"https://www.ncaa.com/sports/football"},"location":{"@type":"Place","name":"JMA Wireless Dome","address":"JMA Wireless Dome, Syracuse, NY"}}</script>
@@ -40,7 +41,11 @@
   <p class="lede">1 bar and fan watch spot in the Tampa area where Syracuse fans watch the game, including 1 official fan club and alumni chapter. Last checked October 2026. Next game: Syracuse vs Louisville, Saturday, October 17 on ACC Network.</p>
 </div></header>
 
-<div class="followbar"><span><b>Syracuse fan?</b> Follow them for a weekly game-day email and see the fans near you.</span><a class="btn sm primary" href="/app.html?follow=cfb-183">Follow Syracuse</a></div>
+<form class="joinbar" action="/app.html" data-team="cfb-183" data-m="Tampa|FL" novalidate><input type="hidden" name="follow" value="cfb-183">
+  <div class="jtxt"><b>Get Syracuse games and Tampa fan bars by email</b><span>Every Thursday: this week's Syracuse games, how to watch, and where fans near you are going. Free, one-click unsubscribe.</span></div>
+  <div class="jrow"><input class="input" type="email" placeholder="you@example.com" autocomplete="email" aria-label="Your email" required><button class="btn primary">Email me</button></div>
+  <p class="jmsg" role="status" aria-live="polite"></p>
+</form>
 
 <p class="intro">Looking for a Syracuse bar in Tampa? Syracuse fans in the area watch games at Glory Days Grill in St Petersburg. Call ahead on game days to make sure the bar will have your game on.</p>
 

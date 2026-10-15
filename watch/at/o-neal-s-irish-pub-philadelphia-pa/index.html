@@ -21,8 +21,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/css/style.css?v=b474a061">
-<link rel="stylesheet" href="/assets/css/watch.css?v=78aabcbf">
-<script type="module" src="/assets/js/analytics.js?v=b8c09f5f"></script>
+<link rel="stylesheet" href="/assets/css/watch.css?v=af8fd489">
+<script type="module" src="/assets/js/analytics.js?v=87c536ee"></script>
+<script type="module" src="/assets/js/join.js?v=d1961051"></script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://distantfan.com/"},{"@type":"ListItem","position":2,"name":"Where to watch","item":"https://distantfan.com/watch/"},{"@type":"ListItem","position":3,"name":"Philadelphia, PA","item":"https://distantfan.com/watch/in/philadelphia-pa/"},{"@type":"ListItem","position":4,"name":"O'Neal's Irish Pub","item":"https://distantfan.com/watch/at/o-neal-s-irish-pub-philadelphia-pa/"}]}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BarOrPub","name":"O'Neal's Irish Pub","address":"611 S 3rd St, Philadelphia, PA 19147","geo":{"@type":"GeoCoordinates","latitude":39.94128,"longitude":-75.14756},"description":"Official 76ers Bar Network bar. Every 76ers game on."}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"SportsEvent","name":"Boston Celtics at Philadelphia 76ers","startDate":"2026-10-16T23:00:00.000Z","description":"Boston Celtics at Philadelphia 76ers (NBA), broadcast on NBA TV. Find bars showing the game in Philadelphia on Distant Fan.","eventStatus":"https://schema.org/EventScheduled","image":"https://a.espncdn.com/i/teamlogos/nba/500/phi.png","homeTeam":{"@type":"SportsTeam","name":"Philadelphia 76ers"},"awayTeam":{"@type":"SportsTeam","name":"Boston Celtics"},"performer":[{"@type":"SportsTeam","name":"Philadelphia 76ers"},{"@type":"SportsTeam","name":"Boston Celtics"}],"organizer":{"@type":"SportsOrganization","name":"NBA","url":"https://www.nba.com/"},"location":{"@type":"Place","name":"Xfinity Mobile Arena","address":"Xfinity Mobile Arena, Philadelphia, PA"}}</script>
@@ -38,7 +39,11 @@
   <p class="lede">Official 76ers Bar Network bar. Every 76ers game on.</p>
 </div></header>
 
-<div class="followbar"><span><b>76ers fan?</b> Follow them for a weekly game-day email and see the fans near you.</span><a class="btn sm primary" href="/app.html?follow=nba-phi">Follow 76ers</a></div>
+<form class="joinbar" action="/app.html" data-team="nba-phi" data-m="Philadelphia|PA" novalidate><input type="hidden" name="follow" value="nba-phi">
+  <div class="jtxt"><b>Get 76ers games and Philadelphia fan bars by email</b><span>Every Thursday: this week's 76ers games, how to watch, and where fans near you are going. Free, one-click unsubscribe.</span></div>
+  <div class="jrow"><input class="input" type="email" placeholder="you@example.com" autocomplete="email" aria-label="Your email" required><button class="btn primary">Email me</button></div>
+  <p class="jmsg" role="status" aria-live="polite"></p>
+</form>
 
 <section class="venue">
   <dl>

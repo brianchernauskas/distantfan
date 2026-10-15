@@ -21,8 +21,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/css/style.css?v=b474a061">
-<link rel="stylesheet" href="/assets/css/watch.css?v=78aabcbf">
-<script type="module" src="/assets/js/analytics.js?v=b8c09f5f"></script>
+<link rel="stylesheet" href="/assets/css/watch.css?v=af8fd489">
+<script type="module" src="/assets/js/analytics.js?v=87c536ee"></script>
+<script type="module" src="/assets/js/join.js?v=d1961051"></script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://distantfan.com/"},{"@type":"ListItem","position":2,"name":"Where to watch","item":"https://distantfan.com/watch/"},{"@type":"ListItem","position":3,"name":"Orlando, FL","item":"https://distantfan.com/watch/in/orlando-fl/"},{"@type":"ListItem","position":4,"name":"Burton's Thornton Park","item":"https://distantfan.com/watch/at/burton-s-thornton-park-orlando-fl/"}]}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BarOrPub","name":"Burton's Thornton Park","address":"801 E Washington St, Orlando, FL 32801","geo":{"@type":"GeoCoordinates","latitude":28.54372,"longitude":-81.36755},"description":"Official Orlando City official bar bar. Every SC game on."}</script>
 </head>
@@ -37,7 +38,11 @@
   <p class="lede">Official Orlando City official bar bar. Every SC game on.</p>
 </div></header>
 
-<div class="followbar"><span><b>Orlando fan?</b> Follow them for a weekly game-day email and see the fans near you.</span><a class="btn sm primary" href="/app.html?follow=mls-orl">Follow Orlando</a></div>
+<form class="joinbar" action="/app.html" data-team="mls-orl" data-m="Orlando|FL" novalidate><input type="hidden" name="follow" value="mls-orl">
+  <div class="jtxt"><b>Get Orlando games and Orlando fan bars by email</b><span>Every Thursday: this week's Orlando games, how to watch, and where fans near you are going. Free, one-click unsubscribe.</span></div>
+  <div class="jrow"><input class="input" type="email" placeholder="you@example.com" autocomplete="email" aria-label="Your email" required><button class="btn primary">Email me</button></div>
+  <p class="jmsg" role="status" aria-live="polite"></p>
+</form>
 
 <section class="venue">
   <dl>

@@ -21,8 +21,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/css/style.css?v=b474a061">
-<link rel="stylesheet" href="/assets/css/watch.css?v=78aabcbf">
-<script type="module" src="/assets/js/analytics.js?v=b8c09f5f"></script>
+<link rel="stylesheet" href="/assets/css/watch.css?v=af8fd489">
+<script type="module" src="/assets/js/analytics.js?v=87c536ee"></script>
+<script type="module" src="/assets/js/join.js?v=d1961051"></script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://distantfan.com/"},{"@type":"ListItem","position":2,"name":"Where to watch","item":"https://distantfan.com/watch/"},{"@type":"ListItem","position":3,"name":"North Dakota State Bison football","item":"https://distantfan.com/watch/north-dakota-state-bison-football/"},{"@type":"ListItem","position":4,"name":"Minneapolis","item":"https://distantfan.com/watch/north-dakota-state-bison-football/minneapolis-mn/"}]}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"ItemList","name":"North Dakota State Bison football watch spots in Minneapolis, MN","numberOfItems":2,"itemListElement":[{"@type":"ListItem","position":1,"item":{"@type":"BarOrPub","name":"Clive's Roadhouse","address":"13050 Aldrich Ave S, Burnsville, MN 55337","geo":{"@type":"GeoCoordinates","latitude":44.76703,"longitude":-93.28941}}},{"@type":"ListItem","position":2,"item":{"@type":"BarOrPub","name":"Padraigs Brewing","address":"945 Broadway St NE, Minneapolis, MN 55413","geo":{"@type":"GeoCoordinates","latitude":44.99877,"longitude":-93.24674}}}]}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"SportsEvent","name":"Nevada Wolf Pack at North Dakota State Bison","startDate":"2026-10-17T23:00:00.000Z","description":"Nevada Wolf Pack at North Dakota State Bison (NCAA Football), broadcast on CBSSN. Find bars showing the game in Minneapolis on Distant Fan.","eventStatus":"https://schema.org/EventScheduled","image":"https://a.espncdn.com/i/teamlogos/ncaa/500/2449.png","homeTeam":{"@type":"SportsTeam","name":"North Dakota State Bison"},"awayTeam":{"@type":"SportsTeam","name":"Nevada Wolf Pack"},"performer":[{"@type":"SportsTeam","name":"North Dakota State Bison"},{"@type":"SportsTeam","name":"Nevada Wolf Pack"}],"organizer":{"@type":"SportsOrganization","name":"NCAA Football","url":"https://www.ncaa.com/sports/football"},"location":{"@type":"Place","name":"Fargodome","address":"Fargodome, Fargo, ND"}}</script>
@@ -40,7 +41,11 @@
   <p class="lede">2 bar and fan watch spots in the Minneapolis area where N Dakota St fans watch the game, including 2 official fan club and alumni chapters. Last checked October 2026. Next game: N Dakota St vs Nevada, Saturday, October 17 on CBSSN.</p>
 </div></header>
 
-<div class="followbar"><span><b>N Dakota St fan?</b> Follow them for a weekly game-day email and see the fans near you.</span><a class="btn sm primary" href="/app.html?follow=cfb-2449">Follow N Dakota St</a></div>
+<form class="joinbar" action="/app.html" data-team="cfb-2449" data-m="Minneapolis|MN" novalidate><input type="hidden" name="follow" value="cfb-2449">
+  <div class="jtxt"><b>Get N Dakota St games and Minneapolis fan bars by email</b><span>Every Thursday: this week's N Dakota St games, how to watch, and where fans near you are going. Free, one-click unsubscribe.</span></div>
+  <div class="jrow"><input class="input" type="email" placeholder="you@example.com" autocomplete="email" aria-label="Your email" required><button class="btn primary">Email me</button></div>
+  <p class="jmsg" role="status" aria-live="polite"></p>
+</form>
 
 <p class="intro">Looking for a N Dakota St bar in Minneapolis? N Dakota St fans in the area watch games at Clive's Roadhouse in Burnsville and Padraigs Brewing. Listed groups include NDSU Herd Huddle. Call ahead on game days to make sure the bar will have your game on.</p>
 

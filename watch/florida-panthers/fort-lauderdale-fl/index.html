@@ -21,8 +21,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/css/style.css?v=b474a061">
-<link rel="stylesheet" href="/assets/css/watch.css?v=78aabcbf">
-<script type="module" src="/assets/js/analytics.js?v=b8c09f5f"></script>
+<link rel="stylesheet" href="/assets/css/watch.css?v=af8fd489">
+<script type="module" src="/assets/js/analytics.js?v=87c536ee"></script>
+<script type="module" src="/assets/js/join.js?v=d1961051"></script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://distantfan.com/"},{"@type":"ListItem","position":2,"name":"Where to watch","item":"https://distantfan.com/watch/"},{"@type":"ListItem","position":3,"name":"Florida Panthers","item":"https://distantfan.com/watch/florida-panthers/"},{"@type":"ListItem","position":4,"name":"Fort Lauderdale","item":"https://distantfan.com/watch/florida-panthers/fort-lauderdale-fl/"}]}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"ItemList","name":"Florida Panthers watch spots in Fort Lauderdale, FL","numberOfItems":5,"itemListElement":[{"@type":"ListItem","position":1,"item":{"@type":"BarOrPub","name":"American Social Bar & Kitchen","address":"351 W Plz Real, Boca Raton, FL 33432","geo":{"@type":"GeoCoordinates","latitude":26.35394,"longitude":-80.08546}}},{"@type":"ListItem","position":2,"item":{"@type":"BarOrPub","name":"Bokamper's","address":"3115 NE 32 Ave, Fort Lauderdale, FL 33308","geo":{"@type":"GeoCoordinates","latitude":26.16791,"longitude":-80.10319}}},{"@type":"ListItem","position":3,"item":{"@type":"BarOrPub","name":"Briny Irish Pub","address":"3440 E Atlantic Blvd, Pompano Beach, FL 33328","geo":{"@type":"GeoCoordinates","latitude":26.23179,"longitude":-80.0905}}},{"@type":"ListItem","position":4,"item":{"@type":"BarOrPub","name":"Duffy's Sports Grill","address":"4800 West Hillsboro Blvd, Coconut Creek, FL 33073","geo":{"@type":"GeoCoordinates","latitude":26.3174,"longitude":-80.18916}}},{"@type":"ListItem","position":5,"item":{"@type":"BarOrPub","name":"Tin Cup","address":"5050 SW 90th Ave, Cooper City, FL 33328","geo":{"@type":"GeoCoordinates","latitude":26.05974,"longitude":-80.27072}}}]}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"SportsEvent","name":"Vancouver Canucks at Florida Panthers","startDate":"2026-10-15T23:00:00.000Z","description":"Vancouver Canucks at Florida Panthers (NHL), broadcast on ESPN+, Scripps Sports. Find bars showing the game in Fort Lauderdale on Distant Fan.","eventStatus":"https://schema.org/EventScheduled","image":"https://a.espncdn.com/i/teamlogos/nhl/500/fla.png","homeTeam":{"@type":"SportsTeam","name":"Florida Panthers"},"awayTeam":{"@type":"SportsTeam","name":"Vancouver Canucks"},"performer":[{"@type":"SportsTeam","name":"Florida Panthers"},{"@type":"SportsTeam","name":"Vancouver Canucks"}],"organizer":{"@type":"SportsOrganization","name":"NHL","url":"https://www.nhl.com/"},"location":{"@type":"Place","name":"Amerant Bank Arena","address":"Amerant Bank Arena, Sunrise, FL"}}</script>
@@ -40,7 +41,11 @@
   <p class="lede">5 bar and fan watch spots in the Fort Lauderdale area where Panthers fans watch the game, including 5 official fan club and alumni chapters. Last checked October 2026. Next game: Panthers vs Canucks, Thursday, October 15 on ESPN+.</p>
 </div></header>
 
-<div class="followbar"><span><b>Panthers fan?</b> Follow them for a weekly game-day email and see the fans near you.</span><a class="btn sm primary" href="/app.html?follow=nhl-fla">Follow Panthers</a></div>
+<form class="joinbar" action="/app.html" data-team="nhl-fla" data-m="Fort Lauderdale|FL" novalidate><input type="hidden" name="follow" value="nhl-fla">
+  <div class="jtxt"><b>Get Panthers games and Fort Lauderdale fan bars by email</b><span>Every Thursday: this week's Panthers games, how to watch, and where fans near you are going. Free, one-click unsubscribe.</span></div>
+  <div class="jrow"><input class="input" type="email" placeholder="you@example.com" autocomplete="email" aria-label="Your email" required><button class="btn primary">Email me</button></div>
+  <p class="jmsg" role="status" aria-live="polite"></p>
+</form>
 
 <p class="intro">Looking for a Panthers bar in Fort Lauderdale? Panthers fans in the area, from Boca Raton, Pompano Beach, Coconut Creek and Cooper City, watch games at American Social Bar &amp; Kitchen in Boca Raton, Bokamper's and Briny Irish Pub in Pompano Beach, plus 2 more below. Call ahead on game days to make sure the bar will have your game on.</p>
 

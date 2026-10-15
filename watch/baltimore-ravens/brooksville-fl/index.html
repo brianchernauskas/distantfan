@@ -21,8 +21,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/css/style.css?v=b474a061">
-<link rel="stylesheet" href="/assets/css/watch.css?v=78aabcbf">
-<script type="module" src="/assets/js/analytics.js?v=b8c09f5f"></script>
+<link rel="stylesheet" href="/assets/css/watch.css?v=af8fd489">
+<script type="module" src="/assets/js/analytics.js?v=87c536ee"></script>
+<script type="module" src="/assets/js/join.js?v=d1961051"></script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://distantfan.com/"},{"@type":"ListItem","position":2,"name":"Where to watch","item":"https://distantfan.com/watch/"},{"@type":"ListItem","position":3,"name":"Baltimore Ravens","item":"https://distantfan.com/watch/baltimore-ravens/"},{"@type":"ListItem","position":4,"name":"Brooksville","item":"https://distantfan.com/watch/baltimore-ravens/brooksville-fl/"}]}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"ItemList","name":"Baltimore Ravens watch spots in Brooksville, FL","numberOfItems":2,"itemListElement":[{"@type":"ListItem","position":1,"item":{"@type":"BarOrPub","name":"Beef O'Brady's Brooksville","address":"7601 Horse Lake Rd, Brooksville, FL 34614","geo":{"@type":"GeoCoordinates","latitude":28.54269,"longitude":-82.41813}}},{"@type":"ListItem","position":2,"item":{"@type":"BarOrPub","name":"Rumors Bistro & Grill","address":"7395 W Pinebrook St, Crystal River, FL 34429","geo":{"@type":"GeoCoordinates","latitude":28.86609,"longitude":-82.55731}}}]}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"SportsEvent","name":"Baltimore Ravens at Cleveland Browns","startDate":"2026-10-18T17:00:00.000Z","description":"Baltimore Ravens at Cleveland Browns (NFL), broadcast on Fox. Find bars showing the game in Brooksville on Distant Fan.","eventStatus":"https://schema.org/EventScheduled","image":"https://a.espncdn.com/i/teamlogos/nfl/500/bal.png","homeTeam":{"@type":"SportsTeam","name":"Cleveland Browns"},"awayTeam":{"@type":"SportsTeam","name":"Baltimore Ravens"},"performer":[{"@type":"SportsTeam","name":"Cleveland Browns"},{"@type":"SportsTeam","name":"Baltimore Ravens"}],"organizer":{"@type":"SportsOrganization","name":"NFL","url":"https://www.nfl.com/"},"location":{"@type":"Place","name":"Huntington Bank Field","address":"Huntington Bank Field, Cleveland, OH"}}</script>
@@ -40,7 +41,11 @@
   <p class="lede">2 bar and fan watch spots in the Brooksville area where Ravens fans watch the game, including 2 official fan club and alumni chapters. Last checked September 2026. Next game: Ravens at Browns, Sunday, October 18 on Fox.</p>
 </div></header>
 
-<div class="followbar"><span><b>Ravens fan?</b> Follow them for a weekly game-day email and see the fans near you.</span><a class="btn sm primary" href="/app.html?follow=nfl-bal">Follow Ravens</a></div>
+<form class="joinbar" action="/app.html" data-team="nfl-bal" data-m="Brooksville|FL" novalidate><input type="hidden" name="follow" value="nfl-bal">
+  <div class="jtxt"><b>Get Ravens games and Brooksville fan bars by email</b><span>Every Thursday: this week's Ravens games, how to watch, and where fans near you are going. Free, one-click unsubscribe.</span></div>
+  <div class="jrow"><input class="input" type="email" placeholder="you@example.com" autocomplete="email" aria-label="Your email" required><button class="btn primary">Email me</button></div>
+  <p class="jmsg" role="status" aria-live="polite"></p>
+</form>
 
 <p class="intro">Looking for a Ravens bar in Brooksville? Ravens fans in the area watch games at Beef O'Brady's Brooksville and Rumors Bistro &amp; Grill in Crystal River. Listed groups include Brooksville Ravens and Nature-Coast Ravens Flock. Call ahead on game days to make sure the bar will have your game on.</p>
 

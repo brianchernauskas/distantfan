@@ -21,8 +21,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/css/style.css?v=b474a061">
-<link rel="stylesheet" href="/assets/css/watch.css?v=78aabcbf">
-<script type="module" src="/assets/js/analytics.js?v=b8c09f5f"></script>
+<link rel="stylesheet" href="/assets/css/watch.css?v=af8fd489">
+<script type="module" src="/assets/js/analytics.js?v=87c536ee"></script>
+<script type="module" src="/assets/js/join.js?v=d1961051"></script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://distantfan.com/"},{"@type":"ListItem","position":2,"name":"Where to watch","item":"https://distantfan.com/watch/"},{"@type":"ListItem","position":3,"name":"Detroit Lions","item":"https://distantfan.com/watch/detroit-lions/"},{"@type":"ListItem","position":4,"name":"Washington","item":"https://distantfan.com/watch/detroit-lions/washington-dc/"}]}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"ItemList","name":"Detroit Lions watch spots in Washington, DC","numberOfItems":2,"itemListElement":[{"@type":"ListItem","position":1,"item":{"@type":"BarOrPub","name":"Ivy and Coney","address":"1537 7th St NW, Washington, DC","geo":{"@type":"GeoCoordinates","latitude":38.9102,"longitude":-77.02184}}},{"@type":"ListItem","position":2,"item":{"@type":"BarOrPub","name":"The Midlands","address":"3333 Georgia Ave NW, Washington, DC","geo":{"@type":"GeoCoordinates","latitude":38.9315,"longitude":-77.02351}}}]}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"SportsEvent","name":"Green Bay Packers at Detroit Lions","startDate":"2026-10-25T20:25:00.000Z","description":"Green Bay Packers at Detroit Lions (NFL), broadcast on Fox. Find bars showing the game in Washington on Distant Fan.","eventStatus":"https://schema.org/EventScheduled","image":"https://a.espncdn.com/i/teamlogos/nfl/500/det.png","homeTeam":{"@type":"SportsTeam","name":"Detroit Lions"},"awayTeam":{"@type":"SportsTeam","name":"Green Bay Packers"},"performer":[{"@type":"SportsTeam","name":"Detroit Lions"},{"@type":"SportsTeam","name":"Green Bay Packers"}],"organizer":{"@type":"SportsOrganization","name":"NFL","url":"https://www.nfl.com/"},"location":{"@type":"Place","name":"Ford Field","address":"Ford Field, Detroit, MI"}}</script>
@@ -40,7 +41,11 @@
   <p class="lede">2 bar and fan watch spots in the Washington area where Lions fans watch the game, including 2 official fan club and alumni chapters. Last checked October 2026. Next game: Lions vs Packers, Sunday, October 25 on Fox.</p>
 </div></header>
 
-<div class="followbar"><span><b>Lions fan?</b> Follow them for a weekly game-day email and see the fans near you.</span><a class="btn sm primary" href="/app.html?follow=nfl-det">Follow Lions</a></div>
+<form class="joinbar" action="/app.html" data-team="nfl-det" data-m="Washington|DC" novalidate><input type="hidden" name="follow" value="nfl-det">
+  <div class="jtxt"><b>Get Lions games and Washington fan bars by email</b><span>Every Thursday: this week's Lions games, how to watch, and where fans near you are going. Free, one-click unsubscribe.</span></div>
+  <div class="jrow"><input class="input" type="email" placeholder="you@example.com" autocomplete="email" aria-label="Your email" required><button class="btn primary">Email me</button></div>
+  <p class="jmsg" role="status" aria-live="polite"></p>
+</form>
 
 <p class="intro">Looking for a Lions bar in Washington? Lions fans in the area watch games at Ivy and Coney and The Midlands. Call ahead on game days to make sure the bar will have your game on.</p>
 

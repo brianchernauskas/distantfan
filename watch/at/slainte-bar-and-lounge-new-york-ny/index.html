@@ -21,8 +21,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/css/style.css?v=b474a061">
-<link rel="stylesheet" href="/assets/css/watch.css?v=78aabcbf">
-<script type="module" src="/assets/js/analytics.js?v=b8c09f5f"></script>
+<link rel="stylesheet" href="/assets/css/watch.css?v=af8fd489">
+<script type="module" src="/assets/js/analytics.js?v=87c536ee"></script>
+<script type="module" src="/assets/js/join.js?v=d1961051"></script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://distantfan.com/"},{"@type":"ListItem","position":2,"name":"Where to watch","item":"https://distantfan.com/watch/"},{"@type":"ListItem","position":3,"name":"New York, NY","item":"https://distantfan.com/watch/in/new-york-ny/"},{"@type":"ListItem","position":4,"name":"Sláinte Bar and Lounge","item":"https://distantfan.com/watch/at/slainte-bar-and-lounge-new-york-ny/"}]}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BarOrPub","name":"Sláinte Bar and Lounge","address":"304 Bowery, New York, NY 10012","geo":{"@type":"GeoCoordinates","latitude":40.72462,"longitude":-73.99251},"description":"Spartan-friendly Bowery venue used by the Greater NYC Spartans."}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"SportsEvent","name":"Northwestern Wildcats at Michigan State Spartans","startDate":"2026-10-17T16:00:00.000Z","description":"Northwestern Wildcats at Michigan State Spartans (NCAA Football), broadcast on Peacock. Find bars showing the game in New York on Distant Fan.","eventStatus":"https://schema.org/EventScheduled","image":"https://a.espncdn.com/i/teamlogos/ncaa/500/127.png","homeTeam":{"@type":"SportsTeam","name":"Michigan State Spartans"},"awayTeam":{"@type":"SportsTeam","name":"Northwestern Wildcats"},"performer":[{"@type":"SportsTeam","name":"Michigan State Spartans"},{"@type":"SportsTeam","name":"Northwestern Wildcats"}],"organizer":{"@type":"SportsOrganization","name":"NCAA Football","url":"https://www.ncaa.com/sports/football"},"location":{"@type":"Place","name":"Spartan Stadium","address":"Spartan Stadium, East Lansing, MI"}}</script>
@@ -40,7 +41,11 @@
   <p class="lede">Spartan-friendly Bowery venue used by the Greater NYC Spartans.</p>
 </div></header>
 
-<div class="followbar"><span><b>Michigan St fan?</b> Follow them for a weekly game-day email and see the fans near you.</span><a class="btn sm primary" href="/app.html?follow=cfb-127">Follow Michigan St</a></div>
+<form class="joinbar" action="/app.html" data-team="cfb-127" data-m="New York|NY" novalidate><input type="hidden" name="follow" value="cfb-127">
+  <div class="jtxt"><b>Get Michigan St games and New York fan bars by email</b><span>Every Thursday: this week's Michigan St games, how to watch, and where fans near you are going. Free, one-click unsubscribe.</span></div>
+  <div class="jrow"><input class="input" type="email" placeholder="you@example.com" autocomplete="email" aria-label="Your email" required><button class="btn primary">Email me</button></div>
+  <p class="jmsg" role="status" aria-live="polite"></p>
+</form>
 
 <section class="venue">
   <dl>

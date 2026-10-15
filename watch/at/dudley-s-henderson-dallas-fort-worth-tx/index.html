@@ -21,8 +21,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/css/style.css?v=b474a061">
-<link rel="stylesheet" href="/assets/css/watch.css?v=78aabcbf">
-<script type="module" src="/assets/js/analytics.js?v=b8c09f5f"></script>
+<link rel="stylesheet" href="/assets/css/watch.css?v=af8fd489">
+<script type="module" src="/assets/js/analytics.js?v=87c536ee"></script>
+<script type="module" src="/assets/js/join.js?v=d1961051"></script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://distantfan.com/"},{"@type":"ListItem","position":2,"name":"Where to watch","item":"https://distantfan.com/watch/"},{"@type":"ListItem","position":3,"name":"Dallas–Fort Worth, TX","item":"https://distantfan.com/watch/in/dallas-fort-worth-tx/"},{"@type":"ListItem","position":4,"name":"Dudley's (Henderson)","item":"https://distantfan.com/watch/at/dudley-s-henderson-dallas-fort-worth-tx/"}]}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BarOrPub","name":"Dudley's (Henderson)","address":"2927 N Henderson Ave, TX 75206","geo":{"@type":"GeoCoordinates","latitude":32.82105,"longitude":-96.78524},"description":"Official Mavericks Bar Network bar. Every Mavericks game on."}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"SportsEvent","name":"Atlanta Hawks at Dallas Mavericks","startDate":"2026-10-17T00:00:00.000Z","description":"Atlanta Hawks at Dallas Mavericks (NBA). Find bars showing the game in Dallas–Fort Worth on Distant Fan.","eventStatus":"https://schema.org/EventScheduled","image":"https://a.espncdn.com/i/teamlogos/nba/500/dal.png","homeTeam":{"@type":"SportsTeam","name":"Dallas Mavericks"},"awayTeam":{"@type":"SportsTeam","name":"Atlanta Hawks"},"performer":[{"@type":"SportsTeam","name":"Dallas Mavericks"},{"@type":"SportsTeam","name":"Atlanta Hawks"}],"organizer":{"@type":"SportsOrganization","name":"NBA","url":"https://www.nba.com/"},"location":{"@type":"Place","name":"American Airlines Center","address":"American Airlines Center, Dallas, TX"}}</script>
@@ -38,7 +39,11 @@
   <p class="lede">Official Mavericks Bar Network bar. Every Mavericks game on.</p>
 </div></header>
 
-<div class="followbar"><span><b>Mavericks fan?</b> Follow them for a weekly game-day email and see the fans near you.</span><a class="btn sm primary" href="/app.html?follow=nba-dal">Follow Mavericks</a></div>
+<form class="joinbar" action="/app.html" data-team="nba-dal" data-m="Dallas–Fort Worth|TX" novalidate><input type="hidden" name="follow" value="nba-dal">
+  <div class="jtxt"><b>Get Mavericks games and Dallas–Fort Worth fan bars by email</b><span>Every Thursday: this week's Mavericks games, how to watch, and where fans near you are going. Free, one-click unsubscribe.</span></div>
+  <div class="jrow"><input class="input" type="email" placeholder="you@example.com" autocomplete="email" aria-label="Your email" required><button class="btn primary">Email me</button></div>
+  <p class="jmsg" role="status" aria-live="polite"></p>
+</form>
 
 <section class="venue">
   <dl>

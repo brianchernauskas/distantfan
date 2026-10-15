@@ -59,10 +59,20 @@
 .spot h3 a:hover { text-decoration: underline; }
 
 /* slim follow bar near the top of team and venue pages */
-.followbar { display: flex; gap: 14px; align-items: center; justify-content: space-between; flex-wrap: wrap; margin: 0 0 18px; padding: 12px 16px;
-  background: var(--surface); border: 1px solid var(--line, var(--border, rgba(128,128,128,.25))); border-radius: var(--radius-sm); }
-.followbar span { color: var(--muted); font-size: 15px; }
-.followbar b { color: var(--text, inherit); }
+.joinbar { display: grid; grid-template-columns: 1fr minmax(260px, 380px); gap: 10px 18px; align-items: center; margin: 0 0 18px; padding: 14px 16px;
+  background: var(--surface); border: 1px solid var(--line, var(--border, rgba(128,128,128,.25))); border-left: 4px solid var(--accent); border-radius: var(--radius-sm); }
+.joinbar .jtxt { display: grid; gap: 3px; }
+.joinbar .jtxt b { color: var(--text, inherit); font-size: 16px; }
+.joinbar .jtxt span { color: var(--muted); font-size: 14px; }
+.joinbar .jrow { display: flex; gap: 8px; }
+.joinbar .jrow .input { flex: 1; min-width: 0; }
+.joinbar .jrow .btn { white-space: nowrap; }
+.joinbar .jmsg { grid-column: 1 / -1; margin: 0; font-size: 14px; }
+.joinbar .jmsg:empty { display: none; }
+.joinbar .jmsg.err { color: var(--danger, #c0392b); }
+.joinbar .jmsg.ok { color: var(--text, inherit); }
+.joinbar.sent .jrow { display: none; }
+@media (max-width: 640px) { .joinbar { grid-template-columns: 1fr; } }
 
 .schedule { margin: 0 0 26px; }
 .schedule h2 { font-size: 26px; margin: 0 0 8px; }

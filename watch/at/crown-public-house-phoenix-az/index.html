@@ -21,8 +21,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/css/style.css?v=b474a061">
-<link rel="stylesheet" href="/assets/css/watch.css?v=78aabcbf">
-<script type="module" src="/assets/js/analytics.js?v=b8c09f5f"></script>
+<link rel="stylesheet" href="/assets/css/watch.css?v=af8fd489">
+<script type="module" src="/assets/js/analytics.js?v=87c536ee"></script>
+<script type="module" src="/assets/js/join.js?v=d1961051"></script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://distantfan.com/"},{"@type":"ListItem","position":2,"name":"Where to watch","item":"https://distantfan.com/watch/"},{"@type":"ListItem","position":3,"name":"Phoenix, AZ","item":"https://distantfan.com/watch/in/phoenix-az/"},{"@type":"ListItem","position":4,"name":"Crown Public House","item":"https://distantfan.com/watch/at/crown-public-house-phoenix-az/"}]}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BarOrPub","name":"Crown Public House","address":"333 E Jefferson St, Phoenix, AZ 85004","geo":{"@type":"GeoCoordinates","latitude":33.44611,"longitude":-112.06904},"description":"Downtown pub across from Chase Field that bills itself as a pre and post-game spot for D-backs fans, with TVs throughout the bar."}</script>
 </head>
@@ -37,7 +38,11 @@
   <p class="lede">Downtown pub across from Chase Field that bills itself as a pre and post-game spot for D-backs fans, with TVs throughout the bar.</p>
 </div></header>
 
-<div class="followbar"><span><b>Diamondbacks fan?</b> Follow them for a weekly game-day email and see the fans near you.</span><a class="btn sm primary" href="/app.html?follow=mlb-ari">Follow Diamondbacks</a></div>
+<form class="joinbar" action="/app.html" data-team="mlb-ari" data-m="Phoenix|AZ" novalidate><input type="hidden" name="follow" value="mlb-ari">
+  <div class="jtxt"><b>Get Diamondbacks games and Phoenix fan bars by email</b><span>Every Thursday: this week's Diamondbacks games, how to watch, and where fans near you are going. Free, one-click unsubscribe.</span></div>
+  <div class="jrow"><input class="input" type="email" placeholder="you@example.com" autocomplete="email" aria-label="Your email" required><button class="btn primary">Email me</button></div>
+  <p class="jmsg" role="status" aria-live="polite"></p>
+</form>
 
 <section class="venue">
   <dl>

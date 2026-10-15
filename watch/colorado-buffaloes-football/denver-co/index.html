@@ -21,8 +21,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/css/style.css?v=b474a061">
-<link rel="stylesheet" href="/assets/css/watch.css?v=78aabcbf">
-<script type="module" src="/assets/js/analytics.js?v=b8c09f5f"></script>
+<link rel="stylesheet" href="/assets/css/watch.css?v=af8fd489">
+<script type="module" src="/assets/js/analytics.js?v=87c536ee"></script>
+<script type="module" src="/assets/js/join.js?v=d1961051"></script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://distantfan.com/"},{"@type":"ListItem","position":2,"name":"Where to watch","item":"https://distantfan.com/watch/"},{"@type":"ListItem","position":3,"name":"Colorado Buffaloes football","item":"https://distantfan.com/watch/colorado-buffaloes-football/"},{"@type":"ListItem","position":4,"name":"Denver","item":"https://distantfan.com/watch/colorado-buffaloes-football/denver-co/"}]}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"ItemList","name":"Colorado Buffaloes football watch spots in Denver, CO","numberOfItems":6,"itemListElement":[{"@type":"ListItem","position":1,"item":{"@type":"BarOrPub","name":"Luki Brewery","address":"14715 W 64th Ave Unit A & B, Arvada, CO 80004","geo":{"@type":"GeoCoordinates","latitude":39.81253,"longitude":-105.16329}}},{"@type":"ListItem","position":2,"item":{"@type":"BarOrPub","name":"Ratio Beerworks Overland","address":"2030 S Cherokee St, Denver, CO 80223","geo":{"@type":"GeoCoordinates","latitude":39.67976,"longitude":-104.99104}}},{"@type":"ListItem","position":3,"item":{"@type":"BarOrPub","name":"School House Kitchen and Libations","address":"5660 Olde Wadsworth Blvd, Arvada, CO 80002","geo":{"@type":"GeoCoordinates","latitude":39.79977,"longitude":-105.08134}}},{"@type":"ListItem","position":4,"item":{"@type":"BarOrPub","name":"The Bar at Plaza38","address":"3550 W 38th Ave #98, Denver, CO 80211","geo":{"@type":"GeoCoordinates","latitude":39.76946,"longitude":-105.03388}}},{"@type":"ListItem","position":5,"item":{"@type":"BarOrPub","name":"The Tavern on Blake Street","address":"2301 Blake Street, Denver, CO 80205","geo":{"@type":"GeoCoordinates","latitude":39.75718,"longitude":-104.99071}}},{"@type":"ListItem","position":6,"item":{"@type":"BarOrPub","name":"Tom's Watch Bar","address":"1601 19TH STREET, Denver, CO 80202","geo":{"@type":"GeoCoordinates","latitude":39.7541,"longitude":-104.99641}}}]}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"SportsEvent","name":"Utah Utes at Colorado Buffaloes","startDate":"2026-10-18T02:15:00.000Z","description":"Utah Utes at Colorado Buffaloes (NCAA Football), broadcast on ESPN. Find bars showing the game in Denver on Distant Fan.","eventStatus":"https://schema.org/EventScheduled","image":"https://a.espncdn.com/i/teamlogos/ncaa/500/38.png","homeTeam":{"@type":"SportsTeam","name":"Colorado Buffaloes"},"awayTeam":{"@type":"SportsTeam","name":"Utah Utes"},"performer":[{"@type":"SportsTeam","name":"Colorado Buffaloes"},{"@type":"SportsTeam","name":"Utah Utes"}],"organizer":{"@type":"SportsOrganization","name":"NCAA Football","url":"https://www.ncaa.com/sports/football"},"location":{"@type":"Place","name":"Folsom Field","address":"Folsom Field, Boulder, CO"}}</script>
@@ -40,7 +41,11 @@
   <p class="lede">6 bar and fan watch spots in the Denver area where Colorado fans watch the game, including 6 official fan club and alumni chapters. Last checked October 2026. Next game: Colorado vs Utah, Saturday, October 17 on ESPN.</p>
 </div></header>
 
-<div class="followbar"><span><b>Colorado fan?</b> Follow them for a weekly game-day email and see the fans near you.</span><a class="btn sm primary" href="/app.html?follow=cfb-38">Follow Colorado</a></div>
+<form class="joinbar" action="/app.html" data-team="cfb-38" data-m="Denver|CO" novalidate><input type="hidden" name="follow" value="cfb-38">
+  <div class="jtxt"><b>Get Colorado games and Denver fan bars by email</b><span>Every Thursday: this week's Colorado games, how to watch, and where fans near you are going. Free, one-click unsubscribe.</span></div>
+  <div class="jrow"><input class="input" type="email" placeholder="you@example.com" autocomplete="email" aria-label="Your email" required><button class="btn primary">Email me</button></div>
+  <p class="jmsg" role="status" aria-live="polite"></p>
+</form>
 
 <p class="intro">Looking for a Colorado bar in Denver? Colorado fans in the area watch games at Luki Brewery in Arvada, Ratio Beerworks Overland and School House Kitchen and Libations in Arvada, plus 3 more below. Call ahead on game days to make sure the bar will have your game on.</p>
 

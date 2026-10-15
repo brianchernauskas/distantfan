@@ -21,8 +21,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/css/style.css?v=b474a061">
-<link rel="stylesheet" href="/assets/css/watch.css?v=78aabcbf">
-<script type="module" src="/assets/js/analytics.js?v=b8c09f5f"></script>
+<link rel="stylesheet" href="/assets/css/watch.css?v=af8fd489">
+<script type="module" src="/assets/js/analytics.js?v=87c536ee"></script>
+<script type="module" src="/assets/js/join.js?v=d1961051"></script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://distantfan.com/"},{"@type":"ListItem","position":2,"name":"Where to watch","item":"https://distantfan.com/watch/"},{"@type":"ListItem","position":3,"name":"Boise State Broncos football","item":"https://distantfan.com/watch/boise-state-broncos-football/"},{"@type":"ListItem","position":4,"name":"Boston","item":"https://distantfan.com/watch/boise-state-broncos-football/boston-ma/"}]}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"ItemList","name":"Boise State Broncos football watch spots in Boston, MA","numberOfItems":1,"itemListElement":[{"@type":"ListItem","position":1,"item":{"@type":"BarOrPub","name":"Castle Island Brewing","address":"10 Old Colony Ave., Boston, MA 02127","geo":{"@type":"GeoCoordinates","latitude":42.33749,"longitude":-71.05673}}}]}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"SportsEvent","name":"Boise State Broncos at Washington State Cougars","startDate":"2026-10-24T22:00:00.000Z","description":"Boise State Broncos at Washington State Cougars (NCAA Football), broadcast on USA Net. Find bars showing the game in Boston on Distant Fan.","eventStatus":"https://schema.org/EventScheduled","image":"https://a.espncdn.com/i/teamlogos/ncaa/500/68.png","homeTeam":{"@type":"SportsTeam","name":"Washington State Cougars"},"awayTeam":{"@type":"SportsTeam","name":"Boise State Broncos"},"performer":[{"@type":"SportsTeam","name":"Washington State Cougars"},{"@type":"SportsTeam","name":"Boise State Broncos"}],"organizer":{"@type":"SportsOrganization","name":"NCAA Football","url":"https://www.ncaa.com/sports/football"},"location":{"@type":"Place","name":"Martin Stadium","address":"Martin Stadium, Pullman, WA"}}</script>
@@ -40,7 +41,11 @@
   <p class="lede">1 bar and fan watch spot in the Boston area where Boise St fans watch the game, including 1 official fan club and alumni chapter. Last checked October 2026. Next game: Boise St at Washington St, Saturday, October 24 on USA Net.</p>
 </div></header>
 
-<div class="followbar"><span><b>Boise St fan?</b> Follow them for a weekly game-day email and see the fans near you.</span><a class="btn sm primary" href="/app.html?follow=cfb-68">Follow Boise St</a></div>
+<form class="joinbar" action="/app.html" data-team="cfb-68" data-m="Boston|MA" novalidate><input type="hidden" name="follow" value="cfb-68">
+  <div class="jtxt"><b>Get Boise St games and Boston fan bars by email</b><span>Every Thursday: this week's Boise St games, how to watch, and where fans near you are going. Free, one-click unsubscribe.</span></div>
+  <div class="jrow"><input class="input" type="email" placeholder="you@example.com" autocomplete="email" aria-label="Your email" required><button class="btn primary">Email me</button></div>
+  <p class="jmsg" role="status" aria-live="polite"></p>
+</form>
 
 <p class="intro">Looking for a Boise St bar in Boston? Boise St fans in the area watch games at Castle Island Brewing. Listed groups include Boise State Alumni Bronco watch party. Call ahead on game days to make sure the bar will have your game on.</p>
 

@@ -21,8 +21,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/css/style.css?v=b474a061">
-<link rel="stylesheet" href="/assets/css/watch.css?v=78aabcbf">
-<script type="module" src="/assets/js/analytics.js?v=b8c09f5f"></script>
+<link rel="stylesheet" href="/assets/css/watch.css?v=af8fd489">
+<script type="module" src="/assets/js/analytics.js?v=87c536ee"></script>
+<script type="module" src="/assets/js/join.js?v=d1961051"></script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://distantfan.com/"},{"@type":"ListItem","position":2,"name":"Where to watch","item":"https://distantfan.com/watch/"},{"@type":"ListItem","position":3,"name":"Colorado Avalanche","item":"https://distantfan.com/watch/colorado-avalanche/"},{"@type":"ListItem","position":4,"name":"Denver","item":"https://distantfan.com/watch/colorado-avalanche/denver-co/"}]}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"ItemList","name":"Colorado Avalanche watch spots in Denver, CO","numberOfItems":2,"itemListElement":[{"@type":"ListItem","position":1,"item":{"@type":"BarOrPub","name":"Alpha Charlie's Tap & Tavern","address":"6631 S. Peoria St. Suite 100, Centennial, CO, 80111","geo":{"@type":"GeoCoordinates","latitude":39.59619,"longitude":-104.84815}}},{"@type":"ListItem","position":2,"item":{"@type":"BarOrPub","name":"Origins Sports Bar & Grill","address":"266 S Downing St Unit B, Denver, CO 80209","geo":{"@type":"GeoCoordinates","latitude":39.71172,"longitude":-104.97332}}}]}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"SportsEvent","name":"Pittsburgh Penguins at Colorado Avalanche","startDate":"2026-10-17T01:00:00.000Z","description":"Pittsburgh Penguins at Colorado Avalanche (NHL), broadcast on ESPN+, Altitude Sports, KTVD-TV (My20). Find bars showing the game in Denver on Distant Fan.","eventStatus":"https://schema.org/EventScheduled","image":"https://a.espncdn.com/i/teamlogos/nhl/500/col.png","homeTeam":{"@type":"SportsTeam","name":"Colorado Avalanche"},"awayTeam":{"@type":"SportsTeam","name":"Pittsburgh Penguins"},"performer":[{"@type":"SportsTeam","name":"Colorado Avalanche"},{"@type":"SportsTeam","name":"Pittsburgh Penguins"}],"organizer":{"@type":"SportsOrganization","name":"NHL","url":"https://www.nhl.com/"},"location":{"@type":"Place","name":"Ball Arena","address":"Ball Arena, Denver, CO"}}</script>
@@ -40,7 +41,11 @@
   <p class="lede">2 bar and fan watch spots in the Denver area where Avalanche fans watch the game, including 2 official fan club and alumni chapters. Last checked October 2026. Next game: Avalanche vs Penguins, Friday, October 16 on ESPN+.</p>
 </div></header>
 
-<div class="followbar"><span><b>Avalanche fan?</b> Follow them for a weekly game-day email and see the fans near you.</span><a class="btn sm primary" href="/app.html?follow=nhl-col">Follow Avalanche</a></div>
+<form class="joinbar" action="/app.html" data-team="nhl-col" data-m="Denver|CO" novalidate><input type="hidden" name="follow" value="nhl-col">
+  <div class="jtxt"><b>Get Avalanche games and Denver fan bars by email</b><span>Every Thursday: this week's Avalanche games, how to watch, and where fans near you are going. Free, one-click unsubscribe.</span></div>
+  <div class="jrow"><input class="input" type="email" placeholder="you@example.com" autocomplete="email" aria-label="Your email" required><button class="btn primary">Email me</button></div>
+  <p class="jmsg" role="status" aria-live="polite"></p>
+</form>
 
 <p class="intro">Looking for an Avalanche bar in Denver? Avalanche fans in the area watch games at Alpha Charlie's Tap &amp; Tavern in CO and Origins Sports Bar &amp; Grill. Call ahead on game days to make sure the bar will have your game on.</p>
 

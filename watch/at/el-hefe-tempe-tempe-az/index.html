@@ -21,8 +21,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/css/style.css?v=b474a061">
-<link rel="stylesheet" href="/assets/css/watch.css?v=78aabcbf">
-<script type="module" src="/assets/js/analytics.js?v=b8c09f5f"></script>
+<link rel="stylesheet" href="/assets/css/watch.css?v=af8fd489">
+<script type="module" src="/assets/js/analytics.js?v=87c536ee"></script>
+<script type="module" src="/assets/js/join.js?v=d1961051"></script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://distantfan.com/"},{"@type":"ListItem","position":2,"name":"Where to watch","item":"https://distantfan.com/watch/"},{"@type":"ListItem","position":3,"name":"Phoenix, AZ","item":"https://distantfan.com/watch/in/phoenix-az/"},{"@type":"ListItem","position":4,"name":"El Hefe Tempe","item":"https://distantfan.com/watch/at/el-hefe-tempe-tempe-az/"}]}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BarOrPub","name":"El Hefe Tempe","address":"640 S Mill Ave, Tempe, AZ 85281","geo":{"@type":"GeoCoordinates","latitude":33.42389,"longitude":-111.94007},"description":"Listed in the Patriots official fan club and bar registry as a Patriots fan bar."}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"SportsEvent","name":"New York Jets at New England Patriots","startDate":"2026-10-18T17:00:00.000Z","description":"New York Jets at New England Patriots (NFL), broadcast on CBS. Find bars showing the game in Tempe on Distant Fan.","eventStatus":"https://schema.org/EventScheduled","image":"https://a.espncdn.com/i/teamlogos/nfl/500/ne.png","homeTeam":{"@type":"SportsTeam","name":"New England Patriots"},"awayTeam":{"@type":"SportsTeam","name":"New York Jets"},"performer":[{"@type":"SportsTeam","name":"New England Patriots"},{"@type":"SportsTeam","name":"New York Jets"}],"organizer":{"@type":"SportsOrganization","name":"NFL","url":"https://www.nfl.com/"},"location":{"@type":"Place","name":"Gillette Stadium","address":"Gillette Stadium, Foxborough, MA"}}</script>
@@ -40,7 +41,11 @@
   <p class="lede">Listed in the Patriots official fan club and bar registry as a Patriots fan bar.</p>
 </div></header>
 
-<div class="followbar"><span><b>Patriots fan?</b> Follow them for a weekly game-day email and see the fans near you.</span><a class="btn sm primary" href="/app.html?follow=nfl-ne">Follow Patriots</a></div>
+<form class="joinbar" action="/app.html" data-team="nfl-ne" data-m="Phoenix|AZ" novalidate><input type="hidden" name="follow" value="nfl-ne">
+  <div class="jtxt"><b>Get Patriots games and Phoenix fan bars by email</b><span>Every Thursday: this week's Patriots games, how to watch, and where fans near you are going. Free, one-click unsubscribe.</span></div>
+  <div class="jrow"><input class="input" type="email" placeholder="you@example.com" autocomplete="email" aria-label="Your email" required><button class="btn primary">Email me</button></div>
+  <p class="jmsg" role="status" aria-live="polite"></p>
+</form>
 
 <section class="venue">
   <dl>

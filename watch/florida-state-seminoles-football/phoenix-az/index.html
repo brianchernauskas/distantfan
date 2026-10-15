@@ -21,8 +21,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/css/style.css?v=b474a061">
-<link rel="stylesheet" href="/assets/css/watch.css?v=78aabcbf">
-<script type="module" src="/assets/js/analytics.js?v=b8c09f5f"></script>
+<link rel="stylesheet" href="/assets/css/watch.css?v=af8fd489">
+<script type="module" src="/assets/js/analytics.js?v=87c536ee"></script>
+<script type="module" src="/assets/js/join.js?v=d1961051"></script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://distantfan.com/"},{"@type":"ListItem","position":2,"name":"Where to watch","item":"https://distantfan.com/watch/"},{"@type":"ListItem","position":3,"name":"Florida State Seminoles football","item":"https://distantfan.com/watch/florida-state-seminoles-football/"},{"@type":"ListItem","position":4,"name":"Phoenix","item":"https://distantfan.com/watch/florida-state-seminoles-football/phoenix-az/"}]}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"ItemList","name":"Florida State Seminoles football watch spots in Phoenix, AZ","numberOfItems":1,"itemListElement":[{"@type":"ListItem","position":1,"item":{"@type":"BarOrPub","name":"R.T. O'Sullivan's","address":"7919 E Thomas Rd #101, Scottsdale, AZ 85251","geo":{"@type":"GeoCoordinates","latitude":33.48033,"longitude":-111.91038}}}]}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"SportsEvent","name":"Florida State Seminoles at Miami Hurricanes","startDate":"2026-10-17T23:00:00.000Z","description":"Florida State Seminoles at Miami Hurricanes (NCAA Football), broadcast on ESPN, Disney+. Find bars showing the game in Phoenix on Distant Fan.","eventStatus":"https://schema.org/EventScheduled","image":"https://a.espncdn.com/i/teamlogos/ncaa/500/52.png","homeTeam":{"@type":"SportsTeam","name":"Miami Hurricanes"},"awayTeam":{"@type":"SportsTeam","name":"Florida State Seminoles"},"performer":[{"@type":"SportsTeam","name":"Miami Hurricanes"},{"@type":"SportsTeam","name":"Florida State Seminoles"}],"organizer":{"@type":"SportsOrganization","name":"NCAA Football","url":"https://www.ncaa.com/sports/football"},"location":{"@type":"Place","name":"Hard Rock Stadium","address":"Hard Rock Stadium, Miami Gardens, FL"}}</script>
@@ -40,7 +41,11 @@
   <p class="lede">1 bar and fan watch spot in the Phoenix area where Florida St fans watch the game, including 1 official fan club and alumni chapter. Last checked September 2026. Next game: Florida St at Miami, Saturday, October 17 on ESPN.</p>
 </div></header>
 
-<div class="followbar"><span><b>Florida St fan?</b> Follow them for a weekly game-day email and see the fans near you.</span><a class="btn sm primary" href="/app.html?follow=cfb-52">Follow Florida St</a></div>
+<form class="joinbar" action="/app.html" data-team="cfb-52" data-m="Phoenix|AZ" novalidate><input type="hidden" name="follow" value="cfb-52">
+  <div class="jtxt"><b>Get Florida St games and Phoenix fan bars by email</b><span>Every Thursday: this week's Florida St games, how to watch, and where fans near you are going. Free, one-click unsubscribe.</span></div>
+  <div class="jrow"><input class="input" type="email" placeholder="you@example.com" autocomplete="email" aria-label="Your email" required><button class="btn primary">Email me</button></div>
+  <p class="jmsg" role="status" aria-live="polite"></p>
+</form>
 
 <p class="intro">Looking for a Florida St bar in Phoenix? Florida St fans in the area watch games at R.T. O'Sullivan's in Scottsdale. Call ahead on game days to make sure the bar will have your game on.</p>
 

@@ -1,9 +1,9 @@
 // Data layer. Uses Firebase (Auth + Firestore) when FIREBASE_CONFIG is set,
 // otherwise a demo store in localStorage seeded with clearly fake fans and spots.
-import { FIREBASE_CONFIG, SITE } from './config.js?v=202610121506';
-import { TEAMS, TEAM_BY_ID } from './teams.js?v=202610121506';
-import { METROS } from './metros.js?v=202610121506';
-import { encode, center } from './geo.js?v=202610121506';
+import { FIREBASE_CONFIG, SITE } from './config.js?v=202610150903';
+import { TEAMS, TEAM_BY_ID } from './teams.js?v=202610150903';
+import { METROS } from './metros.js?v=202610150903';
+import { encode, center } from './geo.js?v=202610150903';
 
 export const mode = FIREBASE_CONFIG ? 'firebase' : 'demo';
 let impl;
@@ -19,6 +19,8 @@ export const signInEmail = call('signInEmail');
 export const signUpEmail = call('signUpEmail');
 export const resetPassword = call('resetPassword');
 export const signInDemo = call('signInDemo');
+export const isEmailLink = call('isEmailLink');
+export const completeEmailLink = call('completeEmailLink');
 export const signOut = call('signOut');
 export const getProfile = call('getProfile');
 export const saveProfile = call('saveProfile');
@@ -147,7 +149,7 @@ async function firebaseStore() {
     // Inside the Capacitor app popups don't work, so use the native Google account chooser (native.js).
     signInGoogle: async () => {
       if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
-        return (await import('./native.js?v=202610121506')).signInGoogle(A, auth);
+        return (await import('./native.js?v=202610150903')).signInGoogle(A, auth);
       }
       return A.signInWithPopup(auth, new A.GoogleAuthProvider());
     },
@@ -158,9 +160,13 @@ async function firebaseStore() {
       me = toUser(auth.currentUser);
     },
     resetPassword: email => A.sendPasswordResetEmail(auth, email),
+    // Passwordless email link from the watch pages' signup form (join.js). Completing it signs the fan in;
+    // a new account then gets its profile from the link's ?join=&m= (app.js joinProfile).
+    isEmailLink: () => A.isSignInWithEmailLink(auth, location.href),
+    completeEmailLink: email => A.signInWithEmailLink(auth, email, location.href),
     signInDemo: () => { throw new Error('Demo sign-in is only available in demo mode.'); },
     signOut: async () => {
-      if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) await (await import('./native.js?v=202610121506')).signOut();
+      if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) await (await import('./native.js?v=202610150903')).signOut();
       return A.signOut(auth);
     },
 
@@ -412,6 +418,8 @@ function demoStore() {
     signInEmail() { throw new Error('Email sign-in needs Firebase. Use "Try the demo" for now.'); },
     signUpEmail() { throw new Error('Email sign-up needs Firebase. Use "Try the demo" for now.'); },
     resetPassword() { throw new Error('Password reset needs Firebase.'); },
+    isEmailLink() { return false; },
+    completeEmailLink() { throw new Error('Email links need Firebase.'); },
     signInDemo(name) { state.user = { uid: 'me', name: clean(name, 40) || 'You', email: null }; save(); emitUser(); },
     signOut() { state.user = null; save(); emitUser(); },
     async getEmailPref() { return null; },   // demo accounts have no email
