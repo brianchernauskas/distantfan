@@ -1,12 +1,12 @@
-import * as S from './store.js?v=202610150903';
-import { SITE, ADMINS } from './config.js?v=202610150903';
-import { TEAMS, TEAM_BY_ID, LEAGUES } from './teams.js?v=202610150903';
-import { METROS } from './metros.js?v=202610150903';
-import { encode, center, bounds, areaLabel, km, nearestMetro } from './geo.js?v=202610150903';
-import { nextGames, liveStatus } from './schedule.js?v=202610150903';
-import { howToWatch, WATCH_COLOR, gcalUrl } from './watch.js?v=202610150903';
-import { shopStrip, hydrateShop, shopBanner, hydrateBanner } from './shop.js?v=202610150903';
-import { firstTouch, followPrefill, clearFollow } from './attrib.js?v=202610150903';
+import * as S from './store.js?v=202610151153';
+import { SITE, ADMINS } from './config.js?v=202610151153';
+import { TEAMS, TEAM_BY_ID, LEAGUES } from './teams.js?v=202610151153';
+import { METROS } from './metros.js?v=202610151153';
+import { encode, center, bounds, areaLabel, km, nearestMetro } from './geo.js?v=202610151153';
+import { nextGames, liveStatus } from './schedule.js?v=202610151153';
+import { howToWatch, WATCH_COLOR, gcalUrl } from './watch.js?v=202610151153';
+import { shopStrip, hydrateShop, shopBanner, hydrateBanner } from './shop.js?v=202610151153';
+import { firstTouch, followPrefill, clearFollow } from './attrib.js?v=202610151153';
 
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -80,7 +80,8 @@ const errMsg = e => (e?.code || '').replace('auth/', '').replace(/-/g, ' ') || e
 (async function boot() {
   try { await S.init(); }
   catch (e) { root.innerHTML = `<div class="center-card"><h2>Can't connect</h2><p class="muted">${esc(e.message)}</p></div>`; return; }
-  if (S.isEmailLink()) await finishEmailLink();
+  // ?join= only counts when this page load completed a sign-in link; never applied to whoever is already signed in.
+  if (!(S.isEmailLink() && await finishEmailLink())) JOIN = null;
   S.onUser(async u => {
     user = u; cleanupView();
     if (!u) return renderAuth();
@@ -114,9 +115,10 @@ async function finishEmailLink() {
       strip();
       return true;
     } catch (e) {
+      console.warn('email link', e?.code, e?.message);
+      S.track('join_link_error', { code: String(e?.code || 'unknown').slice(0, 40), try: tries + 1 });
       if (e?.code === 'auth/invalid-email') { email = null; continue; }
       strip();
-      JOIN = null;
       setTimeout(() => toast('That sign-in link has expired or was already used. Sign in below, or request a new link from any watch page.'), 400);
       return false;
     }
@@ -355,7 +357,7 @@ function renderOnboarding(editing = false) {
         if (!native && !navigator.geolocation) { err.textContent = 'Location is not available in this browser. Pick a metro instead.'; return; }
         $('#locate').disabled = true; $('#locate').textContent = 'Locating…';
         // Inside the Capacitor app, use the native location plugin (native.js); on the web, the browser API.
-        const locate = native ? (ok, fail, o) => import('./native.js?v=202610150903').then(n => n.getPosition(ok, fail, o)) : (ok, fail, o) => navigator.geolocation.getCurrentPosition(ok, fail, o);
+        const locate = native ? (ok, fail, o) => import('./native.js?v=202610151153').then(n => n.getPosition(ok, fail, o)) : (ok, fail, o) => navigator.geolocation.getCurrentPosition(ok, fail, o);
         locate(p => {
           // Round to a coarse cell immediately; the coordinates are discarded here.
           const cell = encode(p.coords.latitude, p.coords.longitude, SITE.homePrecision);

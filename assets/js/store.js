@@ -1,9 +1,9 @@
 // Data layer. Uses Firebase (Auth + Firestore) when FIREBASE_CONFIG is set,
 // otherwise a demo store in localStorage seeded with clearly fake fans and spots.
-import { FIREBASE_CONFIG, SITE } from './config.js?v=202610150903';
-import { TEAMS, TEAM_BY_ID } from './teams.js?v=202610150903';
-import { METROS } from './metros.js?v=202610150903';
-import { encode, center } from './geo.js?v=202610150903';
+import { FIREBASE_CONFIG, SITE } from './config.js?v=202610151153';
+import { TEAMS, TEAM_BY_ID } from './teams.js?v=202610151153';
+import { METROS } from './metros.js?v=202610151153';
+import { encode, center } from './geo.js?v=202610151153';
 
 export const mode = FIREBASE_CONFIG ? 'firebase' : 'demo';
 let impl;
@@ -149,7 +149,7 @@ async function firebaseStore() {
     // Inside the Capacitor app popups don't work, so use the native Google account chooser (native.js).
     signInGoogle: async () => {
       if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
-        return (await import('./native.js?v=202610150903')).signInGoogle(A, auth);
+        return (await import('./native.js?v=202610151153')).signInGoogle(A, auth);
       }
       return A.signInWithPopup(auth, new A.GoogleAuthProvider());
     },
@@ -166,7 +166,7 @@ async function firebaseStore() {
     completeEmailLink: email => A.signInWithEmailLink(auth, email, location.href),
     signInDemo: () => { throw new Error('Demo sign-in is only available in demo mode.'); },
     signOut: async () => {
-      if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) await (await import('./native.js?v=202610150903')).signOut();
+      if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) await (await import('./native.js?v=202610151153')).signOut();
       return A.signOut(auth);
     },
 
