@@ -135,7 +135,7 @@ function render({ pref, profile, games, tz, pt, welcome = false }) {
 <td valign="middle" style="padding:0 12px">
 <div style="font-size:13px;letter-spacing:.05em;text-transform:uppercase;font-weight:700;color:#6b7480">${esc(fmtDay(g.time))} · ${esc(fmtTime(g))}</div>
 <div style="font-size:20px;font-weight:800;line-height:1.2;margin:4px 0;color:#121820">${esc(short(team))} <span style="font-weight:600;color:#6b7480">${g.home ? 'vs' : 'at'}</span> ${esc(g.opp)}</div>
-<div style="font-size:14px;color:#6b7480;line-height:1.5"><span style="display:inline-block;background:${WATCH_COLOR[how.kind]};color:#ffffff;font-weight:700;font-size:12px;padding:2px 9px;border-radius:999px">${esc(how.label)}</span>${g.tv.length > 1 ? ` ${esc(g.tv.join(', '))}` : ''}</div>
+<div style="font-size:14px;color:#6b7480;line-height:1.5"><span style="display:inline-block;max-width:100%;background:${WATCH_COLOR[how.kind]};color:#ffffff;font-weight:700;font-size:12px;line-height:16px;padding:3px 8px;border-radius:6px;vertical-align:middle">${esc(how.label)}</span>${g.tv.length > 1 ? ` ${esc(g.tv.join(', '))}` : ''}</div>
 </td>
 <td width="44" valign="middle" align="right">${tile(g.oppLogo, 40, g.opp)}</td>
 </tr></table>
