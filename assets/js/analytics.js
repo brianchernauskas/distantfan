@@ -1,8 +1,8 @@
 // Firebase Analytics (GA4) for pages that don't load the app's store: landing, unsubscribe and the
 // generated watch/ pages. app.html gets analytics from store.js, so it must not load this file too
 // (two inits would count each page view twice).
-import { FIREBASE_CONFIG } from './config.js?v=202610151153';
-import { firstTouch } from './attrib.js?v=202610151153'; // side effect: records first-touch source + ?follow=
+import { FIREBASE_CONFIG } from './config.js?v=202610151416';
+import { firstTouch, isInternal } from './attrib.js?v=202610151416'; // side effect: records first-touch source + ?follow=
 firstTouch();
 
 // window.dfTrack(name, params): lets the small inline scripts on the generated pages (share buttons)
@@ -17,7 +17,10 @@ if (FIREBASE_CONFIG) {
   Promise.all([import(`${base}/firebase-app.js`), import(`${base}/firebase-analytics.js`)])
     .then(async ([{ initializeApp }, an]) => {
       if (!(await an.isSupported())) return;
-      const a = an.getAnalytics(initializeApp(FIREBASE_CONFIG));
+      // Owner/QA browsers: traffic_type=internal on the config (tags the automatic page_view) and on every later event.
+      const app = initializeApp(FIREBASE_CONFIG), internal = isInternal();
+      if (internal) an.setDefaultEventParameters({ traffic_type: 'internal' });
+      const a = internal ? an.initializeAnalytics(app, { config: { traffic_type: 'internal' } }) : an.getAnalytics(app);
       const send = (name, params) => { try { an.logEvent(a, name, params); } catch {} };
       queue.splice(0).forEach(([n, p]) => send(n, p));
       window.dfTrack = send;

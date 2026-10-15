@@ -1,12 +1,12 @@
-import * as S from './store.js?v=202610151153';
-import { SITE, ADMINS } from './config.js?v=202610151153';
-import { TEAMS, TEAM_BY_ID, LEAGUES } from './teams.js?v=202610151153';
-import { METROS } from './metros.js?v=202610151153';
-import { encode, center, bounds, areaLabel, km, nearestMetro } from './geo.js?v=202610151153';
-import { nextGames, liveStatus } from './schedule.js?v=202610151153';
-import { howToWatch, WATCH_COLOR, gcalUrl } from './watch.js?v=202610151153';
-import { shopStrip, hydrateShop, shopBanner, hydrateBanner } from './shop.js?v=202610151153';
-import { firstTouch, followPrefill, clearFollow } from './attrib.js?v=202610151153';
+import * as S from './store.js?v=202610151416';
+import { SITE, ADMINS } from './config.js?v=202610151416';
+import { TEAMS, TEAM_BY_ID, LEAGUES } from './teams.js?v=202610151416';
+import { METROS } from './metros.js?v=202610151416';
+import { encode, center, bounds, areaLabel, km, nearestMetro } from './geo.js?v=202610151416';
+import { nextGames, liveStatus } from './schedule.js?v=202610151416';
+import { howToWatch, WATCH_COLOR, gcalUrl } from './watch.js?v=202610151416';
+import { shopStrip, hydrateShop, shopBanner, hydrateBanner } from './shop.js?v=202610151416';
+import { firstTouch, followPrefill, clearFollow, markInternal } from './attrib.js?v=202610151416';
 
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -85,6 +85,7 @@ const errMsg = e => (e?.code || '').replace('auth/', '').replace(/-/g, ' ') || e
   S.onUser(async u => {
     user = u; cleanupView();
     if (!u) return renderAuth();
+    if (ADMINS.includes(u.uid)) markInternal(); // the owner's browsers stay out of GA4 reports from the next page load
     try { profile = await S.getProfile(u.uid); } catch (e) { profile = null; console.error(e); }
     const joined = JOIN && await applyJoin(u).catch(e => { console.error(e); return false; });
     JOIN = null;
@@ -357,7 +358,7 @@ function renderOnboarding(editing = false) {
         if (!native && !navigator.geolocation) { err.textContent = 'Location is not available in this browser. Pick a metro instead.'; return; }
         $('#locate').disabled = true; $('#locate').textContent = 'Locating…';
         // Inside the Capacitor app, use the native location plugin (native.js); on the web, the browser API.
-        const locate = native ? (ok, fail, o) => import('./native.js?v=202610151153').then(n => n.getPosition(ok, fail, o)) : (ok, fail, o) => navigator.geolocation.getCurrentPosition(ok, fail, o);
+        const locate = native ? (ok, fail, o) => import('./native.js?v=202610151416').then(n => n.getPosition(ok, fail, o)) : (ok, fail, o) => navigator.geolocation.getCurrentPosition(ok, fail, o);
         locate(p => {
           // Round to a coarse cell immediately; the coordinates are discarded here.
           const cell = encode(p.coords.latitude, p.coords.longitude, SITE.homePrecision);

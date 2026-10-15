@@ -4,7 +4,7 @@
 // doubles as the opt-in confirmation, so nobody can subscribe someone else. Tapping it opens
 // app.html?join=<teamId>&m=<metro>, where app.js finishes sign-in and creates the profile with that team,
 // that metro as the rough home area and the weekly email switched on. Firebase loads only on submit.
-import { FIREBASE_CONFIG } from './config.js?v=202610151153';
+import { FIREBASE_CONFIG } from './config.js?v=202610151416';
 
 const KEY = 'df_join';
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;

@@ -14,8 +14,17 @@ export function firstTouch() {
 export function followPrefill() { return get(FOLLOW) || ''; }
 export function clearFollow() { try { localStorage.removeItem(FOLLOW); } catch {} }
 
+// Owner and QA visits: ?internal=1 marks this browser (?internal=0 clears it) and an admin sign-in marks it
+// too (app.js). analytics.js and store.js then tag every GA4 event traffic_type=internal, which the
+// property's Internal Traffic data filter excludes from reports.
+const INTERNAL = 'df_internal';
+export const isInternal = () => get(INTERNAL) === '1';
+export function markInternal(on = true) { try { on ? localStorage.setItem(INTERNAL, '1') : localStorage.removeItem(INTERNAL); } catch {} }
+
 (function capture() {
   const q = new URLSearchParams(location.search);
+  const iv = q.get('internal');
+  if (iv === '1' || iv === '0') markInternal(iv === '1');
   const follow = q.get('follow');
   if (follow && /^[\w-]{1,40}$/.test(follow)) set(FOLLOW, follow);
   if (firstTouch()) return;

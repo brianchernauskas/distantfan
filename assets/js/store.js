@@ -1,9 +1,9 @@
 // Data layer. Uses Firebase (Auth + Firestore) when FIREBASE_CONFIG is set,
 // otherwise a demo store in localStorage seeded with clearly fake fans and spots.
-import { FIREBASE_CONFIG, SITE } from './config.js?v=202610151153';
-import { TEAMS, TEAM_BY_ID } from './teams.js?v=202610151153';
-import { METROS } from './metros.js?v=202610151153';
-import { encode, center } from './geo.js?v=202610151153';
+import { FIREBASE_CONFIG, SITE } from './config.js?v=202610151416';
+import { TEAMS, TEAM_BY_ID } from './teams.js?v=202610151416';
+import { METROS } from './metros.js?v=202610151416';
+import { encode, center } from './geo.js?v=202610151416';
 
 export const mode = FIREBASE_CONFIG ? 'firebase' : 'demo';
 let impl;
@@ -82,7 +82,11 @@ async function firebaseStore() {
   const app = initializeApp(FIREBASE_CONFIG);
   // Analytics is best-effort: ad blockers or unsupported browsers must never break the app.
   import(`${base}/firebase-analytics.js`).then(async an => {
-    if (await an.isSupported()) { const ga = an.getAnalytics(app); trackImpl = (n, p) => an.logEvent(ga, n, p); }
+    if (await an.isSupported()) {
+      // Owner/QA browsers (attrib.js markInternal) are tagged so GA4's Internal Traffic filter drops them.
+      let internal = false; try { internal = localStorage.getItem('df_internal') === '1'; } catch {}
+      if (internal) an.setDefaultEventParameters({ traffic_type: 'internal' });
+      const ga = internal ? an.initializeAnalytics(app, { config: { traffic_type: 'internal' } }) : an.getAnalytics(app); trackImpl = (n, p) => an.logEvent(ga, n, p); }
   }).catch(() => {});
   const auth = A.getAuth(app);
   const db = F.getFirestore(app);
@@ -149,7 +153,7 @@ async function firebaseStore() {
     // Inside the Capacitor app popups don't work, so use the native Google account chooser (native.js).
     signInGoogle: async () => {
       if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
-        return (await import('./native.js?v=202610151153')).signInGoogle(A, auth);
+        return (await import('./native.js?v=202610151416')).signInGoogle(A, auth);
       }
       return A.signInWithPopup(auth, new A.GoogleAuthProvider());
     },
@@ -166,7 +170,7 @@ async function firebaseStore() {
     completeEmailLink: email => A.signInWithEmailLink(auth, email, location.href),
     signInDemo: () => { throw new Error('Demo sign-in is only available in demo mode.'); },
     signOut: async () => {
-      if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) await (await import('./native.js?v=202610151153')).signOut();
+      if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) await (await import('./native.js?v=202610151416')).signOut();
       return A.signOut(auth);
     },
 
